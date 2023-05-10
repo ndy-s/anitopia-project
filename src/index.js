@@ -16,7 +16,7 @@ const client = new Client({
 (async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log("Connected to Animatopia Database.");
+        console.log("Connected to Anitopia Database.");
 
         eventHandler(client);
         client.login(process.env.TOKEN);
