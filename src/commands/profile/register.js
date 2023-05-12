@@ -55,6 +55,6 @@ module.exports = {
         interaction.reply({ embeds: [embed] });
     },
     name: 'register',
-    description: "Register your official citizenship.",
+    description: "Register your official denizenship.",
     // deleted: true,
 };

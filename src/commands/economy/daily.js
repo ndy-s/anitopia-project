@@ -21,10 +21,10 @@ module.exports = {
             let user = await User.findOne({ userId: interaction.member.id, guildId: interaction.guild.id, });
 
             if (user) {
-                const lastDailyDate = user.lastDaily.toDateString();
-                const currentDate = new Date().toDateString();
+                const lastDailyDate = new Date(user.lastDaily);
+                const currentDate = new Date();
 
-                if (lastDailyDate === currentDate) {
+                if (lastDailyDate.toDateString() === currentDate.toDateString()) {
                     interaction.reply(
                         "You have already collected your dailies today. Come back tommorow!"
                     );
@@ -35,7 +35,7 @@ module.exports = {
                 let bonusCoin = 0;
                 const dailyAniCoin = 10;
 
-                // user.lastDaily = currentDate;
+                user.lastDaily = currentDate;
                 user.coin += dailyCoin;
                 user.aniCoin += dailyAniCoin;
                 
@@ -54,10 +54,11 @@ module.exports = {
                 }
                 
                 user.coin += bonusCoin;
-                user.dailyStreak += 1;
+                const oneDay = 24 * 60 * 60 * 1000; // Number of milliseconds in a day
+                const daysDifference = Math.floor((currentDate - lastDailyDate) / oneDay);
+                user.dailyStreak = (daysDifference <= 1) ? user.dailyStreak + 1 : 1;
                 await user.save();
 
-                // interaction.reply(`${dailyAmount} was added to your balance, Your new balance is ${user.coin}`);
                 const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "AniCoin").id;
                 interaction.reply({ embeds: [
                     new EmbedBuilder()
@@ -65,7 +66,7 @@ module.exports = {
                         .setAuthor({ name: `${interaction.user.username}#${interaction.user.discriminator}`, iconURL: interaction.user.displayAvatarURL() })
                         .setTitle("Daily Rewards")
                         .setDescription("+1000 Coins 🪙\n+10 AniCoins <:AniCoin:"+emojiId+">\nGet **more rewards** with ``/vote``")
-                        .setFooter({ text: `Current streak: ${user.dailyStreak - 1} | Bonus: ${bonusCoin} Coins` })
+                        .setFooter({ text: `Current streak: ${Math.max(user.dailyStreak - 1, 0)} | Bonus: ${bonusCoin} Coins` })
                 ]});
             } else {
                 exceptionCommand(interaction);

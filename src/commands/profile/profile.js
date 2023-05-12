@@ -32,8 +32,16 @@ module.exports = {
                     new EmbedBuilder()
                         .setColor('Blurple')
                         .setAuthor({ name: `${interaction.user.username}#${interaction.user.discriminator}`, iconURL: interaction.user.displayAvatarURL() })
-                        .setTitle(`${mentionedUsername}'s Coins`)
-                        .setDescription(`🪙 ${targetUser.coin} Coin${targetUser.coin !== 0 ? 's' : ''}\n<:AniCoin:${emojiId}> ${targetUser.aniCoin} AniCoin${targetUser.aniCoin !== 0 ? 's' : ''}`)
+                        .setThumbnail(interaction.user.displayAvatarURL())
+                        .setTitle(`Anitopia Offical Denizen Card`)
+                        .setDescription(`**${mentionedUsername}**\nAnitopian status hasn't been set yet.`)
+                        .addFields(
+                            { name: 'ADVENTURE', value: `**Level**: ${targetUser.level}\n**Exp**: ${targetUser.exp}\n**Arena**: \n**Stamina**: ` },
+                        )
+                        .addFields(
+                            { name: 'OTHERS', value: `VALUES`, inline: true },
+                            { name: 'COINS', value: `🪙 **Coin**: ${targetUser.coin}\n<:AniCoin:${emojiId}> **AniCoin**: ${targetUser.aniCoin}`, inline: true },
+                        )
                         .setFooter({ text: 'For assistance, type /help for more info.' })
                 ]});
             } else {
@@ -45,13 +53,13 @@ module.exports = {
             return;
         }
     },
-    name: 'coin',
-    description: 'Check your coin balance and wealth in the realm of Anitopia',
+    name: 'profile',
+    description: 'View your character profile and explore your accomplishments in the realm of Anitopia',
     options: [
         {
             name: 'user',
-            description: 'The Anitopian for whom you want to retrieve the coins.',
+            description: 'The Anitopian whose profile you want to view.',
             type: ApplicationCommandOptionType.User,
         }
     ]
-}
+};
