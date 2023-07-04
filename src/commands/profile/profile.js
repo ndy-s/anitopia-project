@@ -27,7 +27,7 @@ module.exports = {
 
         if (user) {
             if (targetUser) {
-                const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "AniCoin").id;
+                const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "anicoin").id;
                 interaction.reply({ embeds: [
                     new EmbedBuilder()
                         .setColor('Blurple')
@@ -40,7 +40,7 @@ module.exports = {
                         )
                         .addFields(
                             { name: 'OTHERS', value: `VALUES`, inline: true },
-                            { name: 'COINS', value: `🪙 **Coin**: ${targetUser.coin}\n<:AniCoin:${emojiId}> **AniCoin**: ${targetUser.aniCoin}`, inline: true },
+                            { name: 'COINS', value: `🪙 **Coin**: ${targetUser.coin}\n<:anicoin:${emojiId}> **AniCoin**: ${targetUser.aniCoin}`, inline: true },
                         )
                         .setFooter({ text: 'For assistance, type /help for more info.' })
                 ]});

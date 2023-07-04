@@ -59,7 +59,7 @@ module.exports = {
                 user.dailyStreak = (daysDifference <= 1) ? user.dailyStreak + 1 : 1;
                 await user.save();
 
-                const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "AniCoin").id;
+                const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "anicoin").id;
                 interaction.reply({ embeds: [
                     new EmbedBuilder()
                         .setColor('Blurple')

@@ -27,13 +27,13 @@ module.exports = {
 
         if (user) {
             if (targetUser) {
-                const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "AniCoin").id;
+                const emojiId = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "anicoin").id;
                 interaction.reply({ embeds: [
                     new EmbedBuilder()
                         .setColor('Blurple')
                         .setAuthor({ name: `${interaction.user.username}#${interaction.user.discriminator}`, iconURL: interaction.user.displayAvatarURL() })
                         .setTitle(`${mentionedUsername}'s Coins`)
-                        .setDescription(`🪙 ${targetUser.coin} Coin${targetUser.coin !== 0 ? 's' : ''}\n<:AniCoin:${emojiId}> ${targetUser.aniCoin} AniCoin${targetUser.aniCoin !== 0 ? 's' : ''}`)
+                        .setDescription(`🪙 ${targetUser.coin} Coin${targetUser.coin !== 0 ? 's' : ''}\n<:anicoin:${emojiId}> ${targetUser.aniCoin} AniCoin${targetUser.aniCoin !== 0 ? 's' : ''}`)
                         .setFooter({ text: 'For assistance, type /help for more info.' })
                 ]});
             } else {

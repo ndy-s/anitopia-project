@@ -35,7 +35,7 @@ module.exports = {
             const emojiGG2 = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "GG2").id;
             const emojiGG3 = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "GG3").id;
             const emojiGG4 = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "GG4").id;
-            const emojiStar = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "star").id;
+            const emojiStar = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "star_roll").id;
             const emojiLife = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "hp").id;
             const emojiG10 = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "G10").id;
             const emojiG15 = client.guilds.cache.get("1105456989108178984").emojis.cache.find((emoji) => emoji.name === "G15").id;
@@ -62,8 +62,8 @@ module.exports = {
                 // await confirmation.update({ content: `${i}`, components: [] });
                 const playerA = {
                     name: 'Taradora',
-                    hp: 10000,
-                    maxHp: 10000,
+                    hp: 1000,
+                    maxHp: 1000,
                     def: 60,
                     atk: 90,
                     spd: 30,
@@ -73,9 +73,9 @@ module.exports = {
                 };
                   
                 const playerB = {
-                    name: 'Nanashi',
-                    hp: 9000,
-                    maxHp: 9000,
+                    name: 'Nanachi',
+                    hp: 900,
+                    maxHp: 900,
                     def: 60,
                     atk: 80,
                     spd: 100,
