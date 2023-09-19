@@ -1,16 +1,20 @@
+// Import library
 require('dotenv').config();
-const { Client, IntentsBitField } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 const mongoose = require('mongoose');
-const eventHandler = require('./handlers/eventHandler');
+
+// Import other files
+const eventHandler = require('./handlers/eventHandler.js');
+
 
 const client = new Client({
     intents: [
-        IntentsBitField.Flags.Guilds,
-        IntentsBitField.Flags.GuildMembers,
-        IntentsBitField.Flags.GuildMessages,
-        IntentsBitField.Flags.GuildPresences,
-        IntentsBitField.Flags.MessageContent,
-    ],
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.MessageContent,
+    ]
 });
 
 (async () => {
@@ -21,6 +25,6 @@ const client = new Client({
         eventHandler(client);
         client.login(process.env.TOKEN);
     } catch (error) {
-        console.log(`Connection Error: ${error}`)
+        console.log(`Connection Error: ${error}`);
     }
 })();

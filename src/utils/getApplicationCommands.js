@@ -1,4 +1,4 @@
-module.exports = async (client, guildId) => {
+module.exports = async (client, guildId= false) => {
     let applicationCommands;
 
     if (guildId) {

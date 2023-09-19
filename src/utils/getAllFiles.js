@@ -1,10 +1,13 @@
-const fs = require('fs');
+const fs = require('fs'); // File system module
 const path = require('path');
 
 module.exports = (directory, foldersOnly = false) => {
     let fileNames = [];
-    const files = fs.readdirSync(directory, { withFileTypes: true });
 
+    // Read the contents of the directory and get an array of file/folder information
+    const files = fs.readdirSync(directory, {withFileTypes: true});
+
+    // Iterate through each file/folder information object
     for (const file of files) {
         const filePath = path.join(directory, file.name);
 
@@ -18,5 +21,6 @@ module.exports = (directory, foldersOnly = false) => {
             }
         }
     }
+
     return fileNames;
 };

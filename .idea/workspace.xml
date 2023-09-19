@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="33beb57a-6e6e-4e23-a5ca-0c1b7308612c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/battle/pvp.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/economy/coin.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/economy/daily.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/misc/ping.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/profile/profile.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/profile/register.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events/interactionCreate/handleCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/events/interactionCreate/handleCommands.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events/ready/01registerCommands.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/events/ready/consoleLog.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/exception/command.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/exception/userNF.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/handlers/eventHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/eventHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/User.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/Account.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/areCommandsDifferent.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/areCommandsDifferent.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/getAllFiles.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/getAllFiles.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/getApplicationCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/getApplicationCommands.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/getLocalCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/getLocalCommands.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="2VZT6mnnZ36sT5I2yNoYuTCu5EY" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Storage/Programming/Project Dev/Anitopia&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="33beb57a-6e6e-4e23-a5ca-0c1b7308612c" name="Changes" comment="" />
+      <created>1695042432954</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1695042432954</updated>
+      <workItem from="1695042432957" duration="8009000" />
+      <workItem from="1695054325289" duration="1945000" />
+      <workItem from="1695083390377" duration="33522000" />
+      <workItem from="1695139718813" duration="125000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
