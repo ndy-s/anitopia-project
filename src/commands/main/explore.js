@@ -6,8 +6,8 @@ module.exports = {
      *
      * @param {Client} client
      * @param {Interaction} interaction
+     * @param followUp
      */
-
     callback: async (client, interaction, followUp = false) => {
 
         const exploreRouteSelect = new StringSelectMenuBuilder()

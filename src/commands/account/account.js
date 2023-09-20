@@ -1,7 +1,6 @@
 const { Client, Interaction, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
-    ModalBuilder, TextInputBuilder, TextInputStyle
-} = require('discord.js');
-const { footerText } = require('../../../config.json');
+    ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { footerText, accountCommandTag } = require('../../../config.json');
 
 const Account = require('../../models/Account');
 // Import exceptions
@@ -12,8 +11,8 @@ module.exports = {
      *
      * @param {Client} client
      * @param {Interaction} interaction
+     * @param followUp
      */
-
     callback: async (client, interaction, followUp = false) => {
         try {
             let account = await Account.findOne({
@@ -85,64 +84,82 @@ module.exports = {
             let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
 
             while (true) {
-                let confirmation = await response.awaitMessageComponent({
-                    filter: collectorFilter,
-                    time: 300000
-                });
+                try {
+                    let confirmation = await response.awaitMessageComponent({
+                        filter: collectorFilter,
+                        time: 300_000
+                    });
 
-                if (confirmation.customId === 'accountSelect') {
-                    if (confirmation.values.includes('customize')) {
-                        const customizeProfileModal = new ModalBuilder()
-                            .setCustomId('customizeProfileModal')
-                            .setTitle('Customize Profile');
+                    if (confirmation.customId === 'accountSelect') {
+                        if (confirmation.values.includes('customize')) {
+                            const customizeProfileModal = new ModalBuilder()
+                                .setCustomId('customizeProfileModal')
+                                .setTitle('Customize Profile');
 
-                        const usernameInput = new TextInputBuilder()
-                            .setCustomId('usernameInput')
-                            .setLabel('Username')
-                            .setStyle(TextInputStyle.Short)
-                            .setValue(account.username);
+                            const usernameInput = new TextInputBuilder()
+                                .setCustomId('usernameInput')
+                                .setLabel('Username')
+                                .setStyle(TextInputStyle.Short)
+                                .setValue(account.username);
 
-                        const bioInput = new TextInputBuilder()
-                            .setCustomId('bioInput')
-                            .setLabel("Biography")
-                            .setStyle(TextInputStyle.Paragraph)
-                            .setValue(account.bio);
+                            const bioInput = new TextInputBuilder()
+                                .setCustomId('bioInput')
+                                .setLabel("Biography")
+                                .setStyle(TextInputStyle.Paragraph)
+                                .setValue(account.bio);
 
-                        customizeProfileModal.addComponents(
-                            new ActionRowBuilder().addComponents(usernameInput),
-                            new ActionRowBuilder().addComponents(bioInput),
-                        );
+                            customizeProfileModal.addComponents(
+                                new ActionRowBuilder().addComponents(usernameInput),
+                                new ActionRowBuilder().addComponents(bioInput),
+                            );
 
-                        await confirmation.showModal(customizeProfileModal);
+                            await confirmation.showModal(customizeProfileModal);
 
-                        const submitted = await confirmation.awaitModalSubmit({
-                            time: 60000,
-                            filter: i => i.user.id === confirmation.user.id,
-                        }).catch(error => {
-                            console.error(error)
-                            return null
-                        });
-
-                        if (submitted) {
-                            await submitted.reply({
-                                content: "Good Job, success!"
+                            const submitted = await confirmation.awaitModalSubmit({
+                                time: 60000,
+                                filter: i => i.user.id === confirmation.user.id,
+                            }).catch(error => {
+                                console.error(error)
+                                return null
                             });
 
-                            if (followUp === true) {
-                                response = await response.edit({
-                                    components: [new ActionRowBuilder().addComponents(accountSelect)],
+                            if (submitted) {
+                                await submitted.reply({
+                                    content: "Good Job, success!"
                                 });
-                            } else {
-                                response = await interaction.editReply({
-                                    components: [new ActionRowBuilder().addComponents(accountSelect)],
-                                });
-                            }
 
+                                if (followUp === true) {
+                                    response = await response.edit({
+                                        components: [new ActionRowBuilder().addComponents(accountSelect)],
+                                    });
+                                } else {
+                                    response = await interaction.editReply({
+                                        components: [new ActionRowBuilder().addComponents(accountSelect)],
+                                    });
+                                }
+
+                            }
+                        } else {
+                            console.log("Working too!");
                         }
-                    } else {
-                        console.log("Working too!");
                     }
+                } catch (error) {
+                    console.log(`Account Selection Error: ${error}`);
+                    embed.setDescription(`**Biography**\n\`\`\` ${account.bio} \`\`\`\n:hourglass_flowing_sand: **Command Timeout:** This command is __only active for 5 minutes__. To use it again, please **type** ${accountCommandTag}.`);
+                    if (followUp === true) {
+                        await response.edit({
+                            embeds: [embed],
+                            components: []
+                        });
+                    } else {
+                        await interaction.editReply({
+                            embeds: [embed],
+                            components: []
+                        });
+                    }
+                    break;
                 }
+
             }
         } catch (error) {
             console.log(`Account Command Error: ${error}`);

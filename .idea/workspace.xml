@@ -10,10 +10,6 @@
       <change beforePath="$PROJECT_DIR$/src/commands/account/account.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/account/account.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/commands/account/register.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/account/register.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/commands/main/explore.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/main/explore.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/events/interactionCreate/handleCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/events/interactionCreate/handleCommands.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/exceptions/commandNotAllowed.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/exceptions/commandNotAllowed.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/exceptions/registrationNotAllowed.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/exceptions/registrationNotAllowed.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/Account.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/Account.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,7 +59,7 @@
       <workItem from="1695083390377" duration="33522000" />
       <workItem from="1695139718813" duration="2713000" />
       <workItem from="1695170963094" duration="20513000" />
-      <workItem from="1695210997625" duration="12850000" />
+      <workItem from="1695210997625" duration="15996000" />
     </task>
     <servers />
   </component>
