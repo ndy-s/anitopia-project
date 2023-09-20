@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { footerText } = require('../../config.json');
 
 module.exports = (interaction) => {
     interaction.reply({
@@ -8,7 +9,7 @@ module.exports = (interaction) => {
                 .setTitle('Command Not Allowed')
                 .setDescription("This command can **only** be used **in a server**. Please run it within a server.")
                 .setFooter({
-                    text: 'For assistance or to report issues, please contact our support.'
+                    text: footerText
                 })
         ],
         ephemeral: true,

@@ -1,8 +1,8 @@
 const { devs, testServer } = require('../../../config.json');
 
 const getLocalCommands = require('../../utils/getLocalCommands');
-const register = require('../../commands/account/register');
 const Account = require('../../models/Account');
+const registerCallback = require('../../commands/account/register');
 
 // Import exceptions
 const accountNotFound = require('../../exceptions/accountNotFound');
@@ -11,8 +11,12 @@ const commandNotAllowed = require("../../exceptions/commandNotAllowed");
 module.exports = async (client, interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
-    const localCommands = getLocalCommands();
+    if (!interaction.inGuild()) {
+        commandNotAllowed(interaction);
+        return;
+    }
 
+    const localCommands = getLocalCommands();
     try {
         const commandObject = localCommands.find(
             (cmd) => cmd.name === interaction.commandName
@@ -66,22 +70,19 @@ module.exports = async (client, interaction) => {
             }
         }
 
-        if (!interaction.inGuild()) {
-            commandNotAllowed(interaction);
-        } else {
-            const account = await Account.findOne({
-                accountId: interaction.member.id,
-                guildId: interaction.guild.id
-            })
+        const account = await Account.findOne({
+            accountId: interaction.member.id,
+            guildId: interaction.guild.id
+        });
 
-            if (account) {
-                await commandObject.callback(client, interaction);
-            } else {
-                console.log(interaction.command.id);
-                await register.callback(client, interaction);
-            }
+        if (!account) {
+            await registerCallback.callback(client, interaction);
+        } else if (account) {
+            await commandObject.callback(client, interaction);
         }
+
     } catch (error) {
         console.log(`There was an error running this handle command: ${error}`);
     }
+
 };

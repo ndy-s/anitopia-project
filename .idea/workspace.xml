@@ -5,30 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="33beb57a-6e6e-4e23-a5ca-0c1b7308612c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/battle/pvp.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/economy/coin.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/economy/daily.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/misc/ping.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/profile/profile.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/commands/profile/register.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/account/account.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/account/account.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/account/register.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/account/register.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/main/explore.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/main/explore.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/events/interactionCreate/handleCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/events/interactionCreate/handleCommands.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/events/ready/01registerCommands.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/events/ready/consoleLog.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/exception/command.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/exception/userNF.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/handlers/eventHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/handlers/eventHandler.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/models/User.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/Account.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/areCommandsDifferent.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/areCommandsDifferent.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/getAllFiles.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/getAllFiles.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/getApplicationCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/getApplicationCommands.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/getLocalCommands.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/getLocalCommands.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/exceptions/commandNotAllowed.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/exceptions/commandNotAllowed.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/exceptions/registrationNotAllowed.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/exceptions/registrationNotAllowed.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/models/Account.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/models/Account.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +45,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Storage\Programming\Project Dev\Anitopia\src\modalHandler\account" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -71,7 +61,9 @@
       <workItem from="1695042432957" duration="8009000" />
       <workItem from="1695054325289" duration="1945000" />
       <workItem from="1695083390377" duration="33522000" />
-      <workItem from="1695139718813" duration="125000" />
+      <workItem from="1695139718813" duration="2713000" />
+      <workItem from="1695170963094" duration="20513000" />
+      <workItem from="1695210997625" duration="12850000" />
     </task>
     <servers />
   </component>

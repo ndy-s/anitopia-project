@@ -1,8 +1,11 @@
-const { Client, Interaction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder,
-    StringSelectMenuOptionBuilder
-} = require('discord.js');
+const { Client, Interaction, EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { footerText } = require('../../../config.json');
+
 const Account = require('../../models/Account');
+const accountCallback = require('./account');
+const exploreCallback = require('../main/explore');
 const registrationNotAllowed = require('../../exceptions/registrationNotAllowed');
+
 module.exports = {
     /**
      *
@@ -18,53 +21,47 @@ module.exports = {
 
         if (account) {
             registrationNotAllowed(interaction);
-        } else {
-            account = new Account({
-                ...{
-                    accountId: interaction.member.id,
-                    guildId: interaction.guild.id
-                }
-            });
+            return;
         }
 
-        const startTutorialButton = new ButtonBuilder()
-            .setCustomId('startTutorial')
-            .setLabel('Start Tutorial')
-            .setStyle(ButtonStyle.Success);
+        account = new Account({
+            ...{
+                accountId: interaction.member.id,
+                guildId: interaction.guild.id,
+                username: interaction.user.username
+            }
+        });
 
-        const skipTutorialButton = new ButtonBuilder()
-            .setCustomId('skipTutorial')
-            .setLabel('Skip Tutorial')
-            .setStyle(ButtonStyle.Primary);
-
-        const row = new ActionRowBuilder()
+        const tutorialButtonRow = new ActionRowBuilder()
             .addComponents(
-                startTutorialButton,
-                skipTutorialButton
+                new ButtonBuilder()
+                    .setCustomId('startTutorial')
+                    .setLabel('Start Tutorial')
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                    .setCustomId('skipTutorial')
+                    .setLabel('Skip Tutorial')
+                    .setStyle(ButtonStyle.Primary),
             );
 
-
-        // Interaction reply
         const response = await interaction.reply({
             embeds: [
                 new EmbedBuilder()
                     .setColor('DarkRed')
+                    .setAuthor({
+                        name: interaction.user.globalName,
+                        iconURL: interaction.user.displayAvatarURL(),
+                    })
                     .setTitle('Megumin')
                     .setThumbnail('https://www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png')
                     .setDescription(`
-                        EXPLOSION!! Ahem... Greetings, wanderer <@!${interaction.user.id}>! 
-                        I am Megumin, the great Arch-Wizard of Anitopia, and I extend a warm welcome to our extraordinary realm.
-                                               
-                        You have gained access to this sacred land, where adventures and mysteries await. Enjoy your time in Anitopia, and may your adventures be as grand as the biggest explosion!
-                    
-                        If you're new, click the **Start Tutorial** button to begin your journey. If you wish to skip the tutorial, simply click the **Skip Tutorial** button.
-
+                        EXPLOSION!! Ahem... Greetings, wanderer <@!${interaction.user.id}>!\nI am Megumin, the great Arch-Wizard of Anitopia, and I extend a warm welcome to our extraordinary realm.\n\nYou have gained access to this sacred land, where adventures and mysteries await. Enjoy your time in Anitopia, and may your adventures be as grand as the biggest explosion!\nIf you're new, click the **Start Tutorial** button to begin your journey. If you wish to skip the tutorial, simply click the **Skip Tutorial** button.
                     `)
                     .setFooter({
-                        text: 'For assistance or to report issues, please contact our support.'
+                        text: footerText
                     })
             ],
-            components: [row],
+            components: [tutorialButtonRow],
         });
         const collectorFilter = i => i.user.id === interaction.user.id;
 
@@ -82,6 +79,10 @@ module.exports = {
                     embeds: [
                         new EmbedBuilder()
                             .setColor('DarkRed')
+                            .setAuthor({
+                                name: interaction.user.globalName,
+                                iconURL: interaction.user.displayAvatarURL(),
+                            })
                             .setTitle('TBA soon!')
                     ],
                     components: [],
@@ -98,22 +99,22 @@ module.exports = {
                     .setLabel('Account')
                     .setStyle(ButtonStyle.Primary);
 
-                // await account.save();
+                await account.save();
 
                 const confirmationResponse = await interaction.editReply({
                     embeds: [
                         new EmbedBuilder()
                             .setColor('DarkRed')
+                            .setAuthor({
+                                name: interaction.user.globalName,
+                                iconURL: interaction.user.displayAvatarURL(),
+                            })
                             .setTitle(`Welcome to Anitopia!`)
                             .setDescription(`
-                                Congratulations  <@!${interaction.user.id}>, your citizenship has been officially registered in **Anitopia realm**.
-    
-                                To access your account information, **use the command** </account:1153540743038783508>. To embark on your journey, **type** </explore:1153593389091143690> and uncover the wonders that await you.
-    
-                                🌟 **Enjoy your time in Anitopia and have fun!** 🌟
+                                Congratulations  <@!${interaction.user.id}>, your citizenship has been officially registered in **Anitopia realm**.\n\nTo access your account information, **use the command** </account:1153540743038783508>. To embark on your journey, **type** </explore:1153593389091143690> and uncover the wonders that await you.\n\n🌟 **Enjoy your time in Anitopia and have fun!** 🌟
                             `)
                             .setFooter({
-                                text: 'For assistance or to report issues, please contact our support.'
+                                text: footerText
                             })
                     ],
                     components: [
@@ -126,53 +127,29 @@ module.exports = {
 
                 });
 
-                const confirmationCollectorFilter = i => i.user.id === interaction.user.id;
-
                 try {
                     const confirmationResponse = await response.awaitMessageComponent({
-                        filter: confirmationCollectorFilter,
+                        filter: collectorFilter,
                         time: 300000
                     });
 
                     if (confirmationResponse.customId === 'explore') {
                         await confirmationResponse.deferUpdate();
-                        const exploreMapSelect = new StringSelectMenuBuilder()
-                            .setCustomId('exploreMap')
-                            .setPlaceholder('Select your destination!')
-                            .addOptions(
-                                new StringSelectMenuOptionBuilder()
-                                    .setLabel('Story')
-                                    .setDescription('TBA Soon!')
-                                    .setValue('story'),
-                                new StringSelectMenuOptionBuilder()
-                                    .setLabel('Quest')
-                                    .setDescription('TBA Soon!')
-                                    .setValue('quest')
-                            );
-
                         await interaction.editReply({
                             components: []
                         });
 
-                        await interaction.followUp({
-                            embeds: [
-                                new EmbedBuilder()
-                                    .setColor('DarkRed')
-                                    .setTitle('Explore Map')
-                                    .setImage('https://i.pinimg.com/736x/0c/c8/b9/0cc8b9ee6da6a77a5940a24cc9e040f6.jpg')
-                                    .setFooter({
-                                        text: 'For assistance or to report issues, please contact our support.'
-                                    })
-                            ],
-                            components: [
-                                new ActionRowBuilder().addComponents(exploreMapSelect)
-                            ]
-                        });
+                        await exploreCallback.callback(client, interaction, followUp = true);
                     } else if (confirmationResponse.customId === 'account') {
-                        console.log('YES')
+                        await confirmationResponse.deferUpdate();
+                        await interaction.editReply({
+                            components: []
+                        });
+
+                        await accountCallback.callback(client, interaction, followUp = true);
                     }
                 } catch (error) {
-                    console.log(`Next Register Command Error: ${error}`)
+                    console.log(`Success Register Command Error: ${error}`)
                     await interaction.editReply({
                         components: []
                     });
@@ -185,18 +162,17 @@ module.exports = {
                 embeds: [
                     new EmbedBuilder()
                         .setColor('DarkRed')
-                        .setTitle('Megumin: Welcome to Anitopia!')
+                        .setAuthor({
+                            name: interaction.user.globalName,
+                            iconURL: interaction.user.displayAvatarURL(),
+                        })
+                        .setTitle('Megumin')
                         .setThumbnail('https://www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png')
                         .setDescription(`
-                            EXPLOSION!! Ahem... Greetings, wanderer <@!${interaction.user.id}>! 
-                            I am Megumin, the great Arch-Wizard of Anitopia, and I extend a warm welcome to our extraordinary realm.
-                    
-                            You have gained access to this sacred land, where adventures and mysteries await. Enjoy your time in Anitopia, and may your adventures be as grand as the biggest explosion!
-                        
-                            :hourglass_flowing_sand: **Command Timeout:** This command is __only active for 5 minutes__. To use it again, please run </register:1153581756713283614>.
+                            EXPLOSION!! Ahem... Greetings, wanderer <@!${interaction.user.id}>!\nI am Megumin, the great Arch-Wizard of Anitopia, and I extend a warm welcome to our extraordinary realm.\n\nYou have gained access to this sacred land, where adventures and mysteries await. Enjoy your time in Anitopia, and may your adventures be as grand as the biggest explosion!\n\n:hourglass_flowing_sand: **Command Timeout:** This command is __only active for 5 minutes__. To use it again, please run </register:1153581756713283614>.
                         `)
                         .setFooter({
-                            text: 'For assistance or to report issues, please contact our support.'
+                            text: footerText
                         })
                 ],
                 components: []
@@ -204,6 +180,7 @@ module.exports = {
         }
 
     },
+
     name: 'register',
     description: 'TBA soon!',
 };

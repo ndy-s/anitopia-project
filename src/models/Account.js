@@ -9,15 +9,20 @@ const accountSchema = new Schema({
         type: String,
         required: true,
     },
-    stamina: {
-        type: Number,
-        require: 0,
+    username: {
+        type: String,
+        required: true,
     },
-    coin: {
+    bio: {
+        type: String,
+        default: 'This user has not provided a bio yet.',
+        maxLength: 100
+    },
+    goldPieces: {
         type: Number,
         default: 0,
     },
-    aniCoin: {
+    starlightGems: {
         type: Number,
         default: 0,
     },
