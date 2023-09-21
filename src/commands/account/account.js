@@ -115,29 +115,15 @@ module.exports = {
 
                             await confirmation.showModal(customizeProfileModal);
 
-                            const submitted = await confirmation.awaitModalSubmit({
-                                time: 60000,
-                                filter: i => i.user.id === confirmation.user.id,
-                            }).catch(error => {
-                                console.error(error)
-                                return null
-                            });
 
-                            if (submitted) {
-                                await submitted.reply({
-                                    content: "Good Job, success!"
+                            if (followUp === true) {
+                                response = await response.edit({
+                                    components: [new ActionRowBuilder().addComponents(accountSelect)],
                                 });
-
-                                if (followUp === true) {
-                                    response = await response.edit({
-                                        components: [new ActionRowBuilder().addComponents(accountSelect)],
-                                    });
-                                } else {
-                                    response = await interaction.editReply({
-                                        components: [new ActionRowBuilder().addComponents(accountSelect)],
-                                    });
-                                }
-
+                            } else {
+                                response = await interaction.editReply({
+                                    components: [new ActionRowBuilder().addComponents(accountSelect)],
+                                });
                             }
                         } else {
                             console.log("Working too!");
