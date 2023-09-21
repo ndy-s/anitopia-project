@@ -116,7 +116,7 @@ module.exports = {
 
                 await account.save();
 
-                const confirmationResponse = await interaction.editReply({
+                const registerResponse = await interaction.editReply({
                     embeds: [
                         new EmbedBuilder()
                             .setColor('DarkRed')
@@ -143,7 +143,7 @@ module.exports = {
                 });
 
                 try {
-                    const confirmationResponse = await response.awaitMessageComponent({
+                    const confirmationResponse = await registerResponse.awaitMessageComponent({
                         filter: collectorFilter,
                         time: 300_000
                     });

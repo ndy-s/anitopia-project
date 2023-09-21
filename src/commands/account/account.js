@@ -1,5 +1,6 @@
 const { Client, Interaction, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder,
-    ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+    ModalBuilder, TextInputBuilder, TextInputStyle, ButtonBuilder, ButtonStyle
+} = require('discord.js');
 const { footerText, accountCommandTag } = require('../../../config.json');
 
 const Account = require('../../models/Account');
@@ -28,6 +29,10 @@ module.exports = {
                         .setLabel('Customize Profile')
                         .setDescription('TBA Soon!')
                         .setValue('customize'),
+                    new StringSelectMenuOptionBuilder()
+                        .setLabel('Daily Rewards')
+                        .setDescription('TBA Soon!')
+                        .setValue('daily'),
                     new StringSelectMenuOptionBuilder()
                         .setLabel('Redeem Code')
                         .setDescription('TBA Soon!')
@@ -135,6 +140,130 @@ module.exports = {
                                     components: [new ActionRowBuilder().addComponents(accountSelect)],
                                 });
                             }
+                        } else if (confirmation.values.includes('daily')) {
+                            await confirmation.deferUpdate();
+
+                            const lastDailyDate = new Date(account.lastDaily);
+                            const currentDate = new Date();
+
+                            let dailyGoldPieces = 1000;
+                            let dailyBonus = 0;
+                            const dailyStarlightGems = 10;
+
+                            const options = {
+                                year: 'numeric',
+                                month: 'numeric',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: false,
+                                timeZoneName: 'short',
+                            };
+
+                            const formattedLastClaimDate = lastDailyDate.toLocaleString(undefined, options);
+
+                            // Calculate the time remaining until the next claim cooldown
+                            const nextClaimDate = new Date(lastDailyDate);
+                            nextClaimDate.setHours(nextClaimDate.getHours() + 24); // Add 24 hours for the cooldown
+                            const timeUntilNextClaim = nextClaimDate - currentDate; // Calculate the difference in milliseconds
+
+                            const hoursUntilNextClaim = Math.max(0, Math.floor(timeUntilNextClaim / (60 * 60 * 1000)));
+                            const minutesUntilNextClaim = Math.max(0, Math.floor((timeUntilNextClaim % (60 * 60 * 1000)) / (60 * 1000)));
+
+                            const dailyRewardsEmbed = new EmbedBuilder()
+                                .setColor('DarkRed')
+                                .setAuthor({
+                                    name: interaction.user.globalName,
+                                    iconURL: interaction.user.displayAvatarURL(),
+                                })
+                                .setTitle(`${account.username}'s Daily Rewards`)
+                                .setDescription(`Welcome to the Daily Rewards system! 🎉\n\nEvery day when you log in, you have the opportunity to claim exciting rewards that get better as you continue your journey in Anitopia.`)
+                                .addFields(
+                                    {
+                                        name: 'Daily Streak',
+                                        value: `\`${account.dailyStreak} ${account.dailyStreak === 1 ? 'streak' : 'streaks'}\``,
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Last Claim Date',
+                                        value: `\`${formattedLastClaimDate}\``,
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Time Until Next Claim',
+                                        value: `Cooldown: \`${hoursUntilNextClaim} hour${hoursUntilNextClaim !== 1 ? 's' : ''} ${minutesUntilNextClaim} minute${minutesUntilNextClaim !== 1 ? 's' : ''}\``,
+                                        inline: true
+                                    });
+
+                            const backButton = new ButtonBuilder()
+                                .setCustomId('backButton')
+                                .setLabel('Back')
+                                .setStyle(ButtonStyle.Secondary);
+
+                            const claimButton = new ButtonBuilder()
+                                .setCustomId('claimButton')
+                                .setLabel('Claim')
+                                .setStyle(ButtonStyle.Success)
+                                .setDisabled(lastDailyDate.toDateString() === currentDate.toDateString());
+
+                            const claimRow = new ActionRowBuilder()
+                                .addComponents(
+                                    backButton,
+                                    claimButton
+                                );
+
+                            const claimResponse = await interaction.editReply({
+                                embeds: [ dailyRewardsEmbed ],
+                                components: [ claimRow ]
+                            });
+
+                            const claimConfirmation = await claimResponse.awaitMessageComponent({
+                                filter: collectorFilter,
+                                time: 300_000
+                            });
+
+                            if (claimConfirmation.customId === 'claimButton') {
+                                await claimConfirmation.deferUpdate();
+
+                                account.lastDaily = currentDate;
+                                account.goldPieces += dailyGoldPieces;
+                                account.starlightGems += dailyStarlightGems;
+
+                                if (account.dailyStreak < 29) {
+                                    const weeklyStreak = Math.min(Math.ceil(account.dailyStreak / 7), 4);
+                                    for (let i = 1; i <= weeklyStreak; i++) {
+                                        let dailyBonusCalc = 500;
+                                        for (let j = 1; j < i; j++) {
+                                            dailyBonusCalc *= j;
+                                        }
+                                        dailyBonus += dailyBonusCalc;
+                                    }
+                                    if (weeklyStreak === 3) dailyBonus += 500;
+                                } else {
+                                    dailyBonus += 5000;
+                                }
+
+                                account.goldPieces += dailyBonus;
+                                const oneDay = 24 * 60 * 60 * 1000;
+                                const daysDifference = Math.floor((currentDate - lastDailyDate) / oneDay);
+                                account.dailyStreak = (daysDifference <= 1) ? account.dailyStreak + 1 : 1;
+                                await account.save();
+
+                                await interaction.editReply({
+                                    embeds: [ dailyRewardsEmbed ],
+                                    components: [ claimRow ]
+                                });
+
+                                await interaction.followUp({
+                                    content: "Claim Success!",
+                                    ephemeral: true
+                                });
+                            } else if (claimConfirmation.customId === 'backButton') {
+                                console.log('lol');
+                            }
+
+
                         } else if (confirmation.values.includes('redeem')) {
                             await confirmation.deferUpdate();
                             await interaction.followUp({
