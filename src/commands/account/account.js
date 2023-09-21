@@ -40,7 +40,7 @@ module.exports = {
                     name: interaction.user.globalName,
                     iconURL: interaction.user.displayAvatarURL(),
                 })
-                .setTitle(`${interaction.user.globalName}'s Account`)
+                .setTitle(`${account.username}'s Account`)
                 .setThumbnail(interaction.user.displayAvatarURL())
                 .setDescription(`**Biography**\n\`\`\` ${account.bio} \`\`\`\nExplore more options by selecting from the choices below. To personalize your profile, simply click on **Customize Profile** in the menu.`)
                 .addFields(
@@ -55,8 +55,8 @@ module.exports = {
                         inline: true
                     },
                     {
-                        name: 'Username',
-                        value: `\`${account.username}\``,
+                        name: 'Account Code',
+                        value: `\`${account.code}\``,
                         inline: true
                     },
                     {
@@ -90,6 +90,12 @@ module.exports = {
                         time: 300_000
                     });
 
+                    accountSelect.options.forEach(option => {
+                        if (confirmation.values.includes(option.data.value)) {
+                            option.setDefault(true);
+                        }
+                    });
+
                     if (confirmation.customId === 'accountSelect') {
                         if (confirmation.values.includes('customize')) {
                             const customizeProfileModal = new ModalBuilder()
@@ -98,15 +104,20 @@ module.exports = {
 
                             const usernameInput = new TextInputBuilder()
                                 .setCustomId('usernameInput')
-                                .setLabel('Username')
+                                .setLabel("Username")
                                 .setStyle(TextInputStyle.Short)
-                                .setValue(account.username);
+                                .setValue(account.username)
+                                .setMinLength(2)
+                                .setMaxLength(32)
+                                .setRequired(true);
 
                             const bioInput = new TextInputBuilder()
                                 .setCustomId('bioInput')
                                 .setLabel("Biography")
                                 .setStyle(TextInputStyle.Paragraph)
-                                .setValue(account.bio);
+                                .setValue(account.bio)
+                                .setMaxLength(100)
+                                .setRequired(false);
 
                             customizeProfileModal.addComponents(
                                 new ActionRowBuilder().addComponents(usernameInput),
@@ -114,7 +125,6 @@ module.exports = {
                             );
 
                             await confirmation.showModal(customizeProfileModal);
-
 
                             if (followUp === true) {
                                 response = await response.edit({
@@ -125,8 +135,11 @@ module.exports = {
                                     components: [new ActionRowBuilder().addComponents(accountSelect)],
                                 });
                             }
-                        } else {
-                            console.log("Working too!");
+                        } else if (confirmation.values.includes('redeem')) {
+                            await confirmation.deferUpdate();
+                            await interaction.followUp({
+                                content: "TBA SOON! BOS"
+                            });
                         }
                     }
                 } catch (error) {

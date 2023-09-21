@@ -12,6 +12,12 @@ const accountSchema = new Schema({
     username: {
         type: String,
         required: true,
+        minLength: 2,
+        maxLength: 32,
+    },
+    code: {
+        type: String,
+        required: true,
     },
     bio: {
         type: String,

@@ -1,6 +1,8 @@
 const { Client, Interaction, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder} = require('discord.js');
 const { footerText } = require('../../../config.json');
 
+const accountCallback = require('../account/account');
+
 module.exports = {
     /**
      *
@@ -11,7 +13,7 @@ module.exports = {
     callback: async (client, interaction, followUp = false) => {
 
         const exploreRouteSelect = new StringSelectMenuBuilder()
-            .setCustomId('exploreRoute')
+            .setCustomId('exploreRouteSelect')
             .setPlaceholder('Click to select your destination!')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
@@ -36,16 +38,32 @@ module.exports = {
                 text: footerText
             })
 
-        if (followUp === true) {
-            await interaction.followUp({
-                embeds: [embed],
-                components: [new ActionRowBuilder().addComponents(exploreRouteSelect)]
+        const responseOptions = {
+            embeds: [ embed ],
+            components: [new ActionRowBuilder().addComponents(exploreRouteSelect)]
+        };
+
+        const collectorFilter = i => i.user.id === interaction.user.id;
+        let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
+
+        try {
+            let confirmation = await response.awaitMessageComponent({
+                filter: collectorFilter,
+                time: 300_000
             });
-        } else {
-            await interaction.reply({
-                embeds: [embed],
-                components: [new ActionRowBuilder().addComponents(exploreRouteSelect)]
-            });
+
+            if (confirmation.customId === 'exploreRouteSelect') {
+                if (confirmation.values.includes('account')) {
+                    await confirmation.deferUpdate();
+                    await interaction.editReply({
+                        components: []
+                    });
+
+                    await accountCallback.callback(client, interaction, followUp=true);
+                }
+            }
+        } catch (error) {
+            console.log(`Explore Command Error: ${error}`);
         }
     },
 

@@ -5,6 +5,7 @@ const Account = require('../../models/Account');
 const accountCallback = require('./account');
 const exploreCallback = require('../main/explore');
 const registrationNotAllowed = require('../../exceptions/registrationNotAllowed');
+const generateRandomCode = require('../../utils/generateRandomCode');
 
 module.exports = {
     /**
@@ -24,11 +25,25 @@ module.exports = {
             return;
         }
 
+        let generatedCode, existingAccount, retries = 0, maxRetries = 5, codeLength = 4;
+
+        do {
+            generatedCode = generateRandomCode(codeLength);
+            existingAccount = await Account.findOne({ code: generatedCode });
+            retries++;
+
+            if (existingAccount && retries >= maxRetries) {
+                codeLength++;
+                retries = 0;
+            }
+        } while (existingAccount);
+
         account = new Account({
             ...{
                 accountId: interaction.member.id,
                 guildId: interaction.guild.id,
-                username: interaction.user.username
+                username: interaction.user.globalName,
+                code: generatedCode,
             }
         });
 
