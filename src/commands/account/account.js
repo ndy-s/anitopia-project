@@ -4,8 +4,8 @@ const { Client, Interaction, EmbedBuilder, StringSelectMenuBuilder, StringSelect
 const { footerText, accountCommandTag } = require('../../../config.json');
 
 const Account = require('../../models/Account');
-// Import exceptions
-const commandNotAllowed = require('../../exceptions/commandNotAllowed.js');
+
+// const commandNotAllowed = require('../../exceptions/commandNotAllowed.js');
 
 module.exports = {
     /**
@@ -131,17 +131,15 @@ module.exports = {
 
                             await confirmation.showModal(customizeProfileModal);
 
-                            if (followUp === true) {
-                                response = await response.edit({
-                                    components: [new ActionRowBuilder().addComponents(accountSelect)],
-                                });
-                            } else {
-                                response = await interaction.editReply({
-                                    components: [new ActionRowBuilder().addComponents(accountSelect)],
-                                });
-                            }
+                            const components = [new ActionRowBuilder().addComponents(accountSelect)];
+                            response = await (followUp ? response.edit({ components }) : interaction.editReply({ components }));
+
                         } else if (confirmation.values.includes('daily')) {
                             await confirmation.deferUpdate();
+                            let account = await Account.findOne({
+                                accountId: interaction.member.id,
+                                guildId: interaction.guild.id
+                            });
 
                             const lastDailyDate = new Date(account.lastDaily);
                             const currentDate = new Date();
@@ -194,7 +192,10 @@ module.exports = {
                                         name: 'Time Until Next Claim',
                                         value: `Cooldown: \`${hoursUntilNextClaim} hour${hoursUntilNextClaim !== 1 ? 's' : ''} ${minutesUntilNextClaim} minute${minutesUntilNextClaim !== 1 ? 's' : ''}\``,
                                         inline: true
-                                    });
+                                    })
+                                .setFooter({
+                                    text: footerText
+                                });
 
                             const backButton = new ButtonBuilder()
                                 .setCustomId('backButton')
@@ -213,11 +214,16 @@ module.exports = {
                                     claimButton
                                 );
 
-                            const claimResponse = await interaction.editReply({
-                                embeds: [ dailyRewardsEmbed ],
-                                components: [ claimRow ]
-                            });
+                            // const claimResponse = await interaction.editReply({
+                            //     embeds: [ dailyRewardsEmbed ],
+                            //     components: [ claimRow ]
+                            // });
 
+                            const embeds = [dailyRewardsEmbed];
+                            const components = [claimRow];
+                            claimResponse = await (followUp ? response.edit({ embeds, components }) : interaction.editReply({ embeds, components }));
+
+                            const collectorFilter = i => i.user.id === interaction.user.id;
                             const claimConfirmation = await claimResponse.awaitMessageComponent({
                                 filter: collectorFilter,
                                 time: 300_000
@@ -250,19 +256,21 @@ module.exports = {
                                 account.dailyStreak = (daysDifference <= 1) ? account.dailyStreak + 1 : 1;
                                 await account.save();
 
-                                await interaction.editReply({
-                                    embeds: [ dailyRewardsEmbed ],
-                                    components: [ claimRow ]
-                                });
+                                claimButton.setDisabled(true);
+
+
+                                await (followUp ? response.edit({ embeds, components }) : interaction.editReply({ embeds, components }));
+
 
                                 await interaction.followUp({
                                     content: "Claim Success!",
                                     ephemeral: true
                                 });
                             } else if (claimConfirmation.customId === 'backButton') {
-                                console.log('lol');
-                            }
+                                await claimConfirmation.deferUpdate();
 
+
+                            }
 
                         } else if (confirmation.values.includes('redeem')) {
                             await confirmation.deferUpdate();
