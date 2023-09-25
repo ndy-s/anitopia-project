@@ -26,7 +26,7 @@ module.exports = {
                 .setPlaceholder('Click to view more menu options!')
                 .addOptions(
                     new StringSelectMenuOptionBuilder()
-                        .setLabel('Customize Profile')
+                        .setLabel(`Customize Profile 🔴`)
                         .setDescription('TBA Soon!')
                         .setValue('customize'),
                     new StringSelectMenuOptionBuilder()

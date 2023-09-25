@@ -12,6 +12,7 @@
   "dependencies": {
     "discord.js": "^14.13.0",
     "dotenv": "^16.3.1",
+    "emoji-unicode-map": "^1.1.11",
     "mongoose": "^7.5.2"
   }
 }
