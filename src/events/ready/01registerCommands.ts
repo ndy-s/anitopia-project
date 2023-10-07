@@ -1,4 +1,4 @@
-import { Client } from "discord.js";
+import { ApplicationCommandOptionData, Client } from "discord.js";
 import getLocalCommands from "../../utils/getLocalCommands";
 import getApplicationCommands from "../../utils/getApplicationCommands";
 import areCommandsDifferent from "../../utils/areCommandsDifferent";
@@ -28,15 +28,27 @@ export default async (client: Client) => {
                     continue;
                 }
 
-                console.log(existingCommand.options);
-                console.log(localCommand.options);
+                if (areCommandsDifferent(existingCommand, localCommand)) {
+                    await applicationCommands.edit(existingCommand.id, {
+                        description, options: options as ApplicationCommandOptionData[], 
+                    });
 
-                
+                    console.log(`🔁 Edited command "${name}".`);
+                }
+            } else {
+                if (localCommand.deleted) {
+                    console.log(`⏩ Skipping registering command "${name}" as it's set to delete.`);
+                    continue;
+                }
+
+                await applicationCommands.create({
+                    name, description, options: options as ApplicationCommandOptionData[]
+                });
+
+                console.log(`👍 Registered command "${name}."`);
             }
-
         }
-
-    } catch (e) {
-
+    } catch (error) {
+        console.log(`Registering commands error: ${error}`);
     }
 };

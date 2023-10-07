@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionData, Client, Interaction } from "discord.js";
+import { ApplicationCommandOptionData, Client, Interaction, PermissionsString } from "discord.js";
 
 export interface CommandObject {
     name: string;
@@ -7,5 +7,7 @@ export interface CommandObject {
     devOnly: boolean;
     testOnly: boolean;
     deleted: boolean;
+    botPermissions: PermissionsString[] | [];
+    permissionsRequired: PermissionsString[] | [];
     callback: (client: Client, interaction: Interaction) => void;
 };

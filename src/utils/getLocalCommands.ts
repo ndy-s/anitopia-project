@@ -8,6 +8,7 @@ export default (exceptions: string[] = []) => {
     const commandCategories = getAllFiles(commandsPath, true);
 
     for (const commandCategory of commandCategories) {
+        if (path.basename(commandCategory) === 'exceptions' || path.basename(commandCategory) === 'modals') continue;
         const commandFiles = getAllFiles(commandCategory);
 
         for (const commandFile of commandFiles) {
