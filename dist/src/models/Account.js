@@ -1,6 +1,7 @@
-import { Schema, model } from 'mongoose';
-
-const accountSchema = new Schema({
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = require("mongoose");
+const accountSchema = new mongoose_1.Schema({
     accountId: {
         type: String,
         required: true,
@@ -49,6 +50,5 @@ const accountSchema = new Schema({
         default: new Date(0),
     },
 });
-
-const AccountModel = model('Account', accountSchema);
-export default AccountModel;
+const AccountModel = (0, mongoose_1.model)('Account', accountSchema);
+exports.default = AccountModel;

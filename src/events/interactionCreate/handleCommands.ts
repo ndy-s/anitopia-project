@@ -6,6 +6,7 @@ import AccountModel from '../../models/Account';
 import register from '../../commands/account/register';
 
 import commandNA from '../../commands/exceptions/commandNA';
+import cooldownMS from '../../commands/exceptions/cooldownMS';
 
 export default async (client: Client, interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -66,15 +67,20 @@ export default async (client: Client, interaction: CommandInteraction) => {
         }
 
         const account = await AccountModel.findOne({
-            aaccountId: 'id' in interaction.member ? interaction.member.id : undefined,
+            accountId: 'id' in interaction.member ? interaction.member.id : undefined,
             guildId: interaction.guild?.id
         });
 
-        if (!account) {
-            await register.callback(client, interaction);
-        } else if (account) {
-            await commandObject.callback(client, interaction);
-        }
+        if (await cooldownMS(interaction, commandObject) === false) return;
+
+
+        commandObject.callback(client, interaction);
+
+
+        // if (!account) {
+        //     await register.callback(client, interaction);
+        // } else if (account) {
+        // }
 
     } catch (error) {
         console.log(`There was an error running this handle command: ${error}`);
