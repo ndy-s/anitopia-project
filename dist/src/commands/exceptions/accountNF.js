@@ -5,7 +5,7 @@ const config_1 = require("../../config");
 exports.default = (interaction) => {
     interaction.reply({ embeds: [
             new discord_js_1.EmbedBuilder()
-                .setColor('Red')
+                .setColor('#FF0000')
                 .setAuthor({
                 name: `${interaction.user.username}#${interaction.user.discriminator}`,
                 iconURL: interaction.user.displayAvatarURL()

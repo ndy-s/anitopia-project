@@ -5,9 +5,9 @@ export default (interaction: CommandInteraction) => {
     interaction.reply({
         embeds: [
             new EmbedBuilder()
-                .setColor('Red')
-                .setTitle('Command Not Allowed')
-                .setDescription("This command can **only** be used **in a server**. Please run it within a server.")
+                .setColor('#FF0000')
+                .setTitle('⚠️ Command Not Available')
+                .setDescription("Sorry, this command is **server-specific** and cannot be used in direct messages. Please use this command within a server.")
                 .setFooter({
                     text: config.messages.footerText
                 })

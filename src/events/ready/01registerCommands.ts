@@ -9,13 +9,7 @@ export default async (client: Client) => {
         const applicationCommands = await getApplicationCommands(client);
 
         for (const localCommand of localCommands) {
-            const { 
-                name, 
-                description,
-                cooldown,
-                options,
-                callback
-            } = localCommand;
+            const { name, description, options } = localCommand;
 
             const existingCommand = applicationCommands.cache.find((cmd) => cmd.name === name);
 

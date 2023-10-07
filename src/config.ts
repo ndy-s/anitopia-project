@@ -4,7 +4,7 @@ export const config = {
     },
     commands: {
         registerCommandTag: "</register:1153581756713283614>",
-        accountCommandTag: "</account:1153540743038783508>",
-        exploreCommandTag: "</explore:1153593389091143690>",
+        profileCommandTag: "</profile:1153540743038783508>",
+        mainCommandTag: "</main:1153593389091143690>",
     },
 };

@@ -1,12 +1,14 @@
-import { Client, CommandInteraction } from 'discord.js';
+import { Client, CommandInteraction, EmbedBuilder } from 'discord.js';
 import { devs, testServer } from '../../../config.json';
 import getLocalCommands from '../../utils/getLocalCommands';
 
 import AccountModel from '../../models/Account';
+import redis from '../../lib/redis';
 import register from '../../commands/account/register';
 
 import commandNA from '../../commands/exceptions/commandNA';
 import cooldownMS from '../../commands/exceptions/cooldownMS';
+import { config } from '../../config';
 
 export default async (client: Client, interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -32,7 +34,15 @@ export default async (client: Client, interaction: CommandInteraction) => {
                 !devs.includes(interaction.member.id)
             ) {
                 interaction.reply({
-                    content: 'Only developers are allowed to run this command.',
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor('#FF0000')
+                            .setTitle('🚫 Access Denied')
+                            .setDescription("I'm sorry, but this command is restricted to developers only.")
+                            .setFooter({
+                                text: config.messages.footerText
+                            })
+                    ],
                     ephemeral: true,
                 });
                 return;
@@ -44,7 +54,15 @@ export default async (client: Client, interaction: CommandInteraction) => {
 
         if (commandObject.testOnly && !(interaction.guild?.id === testServer)) {
             (interaction as CommandInteraction).reply({
-                content: 'This command cannot be run here.',
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor('#FF0000')
+                        .setTitle('🚫 Command Restriction')
+                        .setDescription("I'm sorry, but this command is not allowed to be executed in this server.")
+                        .setFooter({
+                            text: config.messages.footerText
+                        })
+                ],
                 ephemeral: true,
             });
             return;
@@ -52,7 +70,15 @@ export default async (client: Client, interaction: CommandInteraction) => {
 
         if (commandObject.permissionsRequired?.some(permission => typeof interaction.member.permissions !== 'string' && !interaction.member.permissions.has(permission))) {
             interaction.reply({
-                content: 'Not enough permissions.',
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor('#FF0000')
+                        .setTitle('🚫 Permission Error')
+                        .setDescription("I'm sorry, but you don't have the necessary permissions to execute this command. Please verify your permissions and try again.")
+                        .setFooter({
+                            text: config.messages.footerText
+                        })
+                ],
                 ephemeral: true,
             });
             return;
@@ -60,26 +86,45 @@ export default async (client: Client, interaction: CommandInteraction) => {
 
         if (commandObject.botPermissions?.some(permission => !interaction.guild?.members.me?.permissions.has(permission))) {
             interaction.reply({
-                content: "I don't have enough permissions.",
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor('#FF0000')
+                        .setTitle('🚫 Permission Error')
+                        .setDescription("I'm sorry, but I don't have the necessary permissions to execute this command. Could you please verify my permissions and try again? I appreciate your cooperation!")
+                        .setFooter({
+                            text: config.messages.footerText
+                        })
+                ],
                 ephemeral: true,
             });
             return;
         }
 
-        const account = await AccountModel.findOne({
-            accountId: 'id' in interaction.member ? interaction.member.id : undefined,
-            guildId: interaction.guild?.id
-        });
-
         if (await cooldownMS(interaction, commandObject) === false) return;
 
+        // Redis Caching
+        const result = await redis.get(interaction.user.id);
+        let account;
 
+        if (result) {
+            account = JSON.parse(result);
+        } else {
+            account = await AccountModel.findOne({
+                accountId: 'id' in interaction.member ? interaction.member.id : undefined,
+                guildId: interaction.guild?.id
+            });
+
+            await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+        }
+
+        
+        // Temporary
         commandObject.callback(client, interaction);
-
 
         // if (!account) {
         //     await register.callback(client, interaction);
         // } else if (account) {
+        //     commandObject.callback(client, interaction);
         // }
 
     } catch (error) {

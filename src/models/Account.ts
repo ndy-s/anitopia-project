@@ -15,7 +15,7 @@ const accountSchema = new Schema({
         minLength: 2,
         maxLength: 32,
     },
-    code: {
+    token: {
         type: String,
         required: true,
     },
@@ -24,11 +24,11 @@ const accountSchema = new Schema({
         default: 'This user has not provided a bio yet.',
         maxLength: 100
     },
-    goldPieces: {
+    goldenCoins: {
         type: Number,
         default: 0,
     },
-    starlightGems: {
+    stellarCrystals: {
         type: Number,
         default: 0,
     },
@@ -48,6 +48,10 @@ const accountSchema = new Schema({
         type: Date,
         default: new Date(0),
     },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    }
 });
 
 const AccountModel = model('Account', accountSchema);

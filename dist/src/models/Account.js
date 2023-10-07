@@ -16,7 +16,7 @@ const accountSchema = new mongoose_1.Schema({
         minLength: 2,
         maxLength: 32,
     },
-    code: {
+    token: {
         type: String,
         required: true,
     },
@@ -25,11 +25,11 @@ const accountSchema = new mongoose_1.Schema({
         default: 'This user has not provided a bio yet.',
         maxLength: 100
     },
-    goldPieces: {
+    goldenCoins: {
         type: Number,
         default: 0,
     },
-    starlightGems: {
+    stellarCrystals: {
         type: Number,
         default: 0,
     },
@@ -49,6 +49,10 @@ const accountSchema = new mongoose_1.Schema({
         type: Date,
         default: new Date(0),
     },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    }
 });
 const AccountModel = (0, mongoose_1.model)('Account', accountSchema);
 exports.default = AccountModel;

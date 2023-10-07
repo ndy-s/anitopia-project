@@ -8,7 +8,7 @@ exports.default = async (client) => {
         const localCommands = (0, getLocalCommands_1.default)();
         const applicationCommands = await (0, getApplicationCommands_1.default)(client);
         for (const localCommand of localCommands) {
-            const { name, description, options, deleted, devOnly, testOnly, callback } = localCommand;
+            const { name, description, options } = localCommand;
             const existingCommand = applicationCommands.cache.find((cmd) => cmd.name === name);
             if (existingCommand) {
                 if (localCommand.deleted) {

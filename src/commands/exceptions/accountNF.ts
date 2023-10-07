@@ -4,7 +4,7 @@ import { config } from "../../config";
 export default (interaction: CommandInteraction) => {
     interaction.reply({ embeds: [
         new EmbedBuilder()
-            .setColor('Red')
+            .setColor('#FF0000')
             .setAuthor({
                 name: `${interaction.user.username}#${interaction.user.discriminator}`,
                 iconURL: interaction.user.displayAvatarURL()
