@@ -5,6 +5,7 @@ import registrationNA from "../exceptions/registrationNA";
 import generateUniqueToken from "../../utils/generateUniqueToken";
 import { config } from "../../config";
 import redis from "../../lib/redis";
+import profile from "./profile";
 
 export default {
     name: 'register',
@@ -28,7 +29,6 @@ export default {
         } else {
             account = await AccountModel.findOne({
                 accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
-                guildId: interaction.guild?.id
             });
 
             await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
@@ -46,7 +46,6 @@ export default {
             ...{
                 accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                 guildId: interaction.guild?.id,
-                username: interaction.user.username,
                 token: generatedUniqueToken,
             }
         });
@@ -84,7 +83,8 @@ export default {
     
             if (registerConfirmation.customId === 'createAccount') {
                 await registerConfirmation.deferUpdate();
-                // await account.save();
+                await account.save();
+                await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
 
                 const mainButton = new ButtonBuilder()
                     .setCustomId('main')
@@ -132,16 +132,36 @@ export default {
                     if (confirmCongratulationResponse.customId === 'main') {
 
                     } else if (confirmCongratulationResponse.customId === 'profile') {
-                        
+                        await profile.callback(client, interaction, true);
                     }
 
                 } catch (error) {
-                    console.log(`Congratulations Success Handler Error: ${error}`)
+                    if (error instanceof Error) {
+                        if (error.message === "Collector received no interactions before ending with reason: time") {
+                            await interaction.editReply({
+                                components: []
+                            });
+                        } else {
+                            console.log(`Congratulations Success Handler Error: ${error}`)
+                        }
+                    }
                 }
 
             }
-        } catch (error) {
-            console.log(`Register Command Error: ${error}`);
+        } catch (error) {            
+            if (error instanceof Error) {
+                if (error.message === "Collector received no interactions before ending with reason: time") {
+                    registerEmbed.setFooter({
+                        text: `⏱️ This command is only active for 5 minutes. To use it again, please type /register.`
+                    });
+                    await interaction.editReply({
+                        embeds: [registerEmbed],
+                        components: []
+                    });
+                } else {
+                    console.log(`Register Command Error: ${error}`);
+                }
+            }
         }
 
     },

@@ -7,6 +7,7 @@ export default async (client: Client, interaction: ModalSubmitInteraction) => {
 
     try {
         const localModalHandler = getLocalModals();
+
         const modalHandlerObject = localModalHandler.find(
             (mdl) => mdl.name === interaction.customId
         );

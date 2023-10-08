@@ -10,12 +10,6 @@ const accountSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
-    username: {
-        type: String,
-        required: true,
-        minLength: 2,
-        maxLength: 32,
-    },
     token: {
         type: String,
         required: true,

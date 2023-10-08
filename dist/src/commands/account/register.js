@@ -4,6 +4,9 @@ const discord_js_1 = require("discord.js");
 const Account_1 = require("../../models/Account");
 const registrationNA_1 = require("../exceptions/registrationNA");
 const generateUniqueToken_1 = require("../../utils/generateUniqueToken");
+const config_1 = require("../../config");
+const redis_1 = require("../../lib/redis");
+const profile_1 = require("./profile");
 exports.default = {
     name: 'register',
     description: 'Join Anitopia and start your adventure',
@@ -15,7 +18,18 @@ exports.default = {
     testOnly: false,
     botPermissions: [],
     permissionsRequired: [],
-    callback: async (client, interaction, account) => {
+    callback: async (client, interaction) => {
+        const result = await redis_1.default.get(interaction.user.id);
+        let account;
+        if (result) {
+            account = JSON.parse(result);
+        }
+        else {
+            account = await Account_1.default.findOne({
+                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+            });
+            await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+        }
         if (account) {
             (0, registrationNA_1.default)(interaction);
             return;
@@ -26,26 +40,106 @@ exports.default = {
             ...{
                 accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                 guildId: interaction.guild?.id,
-                username: interaction.user.username,
                 token: generatedUniqueToken,
             }
         });
-        // await account.save();
-        const embed = new discord_js_1.EmbedBuilder()
+        const registerEmbed = new discord_js_1.EmbedBuilder()
             .setColor('Blurple')
             .setAuthor({
             name: interaction.user.username,
             iconURL: interaction.user.displayAvatarURL(),
         })
-            .setTitle('The Gate Keeper of Anitopia')
-            .setThumbnail('https://i.pinimg.com/564x/64/69/7b/64697be0705dd503415616a26162204b.jpg')
-            .setDescription(`Welcome, <@!${interaction.user.id}>!\n\nAs the Gate Keeper of Anitopia, I invite you to a realm of extraordinary experiences. By clicking '**Create Account**', you're not just signing up, but setting sail on an exciting journey.\n\nMay your adventure be filled with joy and discovery!`)
-            .setFooter({
-            iconURL: interaction.user.displayAvatarURL({ extension: 'png', size: 512 }),
-            text: 'Start by clicking the Create Account button'
+            .setTitle('Welcome to Anitopia!')
+            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+            .setDescription(`Explosion! Ahem... Greetings, <@!${interaction.user.id}>!\n\nI am Megumin, the great Arch-Wizard of Anitopia. I invite you to a realm of extraordinary experiences. By clicking '**Create Account**', you're not just signing up, but setting sail on an exciting journey.\n\nMay your adventure be filled with joy and discovery!`);
+        const createAccountButtomRow = new discord_js_1.ActionRowBuilder()
+            .addComponents(new discord_js_1.ButtonBuilder()
+            .setCustomId('createAccount')
+            .setLabel('Create Account')
+            .setStyle(discord_js_1.ButtonStyle.Success));
+        const registerResponse = await interaction.reply({
+            embeds: [registerEmbed],
+            components: [createAccountButtomRow],
         });
-        const response = await interaction.reply({
-            embeds: [embed],
-        });
+        const collectorFilter = (i) => i.user.id === interaction.user.id;
+        try {
+            const registerConfirmation = await registerResponse.awaitMessageComponent({
+                filter: collectorFilter,
+                time: 300000
+            });
+            if (registerConfirmation.customId === 'createAccount') {
+                await registerConfirmation.deferUpdate();
+                await account.save();
+                await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+                const mainButton = new discord_js_1.ButtonBuilder()
+                    .setCustomId('main')
+                    .setLabel('Main')
+                    .setStyle(discord_js_1.ButtonStyle.Primary);
+                const profileButton = new discord_js_1.ButtonBuilder()
+                    .setCustomId('profile')
+                    .setLabel('Profile')
+                    .setStyle(discord_js_1.ButtonStyle.Primary);
+                const commandButtonRow = new discord_js_1.ActionRowBuilder().addComponents(mainButton, profileButton);
+                const congratuliationResponse = await interaction.editReply({
+                    embeds: [
+                        new discord_js_1.EmbedBuilder()
+                            .setColor('Blurple')
+                            .setAuthor({
+                            name: interaction.user.username,
+                            iconURL: interaction.user.displayAvatarURL(),
+                        })
+                            .setTitle(`Congratulations ${interaction.user.username}!`)
+                            .setDescription(`🎉 Congratulations <@!${interaction.user.id}>! Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config_1.config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config_1.config.commands.mainCommandTag}. Have a fantastic journey! 🚀`)
+                            .setFooter({
+                            text: config_1.config.messages.footerText
+                        })
+                    ],
+                    components: [commandButtonRow]
+                });
+                try {
+                    const confirmCongratulationResponse = await congratuliationResponse.awaitMessageComponent({
+                        filter: collectorFilter,
+                        time: 300000
+                    });
+                    await confirmCongratulationResponse.deferUpdate();
+                    await interaction.editReply({
+                        components: []
+                    });
+                    if (confirmCongratulationResponse.customId === 'main') {
+                    }
+                    else if (confirmCongratulationResponse.customId === 'profile') {
+                        await profile_1.default.callback(client, interaction, true);
+                    }
+                }
+                catch (error) {
+                    if (error instanceof Error) {
+                        if (error.message === "Collector received no interactions before ending with reason: time") {
+                            await interaction.editReply({
+                                components: []
+                            });
+                        }
+                        else {
+                            console.log(`Congratulations Success Handler Error: ${error}`);
+                        }
+                    }
+                }
+            }
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                if (error.message === "Collector received no interactions before ending with reason: time") {
+                    registerEmbed.setFooter({
+                        text: `⏱️ This command is only active for 5 minutes. To use it again, please type /register.`
+                    });
+                    await interaction.editReply({
+                        embeds: [registerEmbed],
+                        components: []
+                    });
+                }
+                else {
+                    console.log(`Register Command Error: ${error}`);
+                }
+            }
+        }
     },
 };

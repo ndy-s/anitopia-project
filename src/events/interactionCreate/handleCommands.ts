@@ -46,10 +46,7 @@ export default async (client: Client, interaction: CommandInteraction) => {
                     ephemeral: true,
                 });
                 return;
-            } else {
-                console.error('Invalid interaction.member:', interaction.member);
-                return;
-            }
+            } 
         }
 
         if (commandObject.testOnly && !(interaction.guild?.id === testServer)) {
@@ -111,7 +108,6 @@ export default async (client: Client, interaction: CommandInteraction) => {
         } else {
             account = await AccountModel.findOne({
                 accountId: 'id' in interaction.member ? interaction.member.id : undefined,
-                guildId: interaction.guild?.id
             });
 
             await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);

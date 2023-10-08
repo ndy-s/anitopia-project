@@ -1,45 +1,49 @@
-import { ApplicationCommandOptionData, Client } from "discord.js";
+import { ApplicationCommand, ApplicationCommandManager, ApplicationCommandOptionData, Client, GuildApplicationCommandManager, GuildResolvable } from "discord.js";
 import getLocalCommands from "../../utils/getLocalCommands";
 import getApplicationCommands from "../../utils/getApplicationCommands";
 import areCommandsDifferent from "../../utils/areCommandsDifferent";
+import { testServer } from "../../../config.json";
+import { CommandObject } from "../../interfaces";
 
 export default async (client: Client) => {
     try {
         const localCommands = getLocalCommands();
         const applicationCommands = await getApplicationCommands(client);
+        const testServerApplicationCommands = await getApplicationCommands(client, testServer);
 
-        for (const localCommand of localCommands) {
-            const { name, description, options } = localCommand;
-
-            const existingCommand = applicationCommands.cache.find((cmd) => cmd.name === name);
-
+        const processCommand = async (command: CommandObject, existingCommand: ApplicationCommand<{ guild: GuildResolvable; }> | undefined, applicationCommands: GuildApplicationCommandManager | ApplicationCommandManager<ApplicationCommand<{ guild: GuildResolvable; }>, { guild: GuildResolvable; }, null>) => {
             if (existingCommand) {
-                if (localCommand.deleted) {
+                if (command.deleted) {
                     await applicationCommands.delete(existingCommand.id);
-                    console.log(`🗑 Deleted command "${name}".`);
-                    continue;
-                }
-
-                if (areCommandsDifferent(existingCommand, localCommand)) {
+                    console.log(`🗑 Deleted command "${command.name}".`);
+                } else if (areCommandsDifferent(existingCommand, command)) {
                     await applicationCommands.edit(existingCommand.id, {
-                        description, options: options as ApplicationCommandOptionData[], 
+                        description: command.description,
+                        options: command.options as ApplicationCommandOptionData[],
                     });
-
-                    console.log(`🔁 Edited command "${name}".`);
+                    console.log(`🔁 Edited command "${command.name}".`);
                 }
-            } else {
-                if (localCommand.deleted) {
-                    console.log(`⏩ Skipping registering command "${name}" as it's set to delete.`);
-                    continue;
-                }
-
+            } else if (!command.deleted) {
                 await applicationCommands.create({
-                    name, description, options: options as ApplicationCommandOptionData[]
+                    name: command.name,
+                    description: command.description,
+                    options: command.options as ApplicationCommandOptionData[]
                 });
-
-                console.log(`👍 Registered command "${name}."`);
+                console.log(`👍 Registered command "${command.name}."`);
+            } else {
+                console.log(`⏩ Skipping registering command "${command.name}" as it's set to delete.`);
             }
-        }
+        };
+        
+        for (const localCommand of localCommands) {
+            const existingCommand = localCommand.testOnly
+                ? testServerApplicationCommands.cache.find((cmd) => cmd.name === localCommand.name)
+                : applicationCommands.cache.find((cmd) => cmd.name === localCommand.name);
+        
+            const commands = localCommand.testOnly ? testServerApplicationCommands : applicationCommands;
+        
+            await processCommand(localCommand, existingCommand, commands);
+        }        
     } catch (error) {
         console.log(`Registering commands error: ${error}`);
     }

@@ -5,7 +5,6 @@ const config_json_1 = require("../../../config.json");
 const getLocalCommands_1 = require("../../utils/getLocalCommands");
 const Account_1 = require("../../models/Account");
 const redis_1 = require("../../lib/redis");
-const register_1 = require("../../commands/account/register");
 const commandNA_1 = require("../../commands/exceptions/commandNA");
 const cooldownMS_1 = require("../../commands/exceptions/cooldownMS");
 const config_1 = require("../../config");
@@ -38,10 +37,6 @@ exports.default = async (client, interaction) => {
                     ],
                     ephemeral: true,
                 });
-                return;
-            }
-            else {
-                console.error('Invalid interaction.member:', interaction.member);
                 return;
             }
         }
@@ -101,16 +96,16 @@ exports.default = async (client, interaction) => {
         else {
             account = await Account_1.default.findOne({
                 accountId: 'id' in interaction.member ? interaction.member.id : undefined,
-                guildId: interaction.guild?.id
             });
             await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
         }
-        if (!account) {
-            await register_1.default.callback(client, interaction, account);
-        }
-        else if (account) {
-            commandObject.callback(client, interaction);
-        }
+        // Temporary
+        commandObject.callback(client, interaction);
+        // if (!account) {
+        //     await register.callback(client, interaction);
+        // } else if (account) {
+        //     commandObject.callback(client, interaction);
+        // }
     }
     catch (error) {
         console.log(`There was an error running this handle command: ${error}`);

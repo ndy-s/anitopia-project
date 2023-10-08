@@ -3,10 +3,12 @@ import getAllFiles from "./getAllFiles";
 
 export default (exceptions: string[] = []) => {
     let localModalHandler = [];
-    const modalHandlerPath = path.join(__dirname, '..', 'commands/modals');
+    const modalHandlerPath = path.join(__dirname, '..', 'commands');
+
     const modalHandlerCategories = getAllFiles(modalHandlerPath, true);
 
     for (const modalHandlerCategory of modalHandlerCategories) {
+        if (path.basename(modalHandlerCategory) !== 'modals') continue;
         const modalHandlerFiles = getAllFiles(modalHandlerCategory);
 
         for (const modalHandlerFile of modalHandlerFiles) {
