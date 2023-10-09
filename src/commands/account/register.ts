@@ -1,11 +1,12 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CommandInteraction, EmbedBuilder } from "discord.js";
-import AccountModel from "../../models/Account";
+import PlayerModel from "../../models/Player";
 
 import registrationNA from "../exceptions/registrationNA";
 import generateUniqueToken from "../../utils/generateUniqueToken";
 import { config } from "../../config";
 import redis from "../../lib/redis";
 import profile from "./profile";
+import main from "../main/main";
 
 export default {
     name: 'register',
@@ -22,29 +23,29 @@ export default {
 
     callback: async (client: Client, interaction: CommandInteraction) => {
         const result = await redis.get(interaction.user.id);
-        let account;
+        let player;
 
         if (result) {
-            account = JSON.parse(result);
+            player = JSON.parse(result);
         } else {
-            account = await AccountModel.findOne({
-                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+            player = await PlayerModel.findOne({
+                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
             });
 
-            await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
         }
         
-        if (account) {
+        if (player) {
             registrationNA(interaction);
             return;
         }
 
-        const latestAccount = await AccountModel.findOne({}, {}, { sort: { createdAt: -1 } });
+        const latestAccount = await PlayerModel.findOne({}, {}, { sort: { createdAt: -1 } });
         const generatedUniqueToken = generateUniqueToken(latestAccount?.token ?? null);
 
-        account = new AccountModel({
+        player = new PlayerModel({
             ...{
-                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                 guildId: interaction.guild?.id,
                 token: generatedUniqueToken,
             }
@@ -83,8 +84,8 @@ export default {
     
             if (registerConfirmation.customId === 'createAccount') {
                 await registerConfirmation.deferUpdate();
-                await account.save();
-                await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+                await player.save();
+                await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
                 const mainButton = new ButtonBuilder()
                     .setCustomId('main')
@@ -110,7 +111,7 @@ export default {
                                 iconURL: interaction.user.displayAvatarURL(),
                             })
                             .setTitle(`Congratulations ${interaction.user.username}!`)
-                            .setDescription(`🎉 Congratulations <@!${interaction.user.id}>! Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config.commands.mainCommandTag}. Have a fantastic journey! 🚀`)
+                            .setDescription(`🎉 Congratulations <@!${interaction.user.id}>! Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config.commands.mainCommandTag}. Have a fantastic journey!`)
                             .setFooter({
                                 text: config.messages.footerText
                             })
@@ -130,7 +131,7 @@ export default {
                     });
 
                     if (confirmCongratulationResponse.customId === 'main') {
-
+                        await main.callback(client, interaction, true);
                     } else if (confirmCongratulationResponse.customId === 'profile') {
                         await profile.callback(client, interaction, true);
                     }

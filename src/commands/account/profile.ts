@@ -1,6 +1,6 @@
 import { ActionRowBuilder, Client, CommandInteraction, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import redis from "../../lib/redis";
-import AccountModel from "../../models/Account";
+import PlayerModel from "../../models/Player";
 import { config , configProfileEmbed } from "../../config";
 
 export default {
@@ -18,37 +18,40 @@ export default {
 
     callback: async (client: Client, interaction: CommandInteraction, followUp = false) => {
         const result = await redis.get(interaction.user.id);
-        let account;
+        let player;
 
         if (result) {
-            account = JSON.parse(result);
+            player = JSON.parse(result);
         } else {
-            account = await AccountModel.findOne({
-                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+            player = await PlayerModel.findOne({
+                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
             });
 
-            await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
         }
 
         const profileOption = new StringSelectMenuBuilder()
             .setCustomId('profileOption')
-            .setPlaceholder('Select an option to explore!')
+            .setPlaceholder('Choose your profile action!')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel(`Customize Profile`)
                     .setDescription('Personalize your profile to make it uniquely yours')
-                    .setValue('customize'),
+                    .setValue('customize')
+                    .setEmoji('🎨'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Daily Rewards')
                     .setDescription('Earn exciting rewards every day')
-                    .setValue('daily'),
+                    .setValue('daily')
+                    .setEmoji('🎁'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Redeem Code')
                     .setDescription('Got a code? Redeem it for cool perks')
-                    .setValue('redeem'),
+                    .setValue('redeem')
+                    .setEmoji('🔑'),
             );
 
-        const profileEmbed = configProfileEmbed(interaction, account);
+        const profileEmbed = configProfileEmbed(interaction, player);
 
         const responseOptions: any = {
             embeds: [profileEmbed],
@@ -77,12 +80,12 @@ export default {
 
                 if (profileConfirmation.customId === 'profileOption' && 'values' in profileConfirmation) {
                     if (profileConfirmation.values.includes('customize')) {
-                        account = await AccountModel.findOne({
-                            accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+                        player = await PlayerModel.findOne({
+                            userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                         });
             
-                        if (account) {
-                            await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+                        if (player) {
+                            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                         
                             const customizeProfileModal = new ModalBuilder()
                                 .setCustomId('customizeProfileModal')
@@ -92,7 +95,7 @@ export default {
                                 .setCustomId('bioInput')
                                 .setLabel("Biography")
                                 .setStyle(TextInputStyle.Paragraph)
-                                .setValue(account.bio)
+                                .setValue(player.bio)
                                 .setMaxLength(100)
                                 .setRequired(true);
     

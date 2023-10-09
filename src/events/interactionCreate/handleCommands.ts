@@ -2,7 +2,7 @@ import { Client, CommandInteraction, EmbedBuilder } from 'discord.js';
 import { devs, testServer } from '../../../config.json';
 import getLocalCommands from '../../utils/getLocalCommands';
 
-import AccountModel from '../../models/Account';
+import PlayerModel from '../../models/Player';
 import redis from '../../lib/redis';
 import register from '../../commands/account/register';
 
@@ -101,25 +101,25 @@ export default async (client: Client, interaction: CommandInteraction) => {
 
         // Redis Caching
         const result = await redis.get(interaction.user.id);
-        let account;
+        let player;
 
         if (result) {
-            account = JSON.parse(result);
+            player = JSON.parse(result);
         } else {
-            account = await AccountModel.findOne({
-                accountId: 'id' in interaction.member ? interaction.member.id : undefined,
+            player = await PlayerModel.findOne({
+                userId: 'id' in interaction.member ? interaction.member.id : undefined,
             });
 
-            await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
         }
 
         
         // Temporary
         commandObject.callback(client, interaction);
 
-        // if (!account) {
+        // if (!player) {
         //     await register.callback(client, interaction);
-        // } else if (account) {
+        // } else if (player) {
         //     commandObject.callback(client, interaction);
         // }
 

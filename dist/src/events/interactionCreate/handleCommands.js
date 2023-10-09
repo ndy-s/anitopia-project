@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const config_json_1 = require("../../../config.json");
 const getLocalCommands_1 = require("../../utils/getLocalCommands");
-const Account_1 = require("../../models/Account");
+const Player_1 = require("../../models/Player");
 const redis_1 = require("../../lib/redis");
 const commandNA_1 = require("../../commands/exceptions/commandNA");
 const cooldownMS_1 = require("../../commands/exceptions/cooldownMS");
@@ -89,21 +89,21 @@ exports.default = async (client, interaction) => {
             return;
         // Redis Caching
         const result = await redis_1.default.get(interaction.user.id);
-        let account;
+        let player;
         if (result) {
-            account = JSON.parse(result);
+            player = JSON.parse(result);
         }
         else {
-            account = await Account_1.default.findOne({
-                accountId: 'id' in interaction.member ? interaction.member.id : undefined,
+            player = await Player_1.default.findOne({
+                userId: 'id' in interaction.member ? interaction.member.id : undefined,
             });
-            await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
         }
         // Temporary
         commandObject.callback(client, interaction);
-        // if (!account) {
+        // if (!player) {
         //     await register.callback(client, interaction);
-        // } else if (account) {
+        // } else if (player) {
         //     commandObject.callback(client, interaction);
         // }
     }

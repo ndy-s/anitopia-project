@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const redis_1 = require("../../lib/redis");
-const Account_1 = require("../../models/Account");
+const Player_1 = require("../../models/Player");
 const config_1 = require("../../config");
 exports.default = {
     name: 'profile',
@@ -17,30 +17,33 @@ exports.default = {
     permissionsRequired: [],
     callback: async (client, interaction, followUp = false) => {
         const result = await redis_1.default.get(interaction.user.id);
-        let account;
+        let player;
         if (result) {
-            account = JSON.parse(result);
+            player = JSON.parse(result);
         }
         else {
-            account = await Account_1.default.findOne({
-                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+            player = await Player_1.default.findOne({
+                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
             });
-            await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
         }
         const profileOption = new discord_js_1.StringSelectMenuBuilder()
             .setCustomId('profileOption')
-            .setPlaceholder('Select an option to explore!')
+            .setPlaceholder('Choose your profile action!')
             .addOptions(new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel(`Customize Profile`)
             .setDescription('Personalize your profile to make it uniquely yours')
-            .setValue('customize'), new discord_js_1.StringSelectMenuOptionBuilder()
+            .setValue('customize')
+            .setEmoji('🎨'), new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel('Daily Rewards')
             .setDescription('Earn exciting rewards every day')
-            .setValue('daily'), new discord_js_1.StringSelectMenuOptionBuilder()
+            .setValue('daily')
+            .setEmoji('🎁'), new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel('Redeem Code')
             .setDescription('Got a code? Redeem it for cool perks')
-            .setValue('redeem'));
-        const profileEmbed = (0, config_1.configProfileEmbed)(interaction, account);
+            .setValue('redeem')
+            .setEmoji('🔑'));
+        const profileEmbed = (0, config_1.configProfileEmbed)(interaction, player);
         const responseOptions = {
             embeds: [profileEmbed],
             components: [new discord_js_1.ActionRowBuilder().addComponents(profileOption)],
@@ -62,11 +65,11 @@ exports.default = {
                 // });
                 if (profileConfirmation.customId === 'profileOption' && 'values' in profileConfirmation) {
                     if (profileConfirmation.values.includes('customize')) {
-                        account = await Account_1.default.findOne({
-                            accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+                        player = await Player_1.default.findOne({
+                            userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                         });
-                        if (account) {
-                            await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+                        if (player) {
+                            await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                             const customizeProfileModal = new discord_js_1.ModalBuilder()
                                 .setCustomId('customizeProfileModal')
                                 .setTitle('Customize Profile');
@@ -74,7 +77,7 @@ exports.default = {
                                 .setCustomId('bioInput')
                                 .setLabel("Biography")
                                 .setStyle(discord_js_1.TextInputStyle.Paragraph)
-                                .setValue(account.bio)
+                                .setValue(player.bio)
                                 .setMaxLength(100)
                                 .setRequired(true);
                             const customizeProfileModalRow = new discord_js_1.ActionRowBuilder().addComponents(bioInput);

@@ -1,5 +1,5 @@
 import { Client, EmbedBuilder, ModalSubmitInteraction } from "discord.js";
-import AccountModel from "../../models/Account";
+import PlayerModel from "../../models/Player";
 import redis from "../../lib/redis";
 import { config, configProfileEmbed } from "../../config";
 
@@ -9,15 +9,15 @@ export default {
     callback: async (client: Client, interaction: ModalSubmitInteraction) => {
         try {
             const bioInput = interaction.fields.getTextInputValue('bioInput');
-            let account = await AccountModel.findOneAndUpdate(
-                { accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+            let player = await PlayerModel.findOneAndUpdate(
+                { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
                 { bio: bioInput },
                 { new: true}
             );
 
-            await redis.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
-            const profileEmbed = configProfileEmbed(interaction, account);
+            const profileEmbed = configProfileEmbed(interaction, player);
 
             await interaction.deferUpdate();
             await interaction.editReply({

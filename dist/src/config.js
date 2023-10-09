@@ -8,11 +8,11 @@ exports.config = {
     },
     commands: {
         registerCommandTag: "</register:1160263671814045898>",
-        profileCommandTag: "</profile:1160263750981529640>",
+        profileCommandTag: "</profile:1160505037873754194>",
         mainCommandTag: "</main:1160515892803817482>",
     },
 };
-const configProfileEmbed = (interaction, account) => {
+const configProfileEmbed = (interaction, player) => {
     return new discord_js_1.EmbedBuilder()
         .setColor('Blurple')
         .setAuthor({
@@ -21,30 +21,30 @@ const configProfileEmbed = (interaction, account) => {
     })
         .setTitle('Account Details')
         .setThumbnail(interaction.user.displayAvatarURL())
-        .setDescription(`**Biography:**\n\`\`\`${account.bio}\`\`\`\nExplore more options by selecting from the menu below. To personalize your profile, select **Customize Profile**.`)
+        .setDescription(`**Biography:**\n\`\`\`${player.bio}\`\`\`\nExplore more options by selecting from the menu below. To personalize your profile, select **Customize Profile**.`)
         .addFields({
-        name: 'Level',
-        value: `${account.level}`,
+        name: '📊 Level',
+        value: `${player.experience.level}`,
         inline: true
     }, {
-        name: `Experience Points`,
-        value: `${account.exp}/10000`,
+        name: `⭐ Experience Points`,
+        value: `${player.experience.exp}/10000`,
         inline: true
     }, {
-        name: 'Token',
-        value: `\`${account.token}\``,
+        name: '🔑 Token',
+        value: `\`${player.token}\``,
         inline: true
     }, {
-        name: 'Golden Coins',
-        value: `${account.goldenCoins}`,
+        name: '💰 Golden Coins',
+        value: `${player.balance.goldenCoins}`,
         inline: true
     }, {
-        name: 'Stellar Crystals',
-        value: `${account.stellarCrystals}`,
+        name: '💎 Stellar Crystals',
+        value: `${player.balance.stellarCrystals}`,
         inline: true
     })
         .setFooter({
-        text: `Protip: you can find others using their tokens!`,
+        text: `Tip: Use tokens to connect with other users!`,
     });
 };
 exports.configProfileEmbed = configProfileEmbed;

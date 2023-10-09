@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const Account_1 = require("../../models/Account");
+const Player_1 = require("../../models/Player");
 const registrationNA_1 = require("../exceptions/registrationNA");
 const generateUniqueToken_1 = require("../../utils/generateUniqueToken");
 const config_1 = require("../../config");
@@ -20,25 +20,25 @@ exports.default = {
     permissionsRequired: [],
     callback: async (client, interaction) => {
         const result = await redis_1.default.get(interaction.user.id);
-        let account;
+        let player;
         if (result) {
-            account = JSON.parse(result);
+            player = JSON.parse(result);
         }
         else {
-            account = await Account_1.default.findOne({
-                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+            player = await Player_1.default.findOne({
+                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
             });
-            await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+            await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
         }
-        if (account) {
+        if (player) {
             (0, registrationNA_1.default)(interaction);
             return;
         }
-        const latestAccount = await Account_1.default.findOne({}, {}, { sort: { createdAt: -1 } });
+        const latestAccount = await Player_1.default.findOne({}, {}, { sort: { createdAt: -1 } });
         const generatedUniqueToken = (0, generateUniqueToken_1.default)(latestAccount?.token ?? null);
-        account = new Account_1.default({
+        player = new Player_1.default({
             ...{
-                accountId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                 guildId: interaction.guild?.id,
                 token: generatedUniqueToken,
             }
@@ -69,8 +69,8 @@ exports.default = {
             });
             if (registerConfirmation.customId === 'createAccount') {
                 await registerConfirmation.deferUpdate();
-                await account.save();
-                await redis_1.default.set(interaction.user.id, JSON.stringify(account), 'EX', 60);
+                await player.save();
+                await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                 const mainButton = new discord_js_1.ButtonBuilder()
                     .setCustomId('main')
                     .setLabel('Main')
@@ -89,7 +89,7 @@ exports.default = {
                             iconURL: interaction.user.displayAvatarURL(),
                         })
                             .setTitle(`Congratulations ${interaction.user.username}!`)
-                            .setDescription(`🎉 Congratulations <@!${interaction.user.id}>! Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config_1.config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config_1.config.commands.mainCommandTag}. Have a fantastic journey! 🚀`)
+                            .setDescription(`🎉 Congratulations <@!${interaction.user.id}>! Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config_1.config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config_1.config.commands.mainCommandTag}. Have a fantastic journey!`)
                             .setFooter({
                             text: config_1.config.messages.footerText
                         })
