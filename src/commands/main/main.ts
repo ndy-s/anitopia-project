@@ -26,15 +26,15 @@ export default {
                     .setValue('story')
                     .setEmoji('🏰'),
                 new StringSelectMenuOptionBuilder()
+                    .setLabel('Summon')
+                    .setDescription('Summon your favorite characters')
+                    .setValue('summon')
+                    .setEmoji('🔮'),
+                new StringSelectMenuOptionBuilder()
                     .setLabel('Profile')
                     .setDescription('Manage game progress, profile, and more')
                     .setValue('profile')
                     .setEmoji('👤'),
-                new StringSelectMenuOptionBuilder()
-                    .setLabel('Summon')
-                    .setDescription('Summon your charassss')
-                    .setValue('summon')
-                    .setEmoji('🔮')
             );
 
         const mainEmbed = new EmbedBuilder()
@@ -45,22 +45,24 @@ export default {
             })
             .setTitle('Anitopia Main Commands')
             .setThumbnail('https://europe1.discourse-cdn.com/unity/original/3X/6/0/608e0f8940360c004564efc302d52054b7bc2493.jpeg')
-            .setDescription(`Hello, ${interaction.user.username}! Ready for Anitopia?`)
+            .setDescription(`Hello, ${interaction.user.username}! Are you ready to explore Anitopia? Use the dropdown menu below to navigate through the game.`)
             .setFooter({
-                text: 'Use the dropdown menu to select an option. Need help? Type "/help" in the chat.'
+                text: 'Select an option from the dropdown menu to continue.'
             });
+
+        const mainComponentRow = new ActionRowBuilder().addComponents(mainOption);
 
         const responseOptions: any = {
             embeds: [mainEmbed],
-            components: [new ActionRowBuilder().addComponents(mainOption)]
+            components: [mainComponentRow]
         };
 
-        let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
+        const mainResponse = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
 
         const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
 
         try {
-            let mainConfirmation = await response.awaitMessageComponent({
+            const mainConfirmation = await mainResponse.awaitMessageComponent({
                 filter: collectorFilter,
                 time: 300_000
             });

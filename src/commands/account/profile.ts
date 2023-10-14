@@ -53,9 +53,11 @@ export default {
 
         const profileEmbed = configProfileEmbed(interaction, player);
 
-        const responseOptions: any = {
+        const profileComponentRow: any = new ActionRowBuilder().addComponents(profileOption);
+
+        const responseOptions = {
             embeds: [profileEmbed],
-            components: [new ActionRowBuilder().addComponents(profileOption)],
+            components: [profileComponentRow],
         };
 
         let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);

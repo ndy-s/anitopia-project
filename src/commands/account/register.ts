@@ -102,7 +102,7 @@ export default {
                     profileButton
                 );
     
-                const congratuliationResponse = await interaction.editReply({
+                const congratulationResponse = await interaction.editReply({
                     embeds: [
                         new EmbedBuilder()
                             .setColor('Blurple')
@@ -120,7 +120,7 @@ export default {
                 });
 
                 try {
-                    const confirmCongratulationResponse = await congratuliationResponse.awaitMessageComponent({
+                    const confirmCongratulationResponse = await congratulationResponse.awaitMessageComponent({
                         filter: collectorFilter,
                         time: 300_000
                     });
