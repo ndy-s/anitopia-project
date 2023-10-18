@@ -1,39 +1,65 @@
 import { Schema, model } from "mongoose";
 
+const effectSchema = new Schema({
+    type: {
+        type: String,
+        required: true
+    },
+    value: {
+        type: Number,
+        required: true
+    },
+    chance: {
+        type: Number,
+        required: true
+    },
+    duration: {
+        type: Number,
+        required: true
+    },
+    target: {
+        type: String,
+        required: true,
+    }
+}, { _id: false });
+
+const rarityEffectSchema = new Schema({
+    effects: [effectSchema],
+    description: {
+        type: String,
+        required: true
+    }
+}, { _id: false });
+
 const skillSchema = new Schema({
     name: {
         type: String,
         required: true,
+        unique: true
     },
-    description: {
+    type: {
         type: String,
         required: true,
+        enum: ['Active', 'Passive']
     },
-    type: { 
+    cooldown: {
+        type: Number,
+    },
+    trigger: {
         type: String,
-        enum: ['passive', 'active'],
-        required: true,
+        enum: ['Battle Start', 'Each Turn', 'Health -50%', 'Damage Taken', 'Attack', null]
     },
-    effects: {
-        damage: {
-            ammount: {
-                type: Number,
-            },
-            turns: {
-                type: Number,
-            },
-        },
-        heal: {
-            ammount: {
-                type: Number,
-            },
-            turns: {
-                type: Number,
-            }
-        }
+    target: {
+        type: String,
+        required: true,
+        enum: ['Single', 'Area']
+    },
+    rarityEffects: {
+        type: Map,
+        of: rarityEffectSchema
     }
-
 }, { timestamps: true });
+
 
 const SkillModel = model('Skill', skillSchema);
 export default SkillModel;

@@ -52,9 +52,14 @@ const playerSchema = new Schema({
         },
     },
     characters: [{
-        characterId: {
+        characterToken: {
             type: String,
-            default: 0,
+            requierd: true
+        },
+        character: {
+            type: Schema.Types.ObjectId,
+            ref: 'Character',
+            required: true
         },
         level: {
             type: Number,
@@ -65,6 +70,33 @@ const playerSchema = new Schema({
             type: Number,
             default: 0,
             min: 0,
+        },
+        rarity: {
+            type: String,
+            enum: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'],
+            default: 'Common',
+        },
+        attributes: {
+            health: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
+            attack: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
+            defense: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
+            speed: {
+                type: Number,
+                default: 0,
+                min: 0,
+            },
         }
     }],
 }, { timestamps: true });

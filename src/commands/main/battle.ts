@@ -79,7 +79,7 @@ export default {
                     80, // speed
                     100, // level
                     'Common', // rarity
-                    'Neutralis', // element
+                    'Aqua', // element
                     3, // cooldown
                 );
 
@@ -91,7 +91,7 @@ export default {
                     100, // speed
                     100, // level
                     'Common', // rarity
-                    'Neutralis', // element
+                    'Lumen', // element
                     3, // cooldown
                 );
 
@@ -103,7 +103,7 @@ export default {
                     30, // speed
                     100, // level
                     'Common', // rarity
-                    'Neutralis', // element
+                    'Aero', // element
                     3, // cooldown
                 );
 
@@ -115,7 +115,7 @@ export default {
                     30, // speed
                     100, // level
                     'Common', // rarity
-                    'Neutralis', // element
+                    'Shade', // element
                     3, // cooldown
                 );
 
@@ -127,7 +127,7 @@ export default {
                     10, // speed
                     100, // level
                     'Common', // rarity
-                    'Neutralis', // element
+                    'Pyro', // element
                     3, // cooldown
                 );
 
@@ -139,7 +139,7 @@ export default {
                     10, // speed
                     100, // level
                     'Common', // rarity
-                    'Neutralis', // element
+                    'Shade', // element
                     3, // cooldown
                 );
 
@@ -147,13 +147,6 @@ export default {
                 let teamB = new Team([PlayerB1, PlayerB2, PlayerB3]);
 
                 let allCharacters = [PlayerA1, PlayerA2, PlayerA3, PlayerB1, PlayerB2, PlayerB3];
-
-                allCharacters.sort((a, b) => {
-                    if (a.speed === b.speed) {
-                        return 0.5 - Math.random();
-                    }
-                    return b.speed - a.speed;
-                });
 
                 await confirmation.deferUpdate();
                 await confirmation.editReply({
@@ -192,6 +185,13 @@ export default {
                     turn++;
                     console.log(`This is Turn: ${turn}`);
 
+                    allCharacters.sort((a, b) => {
+                        if (a.speed === b.speed) {
+                            return 0.5 - Math.random();
+                        }
+                        return b.speed - a.speed;
+                    });
+
                     for (let character of allCharacters) {
                         if (character.health > 0) {
                             let enemyTeamPlayers = teamA.hasMember(character) ? [PlayerB1, PlayerB2, PlayerB3] : [PlayerA1, PlayerA2, PlayerA3];
@@ -208,6 +208,7 @@ export default {
                                                 new EmbedBuilder()
                                                     .setColor('Blurple')
                                                     .setTitle("Fight")
+                                                    .setDescription(`**[Turn ${turn}]**\n${character.name} attack ${enemy.name} with ${character.displayDamage}`)
                                                     .addFields(
                                                         {
                                                             name: `In-Game Battle`,

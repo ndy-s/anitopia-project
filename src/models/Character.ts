@@ -1,34 +1,64 @@
 import { Schema, model } from "mongoose";
 
+
+const skillReferenceSchema = new Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    descriptions: {
+        type: Map,
+        of: String
+    },
+    baseName: {
+        type: String,
+        ref: 'Skill'
+    }
+}, { _id: false });
+
 const characterSchema = new Schema({
     name: {
+        type: String,
+        required: true,
+    },
+    fullname: {
+        type: String,
+        required: true,
+    },
+    series: {
         type: String,
         required: true,
     },
     element: {
         type: String,
         required: true,
+        enum: ['Pyro', 'Aqua', 'Volt', 'Terra', 'Aero', 'Lumen', 'Shade', 'Neutralis']
     },
-    rarity: {
-        type: Number,
+    class: {
+        type: String,
         required: true,
-        min: 1,
-        max: 5
+        enum: ['Mage', 'Warrior', 'Tank', 'Hunter', 'Support']
     },
-    status: {
+    attributes: {
         health: {
             type: Number,
+            required: true,
         },
         attack: {
             type: Number,
+            required: true,
         },
         defense: {
             type: Number,
+            required: true,
         },
         speed: {
             type: Number,
+            required: true,
         },
     },
+    activeSkillName: skillReferenceSchema,
+    passiveSkillName: skillReferenceSchema
 
 
 }, { timestamps: true });
