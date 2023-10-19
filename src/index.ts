@@ -30,14 +30,14 @@ const client = new Client({
         console.log("Connected to Anitopia Database.")
 
         // Insert the data into MongoDB
-        try {
-            await SkillModel.insertMany(passiveSkillsData);
-            await SkillModel.insertMany(activeSkillsData);
-            await CharacterModel.insertMany(charactersData);
-            console.log('Skills data has been inserted successfully.');
-        } catch (error) {
-            console.error('An error occurred, skipping insert the data', error);
-        }
+        // try {
+        //     await SkillModel.insertMany(passiveSkillsData);
+        //     await SkillModel.insertMany(activeSkillsData);
+        //     await CharacterModel.insertMany(charactersData);
+        //     console.log('Skills data has been inserted successfully.');
+        // } catch (error) {
+        //     console.error('An error occurred, skipping insert the data', error);
+        // }
         
         eventHandler(client);
         client.login(process.env.TOKEN);

@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CommandInteractio
 import PlayerModel from "../../models/Player";
 
 import registrationNA from "../exceptions/registrationNA";
-import generateUniqueToken from "../../utils/generateUniqueToken";
+import generateUniqueID from "../../utils/generateUniqueID";
 import { config } from "../../config";
 import redis from "../../lib/redis";
 import profile from "./profile";
@@ -41,13 +41,13 @@ export default {
         }
 
         const latestAccount = await PlayerModel.findOne({}, {}, { sort: { createdAt: -1 } });
-        const generatedUniqueToken = generateUniqueToken(latestAccount?.token ?? null);
+        const generatedUniqueToken = generateUniqueID(latestAccount?.playerId ?? null);
 
         player = new PlayerModel({
             ...{
                 userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                 guildId: interaction.guild?.id,
-                token: generatedUniqueToken,
+                playerId: generatedUniqueToken,
             }
         });
 

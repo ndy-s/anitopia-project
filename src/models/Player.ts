@@ -4,14 +4,16 @@ const playerSchema = new Schema({
     userId: {
         type: String,
         required: true,
+        unique: true
     },
     guildId: {
         type: String,
         required: true,
     },
-    token: {
+    playerId: {
         type: String,
         required: true,
+        unique: true,
     },
     bio: {
         type: String,
@@ -19,11 +21,11 @@ const playerSchema = new Schema({
         maxLength: 100
     },
     balance: {
-        goldenCoins: {
+        aniCoin: {
             type: Number,
             default: 0,
         },
-        stellarCrystals: {
+        aniCrystal: {
             type: Number,
             default: 0,
         },
@@ -51,54 +53,6 @@ const playerSchema = new Schema({
             default: new Date(0),
         },
     },
-    characters: [{
-        characterToken: {
-            type: String,
-            requierd: true
-        },
-        character: {
-            type: Schema.Types.ObjectId,
-            ref: 'Character',
-            required: true
-        },
-        level: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-        experience: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-        rarity: {
-            type: String,
-            enum: ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'],
-            default: 'Common',
-        },
-        attributes: {
-            health: {
-                type: Number,
-                default: 0,
-                min: 0,
-            },
-            attack: {
-                type: Number,
-                default: 0,
-                min: 0,
-            },
-            defense: {
-                type: Number,
-                default: 0,
-                min: 0,
-            },
-            speed: {
-                type: Number,
-                default: 0,
-                min: 0,
-            },
-        }
-    }],
 }, { timestamps: true });
 
 const PlayerModel = model('Player', playerSchema);

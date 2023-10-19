@@ -20,7 +20,7 @@ export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmit
         })
         .setTitle('Account Details')
         .setThumbnail(interaction.user.displayAvatarURL())
-        .setDescription(`**Biography:**\n\`\`\`${player.bio}\`\`\`\nExplore more options by selecting from the menu below. To personalize your profile, select **Customize Profile**.`)
+        .setDescription(`**Biography**\n\`\`\`${player.bio}\`\`\`\nExplore more options by selecting from the menu below. To personalize your profile, select **Customize Profile**.`)
         .addFields(
             {
                 name: '📊 Level',
@@ -28,27 +28,27 @@ export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmit
                 inline: true
             },
             {
-                name: `⭐ Experience Points`,
+                name: `⭐ EXP`,
                 value: `${player.experience.exp}/10000`,
                 inline: true
             },
             {
-                name: '🔑 Token',
-                value: `\`${player.token}\``,
+                name: '🔑 Player ID',
+                value: `\`${player.playerId}\``,
                 inline: true
             },
             {
-                name: '💰 Golden Coins',
-                value: `${player.balance.goldenCoins}`,
+                name: '💰 AniCoins',
+                value: `${player.balance.aniCoin}`,
                 inline: true
             },
             {
-                name: '💎 Stellar Crystals',
-                value: `${player.balance.stellarCrystals}`,
+                name: '💎 AniCrystals',
+                value: `${player.balance.aniCrystal}`,
                 inline: true
             },
         )
         .setFooter({
-            text: `Tip: Use tokens to connect with other users!`,
+            text: `Tip: Use Player ID to connect with other players!`,
         });
 }

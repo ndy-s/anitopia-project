@@ -13,7 +13,7 @@ export const charactersData = [
             "defense": 71,
             "speed": 80,
         },
-        "activeSkillName": {
+        "activeSkill": {
             "name": 'Dual Wielding',
             "descriptions": {
                 "Common": "When Kirito's health drops below 50%, he activates his Dual Wielding skill. This increases his attack by 30% and his speed by 50% for 3 turns.",
@@ -24,7 +24,7 @@ export const charactersData = [
             },
             "baseName": "Resilience Boost" 
         },
-        "passiveSkillName": {
+        "passiveSkill": {
             "name": 'Starbust Stream',
             "descriptions": {
                 "Common": "Kirito unleashes a rapid 16-hit combo that targets a single enemy. The skill dealing 150% true damage of Kirito's attack.",
@@ -48,7 +48,7 @@ export const charactersData = [
             "defense": 61,
             "speed": 86,
         },
-        "activeSkillName": {
+        "activeSkill": {
             "name": 'Spirit Dive',
             "descriptions": {
                 "Common": "When Yuno's health drops below 50%, he enters Spirit Dive mode, increasing his attack by 30% and his speed by 50% for 3 turns.",
@@ -59,7 +59,7 @@ export const charactersData = [
             },
             "baseName": "Resilience Boost" 
         },
-        "passiveSkillName": {
+        "passiveSkill": {
             "name": 'Spirit Storm',
             "descriptions": {
                 "Common": "Yuno uses his aero powers to create a strong wind that hits all enemies. This skill deals 105% aero damage to all enemies.",

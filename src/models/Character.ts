@@ -57,8 +57,8 @@ const characterSchema = new Schema({
             required: true,
         },
     },
-    activeSkillName: skillReferenceSchema,
-    passiveSkillName: skillReferenceSchema
+    activeSkill: skillReferenceSchema,
+    passiveSkill: skillReferenceSchema
 
 
 }, { timestamps: true });
