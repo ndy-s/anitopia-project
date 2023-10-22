@@ -7,6 +7,7 @@ import { config } from "../../config";
 import redis from "../../lib/redis";
 import profile from "./profile";
 import main from "../main/main";
+import { getPlayer } from "../../utils/getPlayer";
 
 export default {
     name: 'register',
@@ -22,18 +23,7 @@ export default {
     permissionsRequired: [],
 
     callback: async (client: Client, interaction: CommandInteraction) => {
-        const result = await redis.get(interaction.user.id);
-        let player;
-
-        if (result) {
-            player = JSON.parse(result);
-        } else {
-            player = await PlayerModel.findOne({
-                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
-            });
-
-            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-        }
+        let player = await getPlayer(interaction);
         
         if (player) {
             registrationNA(interaction);

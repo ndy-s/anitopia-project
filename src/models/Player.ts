@@ -53,6 +53,38 @@ const playerSchema = new Schema({
             default: new Date(0),
         },
     },
+    scrolls: {
+        novice: {
+            count: { 
+                type: Number, 
+                default: 0 
+            },
+            guaranteed: { 
+                type: Number, 
+                default: 0 
+            },
+            lastClaim: { 
+                type: Date, 
+                default: new Date(0),
+            }
+        },
+        elite: {
+            count: { 
+                type: Number, 
+                default: 0 
+            },
+            guaranteed: { 
+                type: Number, 
+                default: 100 
+            }
+        },
+        series: {
+            count: { 
+                type: Number, 
+                default: 0 
+            }
+        }
+    }
 }, { timestamps: true });
 
 const PlayerModel = model('Player', playerSchema);

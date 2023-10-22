@@ -2,13 +2,12 @@ import { Client, CommandInteraction, EmbedBuilder } from 'discord.js';
 import { devs, testServer } from '../../../config.json';
 import getLocalCommands from '../../utils/getLocalCommands';
 
-import PlayerModel from '../../models/Player';
-import redis from '../../lib/redis';
 import register from '../../commands/account/register';
 
 import commandNA from '../../commands/exceptions/commandNA';
 import cooldownMS from '../../commands/exceptions/cooldownMS';
 import { config } from '../../config';
+import { getPlayer } from '../../utils/getPlayer';
 
 export default async (client: Client, interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;
@@ -99,29 +98,16 @@ export default async (client: Client, interaction: CommandInteraction) => {
 
         if (await cooldownMS(interaction, commandObject) === false) return;
 
-        // Redis Caching
-        const result = await redis.get(interaction.user.id);
-        let player;
+        const player = await getPlayer(interaction);
 
-        if (result) {
-            player = JSON.parse(result);
-        } else {
-            player = await PlayerModel.findOne({
-                userId: 'id' in interaction.member ? interaction.member.id : undefined,
-            });
-
-            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-        }
-
-        
         // Temporary
-        commandObject.callback(client, interaction);
+        // commandObject.callback(client, interaction);
 
-        // if (!player) {
-        //     await register.callback(client, interaction);
-        // } else if (player) {
-        //     commandObject.callback(client, interaction);
-        // }
+        if (!player) {
+            await register.callback(client, interaction);
+        } else if (player) {
+            commandObject.callback(client, interaction);
+        }
 
     } catch (error) {
         console.log(`There was an error running this handle command: ${error}`);

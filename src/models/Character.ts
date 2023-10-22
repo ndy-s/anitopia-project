@@ -57,10 +57,9 @@ const characterSchema = new Schema({
             required: true,
         },
     },
+    passiveSkill: skillReferenceSchema,
     activeSkill: skillReferenceSchema,
-    passiveSkill: skillReferenceSchema
-
-
+    quotes: String,
 }, { timestamps: true });
 
 const CharacterModel = model('Character', characterSchema);

@@ -29,7 +29,6 @@ const client = new Client({
         await mongoose.connect(process.env.MONGODB_URI);
         console.log("Connected to Anitopia Database.")
 
-        // Insert the data into MongoDB
         // try {
         //     await SkillModel.insertMany(passiveSkillsData);
         //     await SkillModel.insertMany(activeSkillsData);

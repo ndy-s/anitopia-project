@@ -2,6 +2,7 @@ import { ActionRowBuilder, Client, CommandInteraction, EmbedBuilder, ModalBuilde
 import redis from "../../lib/redis";
 import PlayerModel from "../../models/Player";
 import { config , configProfileEmbed } from "../../config";
+import { getPlayer } from "../../utils/getPlayer";
 
 export default {
     name: 'profile',
@@ -17,18 +18,7 @@ export default {
     permissionsRequired: [],
 
     callback: async (client: Client, interaction: CommandInteraction, followUp = false) => {
-        const result = await redis.get(interaction.user.id);
-        let player;
-
-        if (result) {
-            player = JSON.parse(result);
-        } else {
-            player = await PlayerModel.findOne({
-                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
-            });
-
-            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-        }
+        let player = await getPlayer(interaction);
 
         const profileOption = new StringSelectMenuBuilder()
             .setCustomId('profileOption')

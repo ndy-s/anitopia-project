@@ -13,7 +13,7 @@ export const charactersData = [
             "defense": 71,
             "speed": 80,
         },
-        "activeSkill": {
+        "passiveSkill": {
             "name": 'Dual Wielding',
             "descriptions": {
                 "Common": "When Kirito's health drops below 50%, he activates his Dual Wielding skill. This increases his attack by 30% and his speed by 50% for 3 turns.",
@@ -24,7 +24,7 @@ export const charactersData = [
             },
             "baseName": "Resilience Boost" 
         },
-        "passiveSkill": {
+        "activeSkill": {
             "name": 'Starbust Stream',
             "descriptions": {
                 "Common": "Kirito unleashes a rapid 16-hit combo that targets a single enemy. The skill dealing 150% true damage of Kirito's attack.",
@@ -34,7 +34,8 @@ export const charactersData = [
                 "Legendary": "Kirito unleashes a rapid 16-hit combo that targets a single enemy. The skill dealing 170% true damage of Kirito's attack."
             },
             "baseName": "True Damage Strike"
-        }
+        },
+        "quotes": "I may be a solo player, but in this virtual world I feel more alive than ever."
     },
     {
         "name": 'Yuno',
@@ -48,7 +49,7 @@ export const charactersData = [
             "defense": 61,
             "speed": 86,
         },
-        "activeSkill": {
+        "passiveSkill": {
             "name": 'Spirit Dive',
             "descriptions": {
                 "Common": "When Yuno's health drops below 50%, he enters Spirit Dive mode, increasing his attack by 30% and his speed by 50% for 3 turns.",
@@ -59,7 +60,7 @@ export const charactersData = [
             },
             "baseName": "Resilience Boost" 
         },
-        "passiveSkill": {
+        "activeSkill": {
             "name": 'Spirit Storm',
             "descriptions": {
                 "Common": "Yuno uses his aero powers to create a strong wind that hits all enemies. This skill deals 105% aero damage to all enemies.",
@@ -69,6 +70,7 @@ export const charactersData = [
                 "Legendary": "Yuno uses his aero powers to create a strong wind that hits all enemies. This skill deals 125% aero damage to all enemies."
             },
             "baseName": "Elemental Burst"
-        }
+        },
+        "quotes": "Once you elites trip up, you're so weak."
     }
 ];
