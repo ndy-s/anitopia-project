@@ -1,3 +1,6 @@
+import CharaCollectionModel from "../models/CharaCollection";
+import generateUniqueID from "./generateUniqueID";
+
 interface RarityChances {
     Common: number;
     Uncommon: number;
@@ -6,7 +9,15 @@ interface RarityChances {
     Legendary: number;
 }
 
-export function summonCharacters(characters: any[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1) {
+const rarityAdjustments = {
+    Common: 0,
+    Uncommon: 50,
+    Rare: 100,
+    Epic: 150,
+    Legendary: 200
+};
+
+export async function summonCharacters(characters: any[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1) {
     const summonedCharacters = [];
 
     for (let i = 0; i < numCharacters; i++) {
@@ -31,6 +42,11 @@ export function summonCharacters(characters: any[], rarityChances: RarityChances
         }
 
         guaranted--;
+
+        for (const attr in character.attributes) {
+            character.attributes[attr] += rarityAdjustments[rarity];
+        }
+
         summonedCharacters.push({ character, rarity });
     }
 

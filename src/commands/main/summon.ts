@@ -2,12 +2,12 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteract
 import redis from "../../lib/redis";
 import PlayerModel from "../../models/Player";
 import CharaCollectionModel from "../../models/CharaCollection";
-import { config } from "../../config";
+import { configCharacterSummonedEmbed } from "../../config";
 
-import generateUniqueID from "../../utils/generateUniqueID";
 import { getAllCharacters } from "../../utils/getAllCharacters";
 import { summonCharacters } from "../../utils/summonCharacters";
 import { getPlayer } from "../../utils/getPlayer";
+import generateUniqueID from "../../utils/generateUniqueID";
 
 export default {
     name: 'summon',
@@ -188,38 +188,6 @@ export default {
                             time: 300_000
                         });
 
-                        const adjustAttributesByRarity = (rarity: string, attributes:  { 
-                            health: number; 
-                            attack: number; 
-                            defense: number; 
-                            speed: number; 
-                        }) => {
-                            let adjustment;
-                            switch (rarity) {
-                                case 'Uncommon':
-                                    adjustment = 50;
-                                    break;
-                                case 'Rare':
-                                    adjustment = 100;
-                                    break;
-                                case 'Epic':
-                                    adjustment = 150;
-                                    break;
-                                case 'Legendary':
-                                    adjustment = 200;
-                                    break;
-                                default:
-                                    adjustment = 0;
-                            }
-                        
-                            return {
-                                health: attributes.health + adjustment,
-                                attack: attributes.attack + adjustment,
-                                defense: attributes.defense + adjustment,
-                                speed: attributes.speed + adjustment
-                            };
-                        }
-
                         if (noviceSummonConfirmation.customId === 'back') {
                             callbackFunction.callback(client, noviceSummonConfirmation, false, true);
                         } else if (noviceSummonConfirmation.customId === 'summonOne') {
@@ -227,8 +195,11 @@ export default {
                                 lastClaimTimestamp = new Date(player.scrolls.novice.lastClaim).getTime();
                                 currentDate = new Date().getTime();
                                 const characters = await getAllCharacters();
+
+                                const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
+                                const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
                             
-                                const summonedCharacterData = summonCharacters(
+                                const [summonedCharacterData] = await summonCharacters(
                                     characters, 
                                     {
                                         Common: 60,
@@ -238,7 +209,7 @@ export default {
                                         Legendary: 0
                                     },
                                     player.scrolls.novice.guaranteed,
-                                )[0];
+                                );                                
 
                                 player = await PlayerModel.findOneAndUpdate(
                                     { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
@@ -255,94 +226,24 @@ export default {
                                 );
                         
                                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-                                
-                                const adjustedAttributes = adjustAttributesByRarity(summonedCharacterData.rarity, summonedCharacterData.character.attributes);
-                                const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });;
 
                                 const newCharaCollection = new CharaCollectionModel({
                                     playerId: player._id,
-                                    characterId: generateUniqueID(latestCharacter?.characterId as string | null),
+                                    characterId: characterId,
                                     character: summonedCharacterData.character._id,
                                     rarity: summonedCharacterData.rarity,
                                     attributes: {
-                                        health: adjustedAttributes.health,
-                                        attack: adjustedAttributes.attack,
-                                        defense: adjustedAttributes.defense,
-                                        speed: adjustedAttributes.speed,
+                                        health: summonedCharacterData.character.attributes.health,
+                                        attack: summonedCharacterData.character.attributes.attack,
+                                        defense: summonedCharacterData.character.attributes.defense,
+                                        speed: summonedCharacterData.character.attributes.speed,
                                     }
                                 });
 
-                                const characterSummonedEmbed = new EmbedBuilder()
-                                    .setColor('Blurple')
-                                    .setAuthor({
-                                        name: interaction.user.username,
-                                        iconURL: interaction.user.displayAvatarURL(),
-                                    })
-                                    .setTitle('Novice Scroll Summon')
-                                    .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-                                    .setDescription(`Congratulations! You've successfully summoned **${summonedCharacterData.character.name} (${summonedCharacterData.character.fullname})** with the Novice Scroll.`)
-                                    .addFields(
-                                        {
-                                            name: 'Character ID',
-                                            value: `\`${newCharaCollection.characterId}\``,
-                                            inline: true
-                                        },
-                                        {
-                                            name: 'Series',
-                                            value: `${summonedCharacterData.character.series}`,
-                                            inline: true
-                                        },
-                                        {
-                                            name: `Rarity`,
-                                            value: `__${summonedCharacterData.rarity}__`,
-                                            inline: true,
-                                        },
-                                        {
-                                            name: 'Element',
-                                            value: `${summonedCharacterData.character.element}`,
-                                            inline: true, 
-                                        },
-                                        {
-                                            name: `Class`,
-                                            value: `${summonedCharacterData.character.class}`,
-                                            inline: true
-                                        },
-                                        {
-                                            name: `Health`,
-                                            value: `${adjustedAttributes.health}`,
-                                            inline: true,
-                                        },
-                                        {
-                                            name: `Attack`,
-                                            value: `${adjustedAttributes.attack}`,
-                                            inline: true,
-                                        },
-                                        {
-                                            name: `Defense`,
-                                            value: `${adjustedAttributes.defense}`,
-                                            inline: true,
-                                        },
-                                        {
-                                            name: `Speed`,
-                                            value: `${adjustedAttributes.speed}`,
-                                            inline: true,
-                                        },
-                                        {
-                                            name: `Passive Skill`,
-                                            value: `**${summonedCharacterData.character.passiveSkill.name}**: ${summonedCharacterData.character.passiveSkill.descriptions[summonedCharacterData.rarity]}`
-                                        },
-                                        {
-                                            name: "Active Skill",
-                                            value: `**${summonedCharacterData.character.activeSkill.name}**: ${summonedCharacterData.character.activeSkill.descriptions[summonedCharacterData.rarity]}`
-                                        },
-                                        {
-                                            name: "Catchphrase",
-                                            value: `_"${summonedCharacterData.character.quotes}"_`
-                                        }
-                                    )
-                                    .setFooter({
-                                        text: `New character added, see it with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`
-                                    });
+                                const characterSummonedEmbed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId);
+                                characterSummonedEmbed.setFooter({
+                                    text: `New character added, see it with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`
+                                });
 
                                 const characterSummonedComponentRow: any = new ActionRowBuilder()
                                     .addComponents(
@@ -392,7 +293,7 @@ export default {
                             async function handleSummonedTenCharacterPage(noviceSummonConfirmation: CollectedInteraction) {
                                 const characters = await getAllCharacters();
                             
-                                const summonedCharacterDataArray = summonCharacters(
+                                const summonedCharacterDataArray = await summonCharacters(
                                     characters, 
                                     {
                                         Common: 60,
@@ -420,106 +321,114 @@ export default {
                         
                                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
-                                let charaUniqueIds: string[] = []; 
+                                const characterSummonedTenEmbedArray = [
+                                    new EmbedBuilder()
+                                        .setColor('Blurple')
+                                        .setAuthor({
+                                            name: interaction.user.username,
+                                            iconURL: interaction.user.displayAvatarURL(),
+                                        })
+                                        .setTitle('Novice Scroll Summon')
+                                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                                        .setDescription(`Congratulations! You've successfully summoned 10 new characters. To view the details of each character, simply use the next and previous buttons to navigate through the pages.`)
+                                ];
 
                                 for (const summonedCharacterData of summonedCharacterDataArray) {
-                                    const adjustedAttributes = adjustAttributesByRarity(summonedCharacterData.rarity, summonedCharacterData.character.attributes);
                                     const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
+                                    const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
 
-                                    const uniqueId = generateUniqueID(latestCharacter?.characterId as string | null);
-                                    charaUniqueIds.push(uniqueId);
-                                
                                     const newCharaCollection = new CharaCollectionModel({
                                         playerId: player._id,
-                                        characterId: uniqueId,
+                                        characterId: characterId,
                                         character: summonedCharacterData.character._id,
                                         rarity: summonedCharacterData.rarity,
                                         attributes: {
-                                            health: adjustedAttributes.health,
-                                            attack: adjustedAttributes.attack,
-                                            defense: adjustedAttributes.defense,
-                                            speed: adjustedAttributes.speed,
+                                            health: summonedCharacterData.character.attributes.health,
+                                            attack: summonedCharacterData.character.attributes.attack,
+                                            defense: summonedCharacterData.character.attributes.defense,
+                                            speed: summonedCharacterData.character.attributes.speed,
                                         }
                                     });
-                                
                                     await newCharaCollection.save();
-                                }
-                                const currentPage = 1;
-                                const totalPages = 20;
 
-                                const characterSummonedTenEmbed = new EmbedBuilder()
-                                    .setColor('Blurple')
-                                    .setAuthor({
-                                        name: interaction.user.username,
-                                        iconURL: interaction.user.displayAvatarURL(),
-                                    })
-                                    .setTitle('Novice Scroll Summon')
-                                    .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-                                    .setDescription(`Congratulations! You've successfully summoned 10 new characters. To view the details of each character, simply use the next and previous buttons to navigate through the pages.`)
-                                    .setFooter({
-                                        text: `Page ${currentPage} of ${totalPages}. Click the next or previous button to navigate.`
+                                    characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId));
+                                    characterSummonedTenEmbedArray[0].addFields({
+                                        name: `🔹 ${summonedCharacterData.character.name}`,
+                                        value: `ID: \`${characterId}\`\nRarity: **${summonedCharacterData.rarity}**`,
+                                        inline: true,
                                     });
-                                    
-                                summonedCharacterDataArray.forEach((summonedCharacterData, index) => {
-                                    characterSummonedTenEmbed.addFields(
-                                        {
-                                            name: `🔹 ${summonedCharacterData.character.name}`,
-                                            value: `ID: \`${charaUniqueIds[index]}\`\nRarity: **${summonedCharacterData.rarity}**`,
-                                            inline: true,
-                                        }
-                                    );
+                                }
+
+                                characterSummonedTenEmbedArray[0].addFields({
+                                    name: `New characters have joined your collection!`,
+                                    value: `Check them out with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`,
+                                    inline: false,
                                 });
                                 
-                                characterSummonedTenEmbed.addFields(
-                                    {
-                                        name: `New characters have joined your collection!`,
-                                        value: `Check them out with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`,
-                                        inline: false,
-                                    }
-                                );
+                                async function handlePages(noviceSummonConfirmation: CollectedInteraction, currentPage: number = 0) {
+                                        const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
+                                        .setFooter({
+                                            text: `Page ${currentPage + 1} of ${characterSummonedTenEmbedArray.length}. Click the next or previous button to navigate.`
+                                        });
 
-                                const characterSummonedTenComponentRow: any = new ActionRowBuilder()
-                                .addComponents(
-                                    backButton,
-                                    summonTenButton
-                                        .setLabel('Summon 10')
-                                        .setDisabled(player.scrolls.novice.count < 1 ? true : false)
-                                );
+                                    const prevButton = new ButtonBuilder()
+                                        .setCustomId('prev')
+                                        .setStyle(ButtonStyle.Primary)
+                                        .setEmoji('⬅️');
 
+                                    const nextButton = new ButtonBuilder()
+                                        .setCustomId('next')
+                                        .setStyle(ButtonStyle.Primary)
+                                        .setEmoji('➡️');
 
-                                await noviceSummonConfirmation.deferUpdate();
-                                const noviceSummonedTenCharacterResponse = await noviceSummonConfirmation.editReply({
-                                    embeds: [characterSummonedTenEmbed],
-                                    components: [characterSummonedTenComponentRow],
-                                });
+                                    const characterSummonedTenComponentRow: any = new ActionRowBuilder()
+                                        .addComponents(
+                                            backButton,
+                                            prevButton,
+                                            nextButton,
+                                            summonTenButton
+                                                .setLabel('Summon 10')
+                                                .setDisabled(player.scrolls.novice.count < 1 ? true : false)
+                                        );
 
-                                try {
-                                    const noviceSummonedTenCharacterConfirmation = await noviceSummonedTenCharacterResponse.awaitMessageComponent({
-                                        filter: collectorFilter,
-                                        time: 300_000
+                                    await noviceSummonConfirmation.deferUpdate();
+                                    const noviceSummonedTenCharacterResponse = await noviceSummonConfirmation.editReply({
+                                        embeds: [characterSummonedTenEmbed],
+                                        components: [characterSummonedTenComponentRow],
                                     });
-                        
-                                    if (noviceSummonedTenCharacterConfirmation.customId === 'back') {
-                                        await handleNovicePage(noviceSummonedTenCharacterConfirmation);
-                                    } else if (noviceSummonedTenCharacterConfirmation.customId === 'summonTen') {
-                                        await handleSummonedTenCharacterPage(noviceSummonedTenCharacterConfirmation);
-                                    }
-                                } catch (error) {
-                                    if (error instanceof Error) {
-                                        if (error.message === "Collector received no interactions before ending with reason: time") {
-                                            characterSummonedTenEmbed.setFooter({
-                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                            });
-                                            await noviceSummonConfirmation.editReply({
-                                                embeds: [characterSummonedTenEmbed],
-                                                components: []
-                                            });
+
+                                    try {
+                                        const noviceSummonedTenCharacterConfirmation = await noviceSummonedTenCharacterResponse.awaitMessageComponent({
+                                            filter: collectorFilter,
+                                            time: 300_000
+                                        });
+                            
+                                        if (noviceSummonedTenCharacterConfirmation.customId === 'back') {
+                                            await handleNovicePage(noviceSummonedTenCharacterConfirmation);
+                                        } else if (noviceSummonedTenCharacterConfirmation.customId === 'summonTen') {
+                                            await handleSummonedTenCharacterPage(noviceSummonedTenCharacterConfirmation);
+                                        } else if (noviceSummonedTenCharacterConfirmation.customId === 'prev') {
+                                            await handlePages(noviceSummonedTenCharacterConfirmation, currentPage - 1);
+                                        } else if (noviceSummonedTenCharacterConfirmation.customId === 'next') {
+                                            await handlePages(noviceSummonedTenCharacterConfirmation, currentPage + 1);
                                         }
-                                    } else {
-                                        console.log(`Novice Scroll Summon Error: ${error}`);
+                                    } catch (error) {
+                                        if (error instanceof Error) {
+                                            if (error.message === "Collector received no interactions before ending with reason: time") {
+                                                characterSummonedTenEmbed.setFooter({
+                                                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                                });
+                                                await noviceSummonConfirmation.editReply({
+                                                    embeds: [characterSummonedTenEmbed],
+                                                    components: []
+                                                });
+                                            }
+                                        } else {
+                                            console.log(`Novice Scroll Summon Error: ${error}`);
+                                        }
                                     }
                                 }
-
+                                handlePages(noviceSummonConfirmation);
                             }
 
                             await handleSummonedTenCharacterPage(noviceSummonConfirmation);
