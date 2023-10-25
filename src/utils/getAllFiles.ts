@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export default (directory: string, foldersOnly = false): string[] => {
+export const getAllFiles = (directory: string, foldersOnly = false): string[] => {
     let fileNames: string[] = [];
 
     try {

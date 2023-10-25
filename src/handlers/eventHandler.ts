@@ -1,6 +1,6 @@
 import * as path from 'path';
-import getAllFiles from '../utils/getAllFiles';
 import { Client } from 'discord.js';
+import { getAllFiles } from '../utils';
 
 export default (client: Client) => {
     const eventPath = path.join(__dirname, '..', 'events');

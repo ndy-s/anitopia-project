@@ -1,8 +1,7 @@
-export default (latestUserToken: string | null) => {
+export const generateUniqueID = (latestUserToken: string | null) => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const charactersLength = characters.length;
         
-    let code;
     let generatedCode;
     if (latestUserToken) {
         const length = Math.max(latestUserToken.length, 4);
@@ -10,7 +9,7 @@ export default (latestUserToken: string | null) => {
         if (latestUserToken === '9'.repeat(length)) {
             generatedCode = 'A' + 'A'.repeat(length);
         } else {
-            code = latestUserToken;
+            const code = latestUserToken;
             const codeArray = code.split('');
 
             for (let i = codeArray.length - 1; i >= 0; i--) {

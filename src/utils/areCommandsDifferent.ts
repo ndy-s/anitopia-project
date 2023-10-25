@@ -1,7 +1,7 @@
 import { ApplicationCommand, ApplicationCommandOptionChoiceData, ApplicationCommandOptionData, GuildResolvable } from "discord.js";
-import { CommandObject } from "../interfaces";
+import { ICommandObject } from "../interfaces";
 
-export default (existingCommand: ApplicationCommand<{ guild: GuildResolvable }>, localCommand: CommandObject) => {
+export const areCommandsDifferent = (existingCommand: ApplicationCommand<{ guild: GuildResolvable }>, localCommand: ICommandObject) => {
     const areChoicesDifferent = (existingChoices: ApplicationCommandOptionChoiceData[], localChoices: ApplicationCommandOptionChoiceData[]) => {
         for (const localChoice of localChoices) {
             const existingChoice = existingChoices?.find(

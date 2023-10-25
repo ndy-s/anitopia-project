@@ -1,5 +1,5 @@
 import redis from "../lib/redis";
-import CharacterModel from "../models/Character";
+import { CharacterModel } from "../models";
 
 export async function getAllCharacters() {
     const characterResult = await redis.get('characters');

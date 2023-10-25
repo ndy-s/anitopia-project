@@ -1,9 +1,9 @@
 import * as path from "path";
-import getAllFiles from "./getAllFiles";
-import { CommandObject } from "../interfaces";
+import { getAllFiles } from "./getAllFiles";
+import { ICommandObject } from "../interfaces";
 
-export default (exceptions: string[] = []) => {
-    let localCommands: CommandObject[] = [];
+export const getLocalCommands = (exceptions: string[] = []) => {
+    let localCommands: ICommandObject[] = [];
     const commandsPath = path.join(__dirname, '..', 'commands');
     const commandCategories = getAllFiles(commandsPath, true);
 
@@ -12,7 +12,7 @@ export default (exceptions: string[] = []) => {
         const commandFiles = getAllFiles(commandCategory);
 
         for (const commandFile of commandFiles) {
-            const commandObject: CommandObject = require(commandFile).default;
+            const commandObject: ICommandObject = require(commandFile).default;
 
             if (exceptions.includes(commandObject.name)) continue;
             localCommands.push(commandObject);

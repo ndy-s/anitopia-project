@@ -1,13 +1,12 @@
 import { Client, CommandInteraction, EmbedBuilder } from 'discord.js';
+
 import { devs, testServer } from '../../../config.json';
-import getLocalCommands from '../../utils/getLocalCommands';
+import { config } from '../../config';
+
+import { getLocalCommands, getPlayer } from '../../utils';
+import { commandNA, cooldownMS } from '../../commands/exceptions';
 
 import register from '../../commands/account/register';
-
-import commandNA from '../../commands/exceptions/commandNA';
-import cooldownMS from '../../commands/exceptions/cooldownMS';
-import { config } from '../../config';
-import { getPlayer } from '../../utils/getPlayer';
 
 export default async (client: Client, interaction: CommandInteraction) => {
     if (!interaction.isChatInputCommand()) return;

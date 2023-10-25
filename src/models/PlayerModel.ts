@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import { IPlayerModel } from '../interfaces';
 
 const playerSchema = new Schema({
     userId: {
@@ -87,5 +88,4 @@ const playerSchema = new Schema({
     }
 }, { timestamps: true });
 
-const PlayerModel = model('Player', playerSchema);
-export default PlayerModel;
+export const PlayerModel = model<IPlayerModel>('Player', playerSchema);

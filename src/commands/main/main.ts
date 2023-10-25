@@ -1,5 +1,7 @@
 import { ActionRowBuilder, Client, CommandInteraction, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+
 import profile from "../account/profile";
+import character from "../character/character";
 import summon from "./summon";
 
 export default {
@@ -31,6 +33,11 @@ export default {
                     .setValue('summon')
                     .setEmoji('🔮'),
                 new StringSelectMenuOptionBuilder()
+                    .setLabel('Character')
+                    .setDescription('Manage and upgrade your team of characters.')
+                    .setValue('character')
+                    .setEmoji('🧙'),
+                new StringSelectMenuOptionBuilder()
                     .setLabel('Profile')
                     .setDescription('Manage game progress, profile, and more')
                     .setValue('profile')
@@ -50,33 +57,35 @@ export default {
                 text: 'Select an option from the dropdown menu to continue.'
             });
 
-        const mainComponentRow = new ActionRowBuilder().addComponents(mainOption);
+        const mainComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(mainOption);
 
-        const responseOptions: any = {
+        const responseOptions = {
             embeds: [mainEmbed],
             components: [mainComponentRow]
         };
 
-        const mainResponse = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
+        const response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
 
         const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
 
         try {
-            const mainConfirmation = await mainResponse.awaitMessageComponent({
+            const confirmation = await response.awaitMessageComponent({
                 filter: collectorFilter,
                 time: 300_000
             });
 
-            if (mainConfirmation.customId === 'mainOption' && 'values' in mainConfirmation) {
-                await mainConfirmation.deferUpdate();
-                await mainConfirmation.editReply({
+            if (confirmation.customId === 'mainOption' && 'values' in confirmation) {
+                await confirmation.deferUpdate();
+                await confirmation.editReply({
                     components: []
                 });
 
-                if (mainConfirmation.values.includes('profile')) {
+                if (confirmation.values.includes('profile')) {
                     await profile.callback(client, interaction, true);
-                } else if (mainConfirmation.values.includes('summon')) {
+                } else if (confirmation.values.includes('summon')) {
                     await summon.callback(client, interaction, true);
+                } else if (confirmation.values.includes('character')) {
+                    await character.callback(client, interaction, true);
                 }
             } 
         } catch (error) {

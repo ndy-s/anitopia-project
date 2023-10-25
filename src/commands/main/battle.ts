@@ -27,7 +27,7 @@ export default {
             .setLabel('Cancel')
             .setStyle(ButtonStyle.Secondary);
 
-        const battleRow: any = new ActionRowBuilder()
+        const battleRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(confirmButton, cancelButton);
 
         const response = await interaction.reply({

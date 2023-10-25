@@ -1,5 +1,5 @@
 import { ApplicationCommand, ApplicationCommandOptionType, Client, CommandInteraction } from "discord.js";
-import getApplicationCommands from "../../utils/getApplicationCommands";
+import { getApplicationCommands } from "../../utils";
 
 export default {
     name: 'delete-command',

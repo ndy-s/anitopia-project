@@ -1,7 +1,8 @@
 import { Client, EmbedBuilder, ModalSubmitInteraction } from "discord.js";
-import PlayerModel from "../../models/Player";
 import redis from "../../lib/redis";
+
 import { config, configProfileEmbed } from "../../config";
+import { PlayerModel } from "../../models";
 
 export default {
     name: "customizeProfileModal",

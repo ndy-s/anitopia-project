@@ -1,13 +1,9 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, MessageComponentInteraction } from "discord.js";
 import redis from "../../lib/redis";
-import PlayerModel from "../../models/Player";
-import CharaCollectionModel from "../../models/CharaCollection";
-import { configCharacterSummonedEmbed } from "../../config";
 
-import { getAllCharacters } from "../../utils/getAllCharacters";
-import { summonCharacters } from "../../utils/summonCharacters";
-import { getPlayer } from "../../utils/getPlayer";
-import generateUniqueID from "../../utils/generateUniqueID";
+import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID } from "../../utils";
+import { configCharacterSummonedEmbed } from "../../config";
+import { PlayerModel, CharaCollectionModel } from "../../models";
 
 export default {
     name: 'summon',
@@ -86,36 +82,36 @@ export default {
             .setStyle(ButtonStyle.Danger)
             .setEmoji('🟣');
         
-        const summonComponentRow: any = new ActionRowBuilder()
+        const summonComponentRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 noviceScrollButton,
                 eliteScrollButton,
                 seriesScrollButton
             );
 
-        const responseOptions: any = {
+        const responseOptions = {
             embeds: [summonEmbed],
             components: [summonComponentRow],
         };
 
-        let summonResponse;
+        let response;
         if (back) {
             await (interaction as MessageComponentInteraction).deferUpdate();
-            summonResponse = await interaction.editReply(responseOptions);
+            response = await interaction.editReply(responseOptions);
         } else {
-            summonResponse = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
+            response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
         }
 
         const collectorFilter = (i: { user: { id: string } }) => i.user.id === interaction.user.id;
 
         try {
-            const summonConfirmation = await summonResponse.awaitMessageComponent({
+            const confirmation = await response.awaitMessageComponent({
                 filter: collectorFilter,
                 time: 300_000
             });
 
-            if (summonConfirmation.customId === 'novice') {
-                async function handleNovicePage(summonConfirmation: CollectedInteraction) {
+            if (confirmation.customId === 'novice') {
+                async function handleNovicePage(confirmation: CollectedInteraction) {
                     lastClaimTimestamp = new Date(player.scrolls.novice.lastClaim).getTime();
                     currentDate = new Date().getTime();
 
@@ -168,7 +164,7 @@ export default {
                         .setEmoji('🟣')
                         .setDisabled(player.scrolls.novice.count < 10 ? true : false);
 
-                    const noviceSummonComponentRow: any = new ActionRowBuilder()
+                    const noviceSummonComponentRow = new ActionRowBuilder<ButtonBuilder>()
                         .addComponents(
                             backButton,
                             summonOneButton,
@@ -176,22 +172,22 @@ export default {
                         );
 
 
-                    await summonConfirmation.deferUpdate();
-                    const noviceSummonResponse = await summonConfirmation.editReply({
+                    await confirmation.deferUpdate();
+                    const response = await confirmation.editReply({
                         embeds: [noviceScrollEmbed],
                         components: [noviceSummonComponentRow]
                     });
             
                     try {
-                        const noviceSummonConfirmation = await noviceSummonResponse.awaitMessageComponent({
+                        const confirmation = await response.awaitMessageComponent({
                             filter: collectorFilter,
                             time: 300_000
                         });
 
-                        if (noviceSummonConfirmation.customId === 'back') {
-                            callbackFunction.callback(client, noviceSummonConfirmation, false, true);
-                        } else if (noviceSummonConfirmation.customId === 'summonOne') {
-                            async function handleSummonedCharacterPage(noviceSummonConfirmation: CollectedInteraction) {
+                        if (confirmation.customId === 'back') {
+                            callbackFunction.callback(client, confirmation, false, true);
+                        } else if (confirmation.customId === 'summonOne') {
+                            async function handleSummonedCharacterPage(confirmation: CollectedInteraction) {
                                 lastClaimTimestamp = new Date(player.scrolls.novice.lastClaim).getTime();
                                 currentDate = new Date().getTime();
                                 const characters = await getAllCharacters();
@@ -219,11 +215,12 @@ export default {
                                             'scrolls.novice.guaranteed': player.scrolls.novice.guaranteed === 0 ? 100 : -1 
                                         },
                                         $set: {
-                                            'scrolls.novice.lastClaim': Date.now()
+                                            'scrolls.novice.lastClaim': (currentDate - lastClaimTimestamp >= cooldownDuration) ? Date.now() : lastClaimTimestamp 
                                         }
                                     },
                                     { new: true}
                                 );
+
                         
                                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
@@ -245,7 +242,7 @@ export default {
                                     text: `New character added, see it with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`
                                 });
 
-                                const characterSummonedComponentRow: any = new ActionRowBuilder()
+                                const characterSummonedComponentRow = new ActionRowBuilder<ButtonBuilder>()
                                     .addComponents(
                                         backButton,
                                         summonOneButton
@@ -254,43 +251,41 @@ export default {
                                     );
 
                                 await newCharaCollection.save();
-                                await noviceSummonConfirmation.deferUpdate();
-                                const noviceSummonedCharacterResponse = await noviceSummonConfirmation.editReply({
+                                await confirmation.deferUpdate();
+                                const response = await confirmation.editReply({
                                     embeds: [characterSummonedEmbed],
                                     components: [characterSummonedComponentRow]
                                 });
 
                                 try {
-                                    const noviceSummonedCharacterConfirmation = await noviceSummonedCharacterResponse.awaitMessageComponent({
+                                    const confirmation = await response.awaitMessageComponent({
                                         filter: collectorFilter,
                                         time: 300_000
                                     });
                         
-                                    if (noviceSummonedCharacterConfirmation.customId === 'back') {
-                                        await handleNovicePage(noviceSummonedCharacterConfirmation);
-                                    } else if (noviceSummonedCharacterConfirmation.customId === 'summonOne') {
-                                        await handleSummonedCharacterPage(noviceSummonedCharacterConfirmation);
+                                    if (confirmation.customId === 'back') {
+                                        await handleNovicePage(confirmation);
+                                    } else if (confirmation.customId === 'summonOne') {
+                                        await handleSummonedCharacterPage(confirmation);
                                     }
                                 } catch (error) {
-                                    if (error instanceof Error) {
-                                        if (error.message === "Collector received no interactions before ending with reason: time") {
-                                            characterSummonedEmbed.setFooter({
-                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                            });
-                                            await noviceSummonConfirmation.editReply({
-                                                embeds: [characterSummonedEmbed],
-                                                components: []
-                                            });
-                                        }
+                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                        characterSummonedEmbed.setFooter({
+                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                        });
+                                        await confirmation.editReply({
+                                            embeds: [characterSummonedEmbed],
+                                            components: []
+                                        });
                                     } else {
                                         console.log(`Novice Scroll Summon Error: ${error}`);
                                     }
                                 }
                             }
 
-                            await handleSummonedCharacterPage(noviceSummonConfirmation);
-                        } else if (noviceSummonConfirmation.customId === 'summonTen') {
-                            async function handleSummonedTenCharacterPage(noviceSummonConfirmation: CollectedInteraction) {
+                            await handleSummonedCharacterPage(confirmation);
+                        } else if (confirmation.customId === 'summonTen') {
+                            async function handleSummonedTenCharacterPage(confirmation: CollectedInteraction) {
                                 const characters = await getAllCharacters();
                             
                                 const summonedCharacterDataArray = await summonCharacters(
@@ -364,105 +359,102 @@ export default {
                                     value: `Check them out with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`,
                                     inline: false,
                                 });
+
+                                const prevButton = new ButtonBuilder()
+                                    .setCustomId('prev')
+                                    .setStyle(ButtonStyle.Primary)
+                                    .setEmoji('⬅️');
+
+                                const nextButton = new ButtonBuilder()
+                                    .setCustomId('next')
+                                    .setStyle(ButtonStyle.Primary)
+                                    .setEmoji('➡️');
+
+                                const characterSummonedTenComponentRow = new ActionRowBuilder<ButtonBuilder>()
+                                    .addComponents(
+                                        backButton,
+                                        prevButton,
+                                        nextButton,
+                                        summonTenButton
+                                            .setLabel('Summon 10')
+                                            .setDisabled(player.scrolls.novice.count < 1 ? true : false)
+                                    );
                                 
-                                async function handlePages(noviceSummonConfirmation: CollectedInteraction, currentPage: number = 0) {
-                                        const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
+                                async function handlePages(confirmation: CollectedInteraction, currentPage: number = 0) {
+                                    const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
                                         .setFooter({
                                             text: `Page ${currentPage + 1} of ${characterSummonedTenEmbedArray.length}. Click the next or previous button to navigate.`
                                         });
 
-                                    const prevButton = new ButtonBuilder()
-                                        .setCustomId('prev')
-                                        .setStyle(ButtonStyle.Primary)
-                                        .setEmoji('⬅️');
+                                    prevButton.setDisabled(currentPage < 1 ? true : false);
+                                    nextButton.setDisabled(currentPage === (characterSummonedTenEmbedArray.length - 1) ? true : false);
 
-                                    const nextButton = new ButtonBuilder()
-                                        .setCustomId('next')
-                                        .setStyle(ButtonStyle.Primary)
-                                        .setEmoji('➡️');
-
-                                    const characterSummonedTenComponentRow: any = new ActionRowBuilder()
-                                        .addComponents(
-                                            backButton,
-                                            prevButton,
-                                            nextButton,
-                                            summonTenButton
-                                                .setLabel('Summon 10')
-                                                .setDisabled(player.scrolls.novice.count < 1 ? true : false)
-                                        );
-
-                                    await noviceSummonConfirmation.deferUpdate();
-                                    const noviceSummonedTenCharacterResponse = await noviceSummonConfirmation.editReply({
+                                    await confirmation.deferUpdate();
+                                    const response = await confirmation.editReply({
                                         embeds: [characterSummonedTenEmbed],
                                         components: [characterSummonedTenComponentRow],
                                     });
 
                                     try {
-                                        const noviceSummonedTenCharacterConfirmation = await noviceSummonedTenCharacterResponse.awaitMessageComponent({
+                                        const confirmation = await response.awaitMessageComponent({
                                             filter: collectorFilter,
                                             time: 300_000
                                         });
                             
-                                        if (noviceSummonedTenCharacterConfirmation.customId === 'back') {
-                                            await handleNovicePage(noviceSummonedTenCharacterConfirmation);
-                                        } else if (noviceSummonedTenCharacterConfirmation.customId === 'summonTen') {
-                                            await handleSummonedTenCharacterPage(noviceSummonedTenCharacterConfirmation);
-                                        } else if (noviceSummonedTenCharacterConfirmation.customId === 'prev') {
-                                            await handlePages(noviceSummonedTenCharacterConfirmation, currentPage - 1);
-                                        } else if (noviceSummonedTenCharacterConfirmation.customId === 'next') {
-                                            await handlePages(noviceSummonedTenCharacterConfirmation, currentPage + 1);
+                                        if (confirmation.customId === 'back') {
+                                            await handleNovicePage(confirmation);
+                                        } else if (confirmation.customId === 'summonTen') {
+                                            await handleSummonedTenCharacterPage(confirmation);
+                                        } else if (confirmation.customId === 'prev') {
+                                            await handlePages(confirmation, currentPage - 1);
+                                        } else if (confirmation.customId === 'next') {
+                                            await handlePages(confirmation, currentPage + 1);
                                         }
                                     } catch (error) {
-                                        if (error instanceof Error) {
-                                            if (error.message === "Collector received no interactions before ending with reason: time") {
-                                                characterSummonedTenEmbed.setFooter({
-                                                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                                });
-                                                await noviceSummonConfirmation.editReply({
-                                                    embeds: [characterSummonedTenEmbed],
-                                                    components: []
-                                                });
-                                            }
+                                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                            characterSummonedTenEmbed.setFooter({
+                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                            });
+                                            await confirmation.editReply({
+                                                embeds: [characterSummonedTenEmbed],
+                                                components: []
+                                            });
                                         } else {
-                                            console.log(`Novice Scroll Summon Error: ${error}`);
+                                            console.log(`Multiple Novice Scroll Summon Error: ${error}`);
                                         }
                                     }
                                 }
-                                handlePages(noviceSummonConfirmation);
+                                await handlePages(confirmation);
                             }
 
-                            await handleSummonedTenCharacterPage(noviceSummonConfirmation);
+                            await handleSummonedTenCharacterPage(confirmation);
                         }
                     } catch (error) {
-                        if (error instanceof Error) {
-                            if (error.message === "Collector received no interactions before ending with reason: time") {
-                                noviceScrollEmbed.setFooter({
-                                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                });
-                                await summonConfirmation.editReply({
-                                    embeds: [noviceScrollEmbed],
-                                    components: []
-                                });
-                            }
+                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                            noviceScrollEmbed.setFooter({
+                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                            });
+                            await confirmation.editReply({
+                                embeds: [noviceScrollEmbed],
+                                components: []
+                            });
                         } else {
                             console.log(`Summon Command - Novice Scroll Error: ${error}`);
                         }
                     }
                 }
-                await handleNovicePage(summonConfirmation);
+                await handleNovicePage(confirmation);
             }
             
         } catch (error) {
-            if (error instanceof Error) {
-                if (error.message === "Collector received no interactions before ending with reason: time") {
-                    summonEmbed.setFooter({
-                        text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                    });
-                    await interaction.editReply({
-                        embeds: [summonEmbed],
-                        components: []
-                    });
-                }
+            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                summonEmbed.setFooter({
+                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                });
+                await interaction.editReply({
+                    embeds: [summonEmbed],
+                    components: []
+                });
             } else {
                 console.log(`Summon Command Error: ${error}`);
             }

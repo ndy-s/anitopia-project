@@ -1,7 +1,7 @@
 import { CommandInteraction, EmbedBuilder } from "discord.js";
 import { config } from "../../config";
 
-export default (interaction: CommandInteraction) => {
+export const accountNF = (interaction: CommandInteraction) => {
     interaction.reply({ embeds: [
         new EmbedBuilder()
             .setColor('#FF0000')

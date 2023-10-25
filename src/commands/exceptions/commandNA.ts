@@ -1,7 +1,7 @@
 import { CommandInteraction, EmbedBuilder } from "discord.js";
 import { config } from "../../config";
 
-export default (interaction: CommandInteraction) => {
+export const commandNA = (interaction: CommandInteraction) => {
     interaction.reply({
         embeds: [
             new EmbedBuilder()

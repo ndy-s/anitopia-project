@@ -1,5 +1,4 @@
-import CharaCollectionModel from "../models/CharaCollection";
-import generateUniqueID from "./generateUniqueID";
+import { ICharacterModel } from "../interfaces";
 
 interface RarityChances {
     Common: number;
@@ -7,7 +6,7 @@ interface RarityChances {
     Rare: number;
     Epic: number;
     Legendary: number;
-}
+};
 
 const rarityAdjustments = {
     Common: 0,
@@ -17,12 +16,12 @@ const rarityAdjustments = {
     Legendary: 200
 };
 
-export async function summonCharacters(characters: any[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1) {
+export async function summonCharacters(characters: ICharacterModel[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1) {
     const summonedCharacters = [];
 
     for (let i = 0; i < numCharacters; i++) {
         const randomIndex = Math.floor(Math.random() * characters.length);
-        const character = characters[randomIndex];
+        const character = JSON.parse(JSON.stringify(characters[randomIndex]));
 
         let rarity: keyof RarityChances;
         const randomNum = Math.random() * 100;

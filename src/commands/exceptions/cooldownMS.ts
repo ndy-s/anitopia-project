@@ -1,9 +1,10 @@
 import { CommandInteraction, EmbedBuilder } from "discord.js";
-import CooldownModel from '../../models/Cooldown';
-import { CommandObject } from "../../interfaces";
-import { config } from "../../config";
 
-export default async (interaction: CommandInteraction, commandObject: CommandObject) => {
+import { config } from "../../config";
+import { CooldownModel } from "../../models";
+import { ICommandObject } from "../../interfaces";
+
+export const cooldownMS = async (interaction: CommandInteraction, commandObject: ICommandObject) => {
     const commandName = interaction.commandName;
     const userId = interaction.user.id;
 

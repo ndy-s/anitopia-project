@@ -1,9 +1,8 @@
 import { ApplicationCommand, ApplicationCommandManager, ApplicationCommandOptionData, Client, GuildApplicationCommandManager, GuildResolvable } from "discord.js";
-import getLocalCommands from "../../utils/getLocalCommands";
-import getApplicationCommands from "../../utils/getApplicationCommands";
-import areCommandsDifferent from "../../utils/areCommandsDifferent";
+
 import { testServer } from "../../../config.json";
-import { CommandObject } from "../../interfaces";
+import { getLocalCommands, getApplicationCommands, areCommandsDifferent } from "../../utils";
+import { ICommandObject } from "../../interfaces";
 
 export default async (client: Client) => {
     try {
@@ -11,7 +10,11 @@ export default async (client: Client) => {
         const applicationCommands = await getApplicationCommands(client);
         const testServerApplicationCommands = await getApplicationCommands(client, testServer);
 
-        const processCommand = async (command: CommandObject, existingCommand: ApplicationCommand<{ guild: GuildResolvable; }> | undefined, applicationCommands: GuildApplicationCommandManager | ApplicationCommandManager<ApplicationCommand<{ guild: GuildResolvable; }>, { guild: GuildResolvable; }, null>) => {
+        const processCommand = async (
+            command: ICommandObject, 
+            existingCommand: ApplicationCommand<{ guild: GuildResolvable; }> | undefined, 
+            applicationCommands: GuildApplicationCommandManager | ApplicationCommandManager<ApplicationCommand<{ guild: GuildResolvable; }>, { guild: GuildResolvable; }, null>
+        ) => {
             if (existingCommand) {
                 if (command.deleted) {
                     await applicationCommands.delete(existingCommand.id);

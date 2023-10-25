@@ -47,7 +47,6 @@ export default {
             });
 
         interaction.editReply({
-            content: '',
             embeds: [pingEmbed],
         });
     },

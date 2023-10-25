@@ -1,7 +1,7 @@
 import * as path from "path";
-import getAllFiles from "./getAllFiles";
+import { getAllFiles } from "./getAllFiles";
 
-export default (exceptions: string[] = []) => {
+export const getLocalModals = (exceptions: string[] = []) => {
     let localModalHandler = [];
     const modalHandlerPath = path.join(__dirname, '..', 'commands');
 

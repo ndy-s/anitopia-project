@@ -4,11 +4,10 @@ import mongoose from 'mongoose';
 
 import eventHandler from './handlers/eventHandler';
 
-import SkillModel from "./models/Skill";
+import { SkillModel, CharacterModel } from "./models";
 import { passiveSkillsData } from "./passiveSkillsData";
 import { activeSkillsData } from "./activeSkillsData";
 import { charactersData } from "./charactersData";
-import CharacterModel from "./models/Character";
 
 const client = new Client({
     intents: [

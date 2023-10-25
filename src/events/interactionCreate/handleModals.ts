@@ -1,6 +1,5 @@
 import { Client, ModalSubmitInteraction } from "discord.js";
-import getLocalModals from "../../utils/getLocalModals";
-
+import { getLocalModals } from "../../utils";
 
 export default async (client: Client, interaction: ModalSubmitInteraction) => {
     if (!interaction.isModalSubmit()) return;

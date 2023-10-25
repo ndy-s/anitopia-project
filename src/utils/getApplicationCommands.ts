@@ -1,6 +1,6 @@
 import { Client, Guild } from "discord.js";
 
-export default async (client: Client, guildId?: string) => {
+export const getApplicationCommands = async (client: Client, guildId?: string) => {
     let applicationCommands;
 
     if (guildId) {

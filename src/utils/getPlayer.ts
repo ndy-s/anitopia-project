@@ -1,6 +1,7 @@
 import { CollectedInteraction, CommandInteraction } from "discord.js";
-import PlayerModel from "../models/Player";
 import redis from "../lib/redis";
+
+import { PlayerModel } from "../models";
 
 export async function getPlayer(interaction: CommandInteraction | CollectedInteraction) {
     const result = await redis.get(interaction.user.id);

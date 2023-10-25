@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-
+import { ICharacterModel } from "../interfaces";
 
 const skillReferenceSchema = new Schema({
     name: {
@@ -62,5 +62,4 @@ const characterSchema = new Schema({
     quotes: String,
 }, { timestamps: true });
 
-const CharacterModel = model('Character', characterSchema);
-export default CharacterModel;
+export const CharacterModel = model<ICharacterModel>('Character', characterSchema);

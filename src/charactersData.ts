@@ -1,5 +1,3 @@
-import SkillModel from "./models/Skill";
-
 export const charactersData = [
     {
         "name": 'Kirito',

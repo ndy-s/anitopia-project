@@ -1,6 +1,7 @@
-import { Schema, model } from "mongoose";
+import { Model, Schema, model } from "mongoose";
+import { ICharaCollectionModel } from "../interfaces";
 
-const characterSchema = new Schema({
+const charaCollectionSchema = new Schema({
     playerId: {
         type: Schema.Types.ObjectId,
         ref: 'Player',
@@ -54,5 +55,5 @@ const characterSchema = new Schema({
         },
     }
 }, { timestamps: true });
-const CharaCollectionModel = model('CharaCollection', characterSchema);
-export default CharaCollectionModel;
+
+export const CharaCollectionModel = model<ICharaCollectionModel>('CharaCollection', charaCollectionSchema);

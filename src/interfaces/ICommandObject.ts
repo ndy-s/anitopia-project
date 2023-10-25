@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionData, Client, Interaction, PermissionsString } from "discord.js";
 
-export interface CommandObject {
+export interface ICommandObject {
     name: string;
     description: string;
     cooldown: number;
@@ -13,4 +13,4 @@ export interface CommandObject {
     permissionsRequired: PermissionsString[] | [];
     
     callback: (client: Client, interaction: Interaction) => void;
-};
+}

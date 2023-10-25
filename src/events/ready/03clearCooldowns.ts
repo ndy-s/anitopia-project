@@ -1,4 +1,4 @@
-import CooldownModel from "../../models/Cooldown";
+import { CooldownModel } from "../../models";
 
 export default () => {
     setInterval(async () => {

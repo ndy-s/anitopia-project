@@ -1,8 +1,9 @@
 import { ActionRowBuilder, Client, CommandInteraction, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import redis from "../../lib/redis";
-import PlayerModel from "../../models/Player";
-import { config , configProfileEmbed } from "../../config";
-import { getPlayer } from "../../utils/getPlayer";
+
+import { configProfileEmbed } from "../../config";
+import { getPlayer } from "../../utils";
+import { PlayerModel } from "../../models";
 
 export default {
     name: 'profile',
@@ -43,7 +44,7 @@ export default {
 
         const profileEmbed = configProfileEmbed(interaction, player);
 
-        const profileComponentRow: any = new ActionRowBuilder().addComponents(profileOption);
+        const profileComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(profileOption);
 
         const responseOptions = {
             embeds: [profileEmbed],
@@ -56,22 +57,22 @@ export default {
 
         try {
             while (true) {
-                let profileConfirmation = await response.awaitMessageComponent({
+                let confirmation = await response.awaitMessageComponent({
                     filter: collectorFilter,
                     time: 300_000
                 });
 
 
                 // profileOption.options.forEach(option => {
-                //     if ('values' in profileConfirmation) {
-                //         if (profileConfirmation.values.includes(option.data.value)) {
+                //     if ('values' in confirmation) {
+                //         if (confirmation.values.includes(option.data.value)) {
                 //             option.setDefault(true);
                 //         }
                 //     }
                 // });
 
-                if (profileConfirmation.customId === 'profileOption' && 'values' in profileConfirmation) {
-                    if (profileConfirmation.values.includes('customize')) {
+                if (confirmation.customId === 'profileOption' && 'values' in confirmation) {
+                    if (confirmation.values.includes('customize')) {
                         player = await PlayerModel.findOne({
                             userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                         });
@@ -91,29 +92,26 @@ export default {
                                 .setMaxLength(100)
                                 .setRequired(true);
     
-                            const customizeProfileModalRow: any = new ActionRowBuilder().addComponents(bioInput);
-                            customizeProfileModal.addComponents(customizeProfileModalRow);
-                            await profileConfirmation.showModal(customizeProfileModal);
+                            customizeProfileModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(bioInput));
+                            await confirmation.showModal(customizeProfileModal);
     
-                            const components: any = [new ActionRowBuilder().addComponents(profileOption)];
+                            const components = [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(profileOption)];
                             response = await (followUp ? response.edit({ components }) : interaction.editReply({ components }));
                         }
                     }
                 }
             }
         } catch (error) {
-            if (error instanceof Error) {
-                if (error.message === "Collector received no interactions before ending with reason: time") {
-                    profileEmbed.setFooter({
-                        text: `⏱️ This command is only active for 5 minutes. To use it again, please type /profile.`
-                    });
-                    await interaction.editReply({
-                        embeds: [profileEmbed],
-                        components: []
-                    });
-                } else {
-                    console.log(`Profile Command Error: ${error}`);
-                }
+            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                profileEmbed.setFooter({
+                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /profile.`
+                });
+                await interaction.editReply({
+                    embeds: [profileEmbed],
+                    components: []
+                });
+            } else {
+                console.log(`Profile Command Error: ${error}`);
             }
         }
 

@@ -1,13 +1,13 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CommandInteraction, EmbedBuilder } from "discord.js";
-import PlayerModel from "../../models/Player";
-
-import registrationNA from "../exceptions/registrationNA";
-import generateUniqueID from "../../utils/generateUniqueID";
-import { config } from "../../config";
 import redis from "../../lib/redis";
+
+import { config } from "../../config";
+import { getPlayer, generateUniqueID } from "../../utils";
+import { registrationNA } from "../exceptions";
+import { PlayerModel } from "../../models";
+
 import profile from "./profile";
 import main from "../main/main";
-import { getPlayer } from "../../utils/getPlayer";
 
 export default {
     name: 'register',
@@ -51,7 +51,7 @@ export default {
             .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
             .setDescription(`Explosion! Ahem... Greetings, <@!${interaction.user.id}>!\n\nI am Megumin, the great Arch-Wizard of Anitopia. I invite you to a realm of extraordinary experiences. By clicking '**Create Account**', you're not just signing up, but setting sail on an exciting journey.\n\nMay your adventure be filled with joy and discovery!`);
 
-        const createAccountButtomRow: any = new ActionRowBuilder()
+        const registerComponentRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId('createAccount')
@@ -59,21 +59,21 @@ export default {
                     .setStyle(ButtonStyle.Success)
             );
 
-        const registerResponse = await interaction.reply({
+        const response = await interaction.reply({
             embeds: [registerEmbed],
-            components: [createAccountButtomRow],
+            components: [registerComponentRow],
         });
 
         const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
 
         try {
-            const registerConfirmation = await registerResponse.awaitMessageComponent({
+            const confirmation = await response.awaitMessageComponent({
                 filter: collectorFilter,
                 time: 300_000
             });
     
-            if (registerConfirmation.customId === 'createAccount') {
-                await registerConfirmation.deferUpdate();
+            if (confirmation.customId === 'createAccount') {
+                await confirmation.deferUpdate();
                 await player.save();
                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
@@ -87,7 +87,7 @@ export default {
                     .setLabel('Profile')
                     .setStyle(ButtonStyle.Primary);
 
-                const commandButtonRow: any = new ActionRowBuilder().addComponents(
+                const commandButtonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
                     mainButton,
                     profileButton
                 );
@@ -110,48 +110,44 @@ export default {
                 });
 
                 try {
-                    const confirmCongratulationResponse = await congratulationResponse.awaitMessageComponent({
+                    const confirmation = await congratulationResponse.awaitMessageComponent({
                         filter: collectorFilter,
                         time: 300_000
                     });
 
-                    await confirmCongratulationResponse.deferUpdate();
+                    await confirmation.deferUpdate();
                     await interaction.editReply({
                         components: []
                     });
 
-                    if (confirmCongratulationResponse.customId === 'main') {
+                    if (confirmation.customId === 'main') {
                         await main.callback(client, interaction, true);
-                    } else if (confirmCongratulationResponse.customId === 'profile') {
+                    } else if (confirmation.customId === 'profile') {
                         await profile.callback(client, interaction, true);
                     }
 
                 } catch (error) {
-                    if (error instanceof Error) {
-                        if (error.message === "Collector received no interactions before ending with reason: time") {
-                            await interaction.editReply({
-                                components: []
-                            });
-                        } else {
-                            console.log(`Congratulations Success Handler Error: ${error}`)
-                        }
+                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                        await interaction.editReply({
+                            components: []
+                        });
+                    } else {
+                        console.log(`Congratulations Success Handler Error: ${error}`)
                     }
                 }
 
             }
         } catch (error) {            
-            if (error instanceof Error) {
-                if (error.message === "Collector received no interactions before ending with reason: time") {
-                    registerEmbed.setFooter({
-                        text: `⏱️ This command is only active for 5 minutes. To use it again, please type /register.`
-                    });
-                    await interaction.editReply({
-                        embeds: [registerEmbed],
-                        components: []
-                    });
-                } else {
-                    console.log(`Register Command Error: ${error}`);
-                }
+            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                registerEmbed.setFooter({
+                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /register.`
+                });
+                await interaction.editReply({
+                    embeds: [registerEmbed],
+                    components: []
+                });
+            } else {
+                console.log(`Register Command Error: ${error}`);
             }
         }
 

@@ -1,4 +1,5 @@
 import { Schema, model } from "mongoose";
+import { ISkillModel } from "../interfaces";
 
 const effectSchema = new Schema({
     type: {
@@ -60,6 +61,4 @@ const skillSchema = new Schema({
     }
 }, { timestamps: true });
 
-
-const SkillModel = model('Skill', skillSchema);
-export default SkillModel;
+export const SkillModel = model<ISkillModel>('Skill', skillSchema);

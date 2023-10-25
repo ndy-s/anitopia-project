@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import { ICooldownModel } from '../interfaces';
 
 const cooldownSchema = new Schema({
     commandName: {
@@ -15,5 +16,4 @@ const cooldownSchema = new Schema({
     }
 });
 
-const CooldownModel = model('Cooldown', cooldownSchema);
-export default CooldownModel;
+export const CooldownModel = model<ICooldownModel>('Cooldown', cooldownSchema);
