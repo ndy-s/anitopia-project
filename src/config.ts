@@ -1,4 +1,5 @@
 import { CollectedInteraction, CommandInteraction, EmbedBuilder, ModalSubmitInteraction } from "discord.js";
+import { mapRarity } from "./utils";
 
 export const config = {
     messages: {
@@ -6,8 +7,10 @@ export const config = {
     },
     commands: {
         registerCommandTag: "</register:1160263671814045898>",
-        profileCommandTag: "</profile:1160505037873754194>",
         mainCommandTag: "</main:1160515892803817482>",
+        profileCommandTag: "</profile:1160505037873754194>",
+        summonCommandTag: "</summon:1160947915456512000>",
+        collectionCommandTag: "</collection:1166709129792978964>",
     },
 };
 
@@ -54,6 +57,8 @@ export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmit
 };
 
 export const configCharacterSummonedEmbed = (interaction: CommandInteraction | CollectedInteraction, summonedCharacterData: any, characterId: string) => {
+    const rarity = mapRarity(summonedCharacterData.rarity);
+
     return new EmbedBuilder()
         .setColor('Blurple')
         .setAuthor({
@@ -76,7 +81,7 @@ export const configCharacterSummonedEmbed = (interaction: CommandInteraction | C
             },
             {
                 name: `Rarity`,
-                value: `__**${summonedCharacterData.rarity}**__`,
+                value: `__**${rarity}**__`,
                 inline: true,
             },
             {
@@ -111,11 +116,11 @@ export const configCharacterSummonedEmbed = (interaction: CommandInteraction | C
             },
             {
                 name: `Passive Skill`,
-                value: `**${summonedCharacterData.character.passiveSkill.name}**: ${summonedCharacterData.character.passiveSkill.descriptions[summonedCharacterData.rarity]}`
+                value: `**${summonedCharacterData.character.passiveSkill.name}**: ${summonedCharacterData.character.passiveSkill.descriptions[rarity]}`
             },
             {
                 name: "Active Skill",
-                value: `**${summonedCharacterData.character.activeSkill.name}**: ${summonedCharacterData.character.activeSkill.descriptions[summonedCharacterData.rarity]}`
+                value: `**${summonedCharacterData.character.activeSkill.name}**: ${summonedCharacterData.character.activeSkill.descriptions[rarity]}`
             },
             {
                 name: "Catchphrase",

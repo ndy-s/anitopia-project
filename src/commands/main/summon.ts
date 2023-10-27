@@ -1,8 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, MessageComponentInteraction } from "discord.js";
 import redis from "../../lib/redis";
 
-import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID } from "../../utils";
-import { configCharacterSummonedEmbed } from "../../config";
+import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID, mapRarity } from "../../utils";
+import { config, configCharacterSummonedEmbed } from "../../config";
 import { PlayerModel, CharaCollectionModel } from "../../models";
 
 export default {
@@ -198,11 +198,11 @@ export default {
                                 const [summonedCharacterData] = await summonCharacters(
                                     characters, 
                                     {
-                                        Common: 60,
-                                        Uncommon: 24,
-                                        Rare: 13,
-                                        Epic: 3,
-                                        Legendary: 0
+                                        5: 60, // Common
+                                        4: 24, // Uncommon
+                                        3: 13, // Rare
+                                        2: 3, // Epic
+                                        1: 0 // Legendary
                                     },
                                     player.scrolls.novice.guaranteed,
                                 );                                
@@ -291,11 +291,11 @@ export default {
                                 const summonedCharacterDataArray = await summonCharacters(
                                     characters, 
                                     {
-                                        Common: 60,
-                                        Uncommon: 24,
-                                        Rare: 13,
-                                        Epic: 3,
-                                        Legendary: 0
+                                        5: 60, // Common
+                                        4: 24, // Uncommon
+                                        3: 13, // Rare
+                                        2: 3, // Epic
+                                        1: 0 // Legendary
                                     },
                                     player.scrolls.novice.guaranteed,
                                     10
@@ -325,7 +325,7 @@ export default {
                                         })
                                         .setTitle('Novice Scroll Summon')
                                         .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-                                        .setDescription(`Congratulations! You've successfully summoned 10 new characters. To view the details of each character, simply use the next and previous buttons to navigate through the pages.`)
+                                        .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
 
                                 for (const summonedCharacterData of summonedCharacterDataArray) {
@@ -349,14 +349,14 @@ export default {
                                     characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId));
                                     characterSummonedTenEmbedArray[0].addFields({
                                         name: `🔹 ${summonedCharacterData.character.name}`,
-                                        value: `ID: \`${characterId}\`\nRarity: **${summonedCharacterData.rarity}**`,
+                                        value: `ID: \`${characterId}\`\nRarity: **${mapRarity(summonedCharacterData.rarity)}**`,
                                         inline: true,
                                     });
                                 }
 
                                 characterSummonedTenEmbedArray[0].addFields({
                                     name: `New characters have joined your collection!`,
-                                    value: `Check them out with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`,
+                                    value: `Check them out with ${config.commands.collectionCommandTag}. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`,
                                     inline: false,
                                 });
 
@@ -383,7 +383,7 @@ export default {
                                 async function handlePages(confirmation: CollectedInteraction, currentPage: number = 0) {
                                     const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
                                         .setFooter({
-                                            text: `Page ${currentPage + 1} of ${characterSummonedTenEmbedArray.length}. Click the next or previous button to navigate.`
+                                            text: `Page ${currentPage + 1} of ${characterSummonedTenEmbedArray.length} • Click the ⬅️ or ➡️ button to navigate.`
                                         });
 
                                     prevButton.setDisabled(currentPage < 1 ? true : false);

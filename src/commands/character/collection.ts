@@ -1,11 +1,12 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, Interaction, InteractionCollector, InteractionResponse, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
 
-import { getPlayer } from "../../utils";
+import { getPlayer, mapRarity } from "../../utils";
 import { pageNF } from "../exceptions";
 import { ICharaCollectionModel, ICharacterModel } from "../../interfaces";
 import { CharaCollectionModel } from "../../models";
 
 import character from "./character";
+import { Collection } from "mongoose";
 
 export default {
     name: 'collection',
@@ -28,46 +29,50 @@ export default {
     botPermissions: [],
     permissionRequired: [],
 
-    callback: async (client: Client, interaction: CommandInteraction | CollectedInteraction, editReply = false) => {
-        let desiredPage: number = 1;
-        if ('options' in interaction) {
-            desiredPage = Number(interaction.options.get('page')?.value ?? 1);
-        }
-        
-        let player = await getPlayer(interaction);
+    callback: async function callback(client: Client, interaction: CommandInteraction | CollectedInteraction, editReply = false, pageInput: number = 0, modalSubmit: boolean = false) {
+        const pageOptionValue: number = pageInput || (interaction instanceof CommandInteraction ? Number(interaction.options?.get('page')?.value) : 1) || 1;
+        const player = await getPlayer(interaction);
 
-        const charaCollection: ICharaCollectionModel[] = await CharaCollectionModel.find({ playerId: player._id }).populate('character');
+        const PAGE_SIZE: number = 12;
+        const totalDocuments: number = await CharaCollectionModel.countDocuments({ playerId: player._id });
+        const maxPageNumber: number = Math.ceil(totalDocuments / PAGE_SIZE);
 
-        const charaCollectionArray = [];
-        for (let i = 0; i < charaCollection.length; i += 12) {
-            charaCollectionArray.push(charaCollection.slice(i, i + 12));
+        if (totalDocuments < 1) {
+            return pageNF(interaction, maxPageNumber, {'command': 'collection', 'data': 'character'}, 'empty');
+        } else if (pageOptionValue > maxPageNumber) {
+            return pageNF(interaction, maxPageNumber, {'command': 'collection', 'data': 'character'});
         }
+    
+        const charaCollection: ICharaCollectionModel[] = await CharaCollectionModel
+            .find({ playerId: player._id })
+            .skip((pageOptionValue - 1) * PAGE_SIZE)
+            .limit(PAGE_SIZE)
+            .populate('character')
+            .sort({ rarity: 1, level: -1, createdAt: -1 });
 
         const attachment = new AttachmentBuilder('C:/Storage/Programming/Project Dev/Anitopia/src/public/wisp.jpg', { name: 'wisp.jpg' });
 
-        const charaCollectionEmbedArray = await Promise.all(charaCollectionArray.map(async (charas) => {
-            const charaCollectionEmbed = new EmbedBuilder()
-                .setColor('Blurple')
-                .setAuthor({
-                    name: `${interaction.user.username}'s Collection`,
-                    iconURL: interaction.user.displayAvatarURL(),
-                })
-                .setTitle(`Character Collection`)
-                .setDescription("Here's a glimpse of your unique character collection. Each character has its own level and ID. Keep exploring to level up your characters!")
-                .setThumbnail('attachment://wisp.jpg');
-
-            charas.forEach((chara) => {
-                if ((<ICharacterModel>chara.character).name) {
-                    charaCollectionEmbed.addFields({
-                        name: `🔹 ${(<ICharacterModel>chara.character).name} Lv. ${chara.level}`,
-                        value: `ID: \`${chara.characterId}\`\nRarity: **${chara.rarity}**`,
-                        inline: true
-                    });
-                }
+        const charaCollectionEmbed = new EmbedBuilder()
+            .setColor('Blurple')
+            .setAuthor({
+                name: `${interaction.user.username}'s Collection`,
+                iconURL: interaction.user.displayAvatarURL(),
+            })
+            .setTitle(`Character Collection`)
+            .setDescription("Welcome to your character collection! Each character has a unique ID that you can use to view more details about them. \n\nSimply click the **Info** button and input the **Character ID** to get more details.")
+            .setThumbnail('attachment://wisp.jpg');
+        
+        for (const chara of charaCollection) {
+            charaCollectionEmbed.addFields({
+                name: `🔹 ${(<ICharacterModel>chara.character).name} Lv. ${chara.level}`,
+                value: `ID: \`${chara.characterId}\`\nRarity: **${mapRarity(Number(chara.rarity))}**`,
+                inline: true
             });
-
-            return charaCollectionEmbed;
-        }));
+        }
+    
+        charaCollectionEmbed.setFooter({
+            text: `Page ${pageOptionValue} of ${maxPageNumber} • Characters ${(pageOptionValue - 1) * 12 + 1 + charaCollection.length - 1} of ${totalDocuments}`
+        });
 
         const backButton = new ButtonBuilder()
             .setCustomId('back')
@@ -88,83 +93,217 @@ export default {
             .setCustomId('searchPage')
             .setStyle(ButtonStyle.Primary)
             .setLabel('⋯');
+        
+        const infoButton = new ButtonBuilder()
+            .setCustomId('info')
+            .setLabel('Info')
+            .setStyle(ButtonStyle.Success);
 
         const charaCollectionComponentRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 backButton,
                 prevButton,
                 searchPageButton,
-                nextButton
+                nextButton,
+                infoButton
             );
+    
+        prevButton.setDisabled(pageOptionValue < 2 ? true : false);
+        nextButton.setDisabled(pageOptionValue === (maxPageNumber) ? true : false);
+    
+        const responseOptions = {
+            embeds: [charaCollectionEmbed],
+            components: [charaCollectionComponentRow],
+            files: [attachment]
+        };
+
+
+        if ('deferUpdate' in interaction && editReply) {
+            await interaction.deferUpdate();
+        }
+
+        const response = editReply ? await interaction.editReply(responseOptions) : await interaction.reply(responseOptions);
 
         const collectorFilter = (i: { user: { id: string }}) => i.user.id === interaction.user.id;
 
-        async function handlePages(interaction: CommandInteraction | CollectedInteraction, deferUpdate: boolean = false, editReply: boolean = false, currentPage: number = 1) {
-            if (currentPage > charaCollectionArray.length) {
-                return pageNF(interaction, charaCollectionEmbedArray.length);
-            }
-
-            const charaCollectionEmbed = charaCollectionEmbedArray[currentPage - 1].setFooter({
-                text: `Page ${currentPage} of ${charaCollectionEmbedArray.length}. Click the next or previous button to navigate.`
+        try {
+            const confirmation = await response.awaitMessageComponent({
+                filter: collectorFilter,
+                time: 300_000
             });
 
-            prevButton.setDisabled(currentPage < 2 ? true : false);
-            nextButton.setDisabled(currentPage === (charaCollectionEmbedArray.length) ? true : false);
+            async function searchPage (confirmation: CollectedInteraction) {
+                const searchCollectionPageModal = new ModalBuilder()
+                    .setCustomId('searchCollectionPageModal')
+                    .setTitle(`Search Collection Page`);
+                
+                const pageInput = new TextInputBuilder()
+                    .setCustomId('pageInput')
+                    .setLabel('Enter Page Number')
+                    .setPlaceholder(`Type a number from 1 to ${maxPageNumber}`)
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+                
+                searchCollectionPageModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(pageInput));
 
-            const responseOptions = {
-                embeds: [charaCollectionEmbed],
-                components: [charaCollectionComponentRow],
-                files: [attachment]
-            };
+                if (!(confirmation instanceof ModalSubmitInteraction)) {
+                    await confirmation.showModal(searchCollectionPageModal);
+                }
 
-                let response;
-                if (deferUpdate && 'deferUpdate' in interaction) {
-                    await interaction.deferUpdate();
-                }
-                if (editReply) {
-                    response = await interaction.editReply(responseOptions);
-                } else {
-                    response = await interaction.reply(responseOptions);
-                }
-    
-            try {
-                const confirmation = await response.awaitMessageComponent({
-                    filter: collectorFilter,
-                    time: 300_000
+                prevButton.setCustomId('prevModal');
+                nextButton.setCustomId('nextModal');
+                searchPageButton.setCustomId('searchPageModal');
+                infoButton.setCustomId('infoModal');
+
+                prevButton.setDisabled(pageOptionValue < 2 ? true : false);
+                nextButton.setDisabled(pageOptionValue === (maxPageNumber) ? true : false);
+                    
+        
+                const response = await confirmation.editReply({
+                    components: [new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents(
+                            backButton,
+                            prevButton,
+                            searchPageButton,
+                            nextButton,
+                            infoButton
+                        )
+                    ],
                 });
 
-                if (confirmation.customId === 'back') {
-                    await character.callback(client, confirmation, false, true);
-                } else if (confirmation.customId === 'prev') {
-                    await handlePages(confirmation, true, true, currentPage - 1);
-                } else if (confirmation.customId === 'next') {
-                    await handlePages(confirmation, true, true, currentPage + 1);
-                } else if (confirmation.customId === 'searchPage') {
-                    const searchCollectionPageModal = new ModalBuilder()
-                        .setCustomId('searchCollectionPageModal')
-                        .setTitle(`Search Collection Page`);
-                    
-                    const pageInput = new TextInputBuilder()
-                        .setCustomId('pageInput')
-                        .setLabel('Enter Page Number')
-                        .setPlaceholder(`Type a number from 1 to ${charaCollectionEmbedArray.length}`)
-                        .setStyle(TextInputStyle.Short)
-                        .setRequired(true);
-                    
-                    searchCollectionPageModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(pageInput));
-                    await confirmation.showModal(searchCollectionPageModal);
-
-                    await handlePages(confirmation, false, true, currentPage);
-                }
-    
-            } catch (error) {
-                if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                } else {
-                    console.log(`Collection Command Error: ${error}`)
+                try {
+                    const confirmation = await response.awaitMessageComponent({ 
+                        filter: collectorFilter,
+                        time: 300_000,
+                    });
+                        
+                    if (confirmation.customId === 'back') {
+                        await character.callback(client, confirmation, false, true);
+                    } else if (confirmation.customId === 'prevModal') {
+                        await callback(client, confirmation, true, pageOptionValue - 1);
+                    } else if (confirmation.customId === 'nextModal') {
+                        await callback(client, confirmation, true, pageOptionValue + 1);
+                    } else if (confirmation.customId === 'searchPageModal') {
+                        await searchPage(confirmation);
+                    } else if (confirmation.customId === 'infoModal') {
+                        await searchCharacterInfo(confirmation);
+                    }
+                            
+                } catch (error) {
+                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                        charaCollectionEmbed.setFooter({
+                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /collection.`
+                        });
+        
+                        await interaction.editReply({
+                            embeds: [charaCollectionEmbed],
+                            components: []
+                        });
+                    } else {
+                        console.log(`Collection Command Error: ${error}`)
+                    }
                 }
             }
-        }
-        await handlePages(interaction, editReply, editReply, desiredPage);
 
+            async function searchCharacterInfo (confirmation: CollectedInteraction) {
+                const infoCharaModal = new ModalBuilder()
+                    .setCustomId('infoCharaModal')
+                    .setTitle('Check Character Info');
+
+                const charaIdInput = new TextInputBuilder()
+                    .setCustomId('charaIdInput')
+                    .setLabel('Enter Your Character ID')
+                    .setMinLength(4)
+                    .setPlaceholder(`For example: ${charaCollection[0].characterId}`)
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+
+                infoCharaModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(charaIdInput));
+
+                if (!(confirmation instanceof ModalSubmitInteraction)) {
+                    await confirmation.showModal(infoCharaModal);
+                }
+
+                prevButton.setCustomId('prevCharaModal');
+                nextButton.setCustomId('nextCharaModal');
+                searchPageButton.setCustomId('searchPageCharaModal');
+                infoButton.setCustomId('infoCharaModal');
+
+                prevButton.setDisabled(pageOptionValue < 2 ? true : false);
+                nextButton.setDisabled(pageOptionValue === (maxPageNumber) ? true : false);
+
+                const response = await confirmation.editReply({
+                    components: [new ActionRowBuilder<ButtonBuilder>()
+                        .addComponents(
+                            backButton,
+                            prevButton,
+                            searchPageButton,
+                            nextButton,
+                            infoButton
+                        )
+                    ],
+                });
+
+                try {
+                    const confirmation = await response.awaitMessageComponent({ 
+                        filter: collectorFilter,
+                        time: 300_000,
+                    });
+                        
+                    if (confirmation.customId === 'back') {
+                        await character.callback(client, confirmation, false, true);
+                    } else if (confirmation.customId === 'prevCharaModal') {
+                        await callback(client, confirmation, true, pageOptionValue - 1);
+                    } else if (confirmation.customId === 'nextCharaModal') {
+                        await callback(client, confirmation, true, pageOptionValue + 1);
+                    } else if (confirmation.customId === 'searchPageCharaModal') {
+                        await searchPage(confirmation);
+                    } else if (confirmation.customId === 'infoCharaModal') {
+                        await searchCharacterInfo(confirmation);
+                    }
+                            
+                } catch (error) {
+                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                        charaCollectionEmbed.setFooter({
+                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /collection.`
+                        });
+        
+                        await interaction.editReply({
+                            embeds: [charaCollectionEmbed],
+                            components: []
+                        });
+                    } else {
+                        console.log(`Collection Command Error: ${error}`)
+                    }
+                }
+            }
+
+
+            if (confirmation.customId === 'back') {
+                await character.callback(client, confirmation, false, true);
+            } else if (confirmation.customId === 'prev') {
+                await callback(client, confirmation, true, pageOptionValue - 1);
+            } else if (confirmation.customId === 'next') {
+                await callback(client, confirmation, true, pageOptionValue + 1);
+            } else if (confirmation.customId === 'searchPage') {
+                await searchPage(confirmation);
+            } else if (confirmation.customId === 'info') {
+                await searchCharacterInfo(confirmation);
+            }
+
+        } catch (error) {
+            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                charaCollectionEmbed.setFooter({
+                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /collection.`
+                });
+
+                await interaction.editReply({
+                    embeds: [charaCollectionEmbed],
+                    components: []
+                });
+            } else {
+                console.log(`Collection Command Error: ${error}`)
+            }
+        }
     }
 }

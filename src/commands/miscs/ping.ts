@@ -15,14 +15,17 @@ export default {
     permissionsRequired: [],
 
     callback: async (client: Client, interaction: CommandInteraction) => {
+        const pingEmbed = new EmbedBuilder()
+        .setColor('Blurple')
+        .setTitle(`🏓 Pinging server...`)
+
         const sent = await interaction.reply({ 
-            content: '🏓 Pinging server...', 
+            embeds: [pingEmbed], 
             fetchReply: true 
         });
 
-        const pingEmbed = new EmbedBuilder()
-            .setColor('Blurple')
-            .setTitle(`🏓 Pong! Latency Details`)
+        
+        pingEmbed.setTitle(`🏓 Pong! Latency Details`)
             .addFields(
                 { 
                     name: '👤 User', 
@@ -46,7 +49,7 @@ export default {
                 text: config.messages.footerText,
             });
 
-        interaction.editReply({
+        await interaction.editReply({
             embeds: [pingEmbed],
         });
     },

@@ -1,19 +1,19 @@
 import { ICharacterModel } from "../interfaces";
 
 interface RarityChances {
-    Common: number;
-    Uncommon: number;
-    Rare: number;
-    Epic: number;
-    Legendary: number;
+    5: number; // Common
+    4: number; // Uncommon
+    3: number; // Rare
+    2: number; // Epic
+    1: number; // Legendary
 };
 
 const rarityAdjustments = {
-    Common: 0,
-    Uncommon: 50,
-    Rare: 100,
-    Epic: 150,
-    Legendary: 200
+    5: 0, // Common
+    4: 50, // Uncommon
+    3: 100, // Rare
+    2: 150, // Epic
+    1: 200 // Legendary
 };
 
 export async function summonCharacters(characters: ICharacterModel[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1) {
@@ -27,17 +27,17 @@ export async function summonCharacters(characters: ICharacterModel[], rarityChan
         const randomNum = Math.random() * 100;
 
         if (guaranted === 0) {
-            rarity = 'Epic';
-        } else if (randomNum < rarityChances.Common) {
-            rarity = 'Common';
-        } else if (randomNum < rarityChances.Common + rarityChances.Uncommon) {
-            rarity = 'Uncommon';
-        } else if (randomNum < rarityChances.Common + rarityChances.Uncommon + rarityChances.Rare) {
-            rarity = 'Rare';
-        } else if (randomNum < rarityChances.Common + rarityChances.Uncommon + rarityChances.Rare + rarityChances.Epic) {
-            rarity = 'Epic';
+            rarity = 2; // Epic
+        } else if (randomNum < rarityChances[5]) {
+            rarity = 5; // Common
+        } else if (randomNum < rarityChances[5] + rarityChances[4]) {
+            rarity = 4; // Uncommon
+        } else if (randomNum < rarityChances[5] + rarityChances[4] + rarityChances[3]) {
+            rarity = 3; // Rare
+        } else if (randomNum < rarityChances[5] + rarityChances[4] + rarityChances[3] + rarityChances[2]) {
+            rarity = 2; // Epic
         } else {
-            rarity = 'Legendary';
+            rarity = 1; // Legendary
         }
 
         guaranted--;
