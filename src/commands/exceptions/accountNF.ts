@@ -12,6 +12,7 @@ export const accountNF = (interaction: CommandInteraction) => {
             .setTitle("Anitopian Not Found❗")
             .setDescription(`Oh dear, it seems that you hasn't registered yet!`)
             .setFooter({
+                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: config.messages.footerText
             })
     ]});

@@ -22,6 +22,7 @@ export const cooldownMS = async (interaction: CommandInteraction, commandObject:
             .setTitle('⏱️ Command Cooldown')
             .setDescription(`You are currently on cooldown. Please wait **${timeLeft}** ⏳ before using this command again.`)
             .setFooter({
+                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: config.messages.footerText
             });
     

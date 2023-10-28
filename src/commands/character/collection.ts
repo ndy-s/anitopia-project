@@ -29,7 +29,7 @@ export default {
     botPermissions: [],
     permissionRequired: [],
 
-    callback: async function callback(client: Client, interaction: CommandInteraction | CollectedInteraction, editReply = false, pageInput: number = 0, modalSubmit: boolean = false) {
+    callback: async function callback(client: Client, interaction: CommandInteraction | CollectedInteraction, editReply = false, pageInput: number = 0) {
         const pageOptionValue: number = pageInput || (interaction instanceof CommandInteraction ? Number(interaction.options?.get('page')?.value) : 1) || 1;
         const player = await getPlayer(interaction);
 
@@ -110,6 +110,7 @@ export default {
     
         prevButton.setDisabled(pageOptionValue < 2 ? true : false);
         nextButton.setDisabled(pageOptionValue === (maxPageNumber) ? true : false);
+        searchPageButton.setDisabled(pageOptionValue === (maxPageNumber) && pageOptionValue < 2 ? true : false );
     
         const responseOptions = {
             embeds: [charaCollectionEmbed],
@@ -157,7 +158,7 @@ export default {
 
                 prevButton.setDisabled(pageOptionValue < 2 ? true : false);
                 nextButton.setDisabled(pageOptionValue === (maxPageNumber) ? true : false);
-                    
+                searchPageButton.setDisabled(pageOptionValue === (maxPageNumber) && pageOptionValue < 2 ? true : false );  
         
                 const response = await confirmation.editReply({
                     components: [new ActionRowBuilder<ButtonBuilder>()
@@ -231,6 +232,7 @@ export default {
 
                 prevButton.setDisabled(pageOptionValue < 2 ? true : false);
                 nextButton.setDisabled(pageOptionValue === (maxPageNumber) ? true : false);
+                searchPageButton.setDisabled(pageOptionValue === (maxPageNumber) && pageOptionValue < 2 ? true : false );
 
                 const response = await confirmation.editReply({
                     components: [new ActionRowBuilder<ButtonBuilder>()

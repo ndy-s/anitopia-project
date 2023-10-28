@@ -1,3 +1,4 @@
+import { Document } from 'mongoose';
 import { IAttributes } from "./IAttributes";
 
 interface ISkillReference {
@@ -6,7 +7,7 @@ interface ISkillReference {
     baseName: string;
 }
 
-export interface ICharacterModel {
+export interface ICharacterModel extends Document {
     name: string;
     fullname: string;
     series: string;

@@ -28,7 +28,7 @@ const charaCollectionSchema = new Schema({
         min: 0,
     },
     rarity: {
-        type: String,
+        type: Number,
         // 1: Legendary, 2: Epic, 3: Rare, 4: Uncommon, 5: Common
         enum: [1, 2, 3, 4, 5],
         default: 5,

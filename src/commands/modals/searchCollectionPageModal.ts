@@ -24,7 +24,7 @@ export default {
                 return pageNF(interaction, maxPageNumber, {'command': 'collection', 'data': 'character'});
             }
 
-            await collection.callback(client, interaction, true, pageInput, true);
+            await collection.callback(client, interaction, true, pageInput);
 
         } catch (error) {
             console.log(`Handle Submit Modal searchCollectionPageModal Error: ${error}`);

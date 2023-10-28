@@ -101,8 +101,9 @@ export default {
                                 iconURL: interaction.user.displayAvatarURL(),
                             })
                             .setTitle(`Congratulations ${interaction.user.username}!`)
-                            .setDescription(`🎉 Congratulations <@!${interaction.user.id}>! Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config.commands.mainCommandTag}. Have a fantastic journey!`)
+                            .setDescription(`Congratulations <@!${interaction.user.id}>! 🎉 Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config.commands.mainCommandTag}. Have a fantastic journey!`)
                             .setFooter({
+                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                                 text: config.messages.footerText
                             })
                     ],

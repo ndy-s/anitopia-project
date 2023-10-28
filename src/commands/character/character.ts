@@ -49,7 +49,8 @@ export default {
                 iconURL: interaction.user.displayAvatarURL(),
             })
             .setTitle('Characters')
-            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671');
+            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+            .setDescription(`Welcome to your character command center! Here, you can view your collection of characters, enhance their abilities, or form a powerful team. Choose an option from the menu to get started. If you need any help, don't hesitate to ask!`);
 
         const characterComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(characterOption);
 
