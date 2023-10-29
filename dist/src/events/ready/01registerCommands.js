@@ -1,21 +1,19 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const getLocalCommands_1 = require("../../utils/getLocalCommands");
-const getApplicationCommands_1 = require("../../utils/getApplicationCommands");
-const areCommandsDifferent_1 = require("../../utils/areCommandsDifferent");
 const config_json_1 = require("../../../config.json");
+const utils_1 = require("../../utils");
 exports.default = async (client) => {
     try {
-        const localCommands = (0, getLocalCommands_1.default)();
-        const applicationCommands = await (0, getApplicationCommands_1.default)(client);
-        const testServerApplicationCommands = await (0, getApplicationCommands_1.default)(client, config_json_1.testServer);
+        const localCommands = (0, utils_1.getLocalCommands)();
+        const applicationCommands = await (0, utils_1.getApplicationCommands)(client);
+        const testServerApplicationCommands = await (0, utils_1.getApplicationCommands)(client, config_json_1.testServer);
         const processCommand = async (command, existingCommand, applicationCommands) => {
             if (existingCommand) {
                 if (command.deleted) {
                     await applicationCommands.delete(existingCommand.id);
                     console.log(`🗑 Deleted command "${command.name}".`);
                 }
-                else if ((0, areCommandsDifferent_1.default)(existingCommand, command)) {
+                else if ((0, utils_1.areCommandsDifferent)(existingCommand, command)) {
                     await applicationCommands.edit(existingCommand.id, {
                         description: command.description,
                         options: command.options,

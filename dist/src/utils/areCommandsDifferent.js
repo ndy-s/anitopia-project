@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = (existingCommand, localCommand) => {
+exports.areCommandsDifferent = void 0;
+const areCommandsDifferent = (existingCommand, localCommand) => {
     const areChoicesDifferent = (existingChoices, localChoices) => {
         for (const localChoice of localChoices) {
             const existingChoice = existingChoices?.find((choice) => choice.name === localChoice.name);
@@ -41,3 +42,4 @@ exports.default = (existingCommand, localCommand) => {
     }
     return false;
 };
+exports.areCommandsDifferent = areCommandsDifferent;

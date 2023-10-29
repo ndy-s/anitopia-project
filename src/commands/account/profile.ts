@@ -23,7 +23,7 @@ export default {
 
         const profileOption = new StringSelectMenuBuilder()
             .setCustomId('profileOption')
-            .setPlaceholder('Choose your profile action!')
+            .setPlaceholder('Select an action for your profile')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel(`Customize Profile`)

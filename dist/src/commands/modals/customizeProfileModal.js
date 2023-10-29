@@ -1,15 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const Player_1 = require("../../models/Player");
 const redis_1 = require("../../lib/redis");
 const config_1 = require("../../config");
+const models_1 = require("../../models");
 exports.default = {
     name: "customizeProfileModal",
     callback: async (client, interaction) => {
         try {
             const bioInput = interaction.fields.getTextInputValue('bioInput');
-            let player = await Player_1.default.findOneAndUpdate({ userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined }, { bio: bioInput }, { new: true });
+            let player = await models_1.PlayerModel.findOneAndUpdate({ userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined }, { bio: bioInput }, { new: true });
             await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
             const profileEmbed = (0, config_1.configProfileEmbed)(interaction, player);
             await interaction.deferUpdate();
@@ -27,6 +27,7 @@ exports.default = {
                         .setTitle('Profile Updated Successfully 🎉')
                         .setDescription(`Great job, ${interaction.user.username}! Your **Biography** have been successfully updated. Your unique personality shines through your profile! 🌟\n\nNow, let's dive back into the world of Anitopia. Your adventure awaits! 🚀`)
                         .setFooter({
+                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512 }),
                         text: config_1.config.messages.footerText
                     })
                 ],

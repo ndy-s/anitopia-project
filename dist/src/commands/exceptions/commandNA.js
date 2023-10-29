@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.commandNA = void 0;
 const discord_js_1 = require("discord.js");
 const config_1 = require("../../config");
-exports.default = (interaction) => {
+const commandNA = (interaction) => {
     interaction.reply({
         embeds: [
             new discord_js_1.EmbedBuilder()
@@ -16,3 +17,4 @@ exports.default = (interaction) => {
         ephemeral: true,
     });
 };
+exports.commandNA = commandNA;

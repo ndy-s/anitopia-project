@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.cooldownMS = void 0;
 const discord_js_1 = require("discord.js");
-const Cooldown_1 = require("../../models/Cooldown");
 const config_1 = require("../../config");
-exports.default = async (interaction, commandObject) => {
+const models_1 = require("../../models");
+const cooldownMS = async (interaction, commandObject) => {
     const commandName = interaction.commandName;
     const userId = interaction.user.id;
-    let cooldown = await Cooldown_1.default.findOne({
+    let cooldown = await models_1.CooldownModel.findOne({
         userId, commandName
     });
     if (cooldown && Date.now() < cooldown.endsAt.getTime()) {
@@ -17,15 +18,17 @@ exports.default = async (interaction, commandObject) => {
             .setTitle('⏱️ Command Cooldown')
             .setDescription(`You are currently on cooldown. Please wait **${timeLeft}** ⏳ before using this command again.`)
             .setFooter({
+            iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512 }),
             text: config_1.config.messages.footerText
         });
         await interaction.reply({ embeds: [cooldownEmbed], ephemeral: true });
         return false;
     }
     if (!cooldown) {
-        cooldown = new Cooldown_1.default({ userId, commandName });
+        cooldown = new models_1.CooldownModel({ userId, commandName });
     }
     cooldown.endsAt = new Date(Date.now() + commandObject.cooldown);
     await cooldown.save();
     return true;
 };
+exports.cooldownMS = cooldownMS;

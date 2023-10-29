@@ -4,6 +4,7 @@ import { getPlayer } from "../../utils";
 import { CharaCollectionModel } from "../../models";
 
 import collection from "./collection";
+import team from "./team";
 
 export default {
     name: 'character',
@@ -23,7 +24,7 @@ export default {
 
         const characterOption = new StringSelectMenuBuilder()
             .setCustomId('characterOption')
-            .setPlaceholder('Choose an action for your character!')
+            .setPlaceholder('Select an action for your character')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel(`Collection`)
@@ -48,7 +49,7 @@ export default {
                 name: interaction.user.username,
                 iconURL: interaction.user.displayAvatarURL(),
             })
-            .setTitle('Characters')
+            .setTitle('Character')
             .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
             .setDescription(`Welcome to your character command center! Here, you can view your collection of characters, enhance their abilities, or form a powerful team. Choose an option from the menu to get started. If you need any help, don't hesitate to ask!`);
 
@@ -79,8 +80,9 @@ export default {
             if (confirmation.customId === 'characterOption' && 'values' in confirmation) {
                 if (confirmation.values.includes('collection')) {
                     await collection.callback(client, confirmation, true);
+                } else if (confirmation.values.includes('team')) {
+                    await team.callback(client, confirmation, true);
                 }
-
             }
 
         } catch (error) {

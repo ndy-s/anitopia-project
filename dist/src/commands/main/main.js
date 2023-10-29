@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const profile_1 = require("../account/profile");
+const character_1 = require("../character/character");
+const summon_1 = require("./summon");
 exports.default = {
     name: 'main',
     description: 'Central hub for Anitopia commands',
@@ -22,6 +24,14 @@ exports.default = {
             .setDescription('Explore anime-based chapters and quests')
             .setValue('story')
             .setEmoji('🏰'), new discord_js_1.StringSelectMenuOptionBuilder()
+            .setLabel('Summon')
+            .setDescription('Summon your favorite characters')
+            .setValue('summon')
+            .setEmoji('🔮'), new discord_js_1.StringSelectMenuOptionBuilder()
+            .setLabel('Character')
+            .setDescription('Manage and upgrade your team of characters.')
+            .setValue('character')
+            .setEmoji('🧙'), new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel('Profile')
             .setDescription('Manage game progress, profile, and more')
             .setValue('profile')
@@ -34,28 +44,35 @@ exports.default = {
         })
             .setTitle('Anitopia Main Commands')
             .setThumbnail('https://europe1.discourse-cdn.com/unity/original/3X/6/0/608e0f8940360c004564efc302d52054b7bc2493.jpeg')
-            .setDescription(`Hello, ${interaction.user.username}! Ready for Anitopia?`)
+            .setDescription(`Hello, ${interaction.user.username}! Are you ready to explore Anitopia? Use the dropdown menu below to navigate through the game.`)
             .setFooter({
-            text: 'Use the dropdown menu to select an option. Need help? Type "/help" in the chat.'
+            text: 'Select an option from the dropdown menu to continue.'
         });
+        const mainComponentRow = new discord_js_1.ActionRowBuilder().addComponents(mainOption);
         const responseOptions = {
             embeds: [mainEmbed],
-            components: [new discord_js_1.ActionRowBuilder().addComponents(mainOption)]
+            components: [mainComponentRow]
         };
-        let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
+        const response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
         const collectorFilter = (i) => i.user.id === interaction.user.id;
         try {
-            let mainConfirmation = await response.awaitMessageComponent({
+            const confirmation = await response.awaitMessageComponent({
                 filter: collectorFilter,
                 time: 300000
             });
-            if (mainConfirmation.customId === 'mainOption' && 'values' in mainConfirmation) {
-                if (mainConfirmation.values.includes('profile')) {
-                    await mainConfirmation.deferUpdate();
-                    await interaction.editReply({
-                        components: []
-                    });
+            if (confirmation.customId === 'mainOption' && 'values' in confirmation) {
+                await confirmation.deferUpdate();
+                await confirmation.editReply({
+                    components: []
+                });
+                if (confirmation.values.includes('profile')) {
                     await profile_1.default.callback(client, interaction, true);
+                }
+                else if (confirmation.values.includes('summon')) {
+                    await summon_1.default.callback(client, interaction, true);
+                }
+                else if (confirmation.values.includes('character')) {
+                    await character_1.default.callback(client, interaction, true);
                 }
             }
         }

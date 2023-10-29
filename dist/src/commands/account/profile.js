@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const redis_1 = require("../../lib/redis");
-const Player_1 = require("../../models/Player");
 const config_1 = require("../../config");
+const utils_1 = require("../../utils");
+const models_1 = require("../../models");
 exports.default = {
     name: 'profile',
     description: 'Shows your Anitopia profile',
@@ -16,17 +17,7 @@ exports.default = {
     botPermissions: [],
     permissionsRequired: [],
     callback: async (client, interaction, followUp = false) => {
-        const result = await redis_1.default.get(interaction.user.id);
-        let player;
-        if (result) {
-            player = JSON.parse(result);
-        }
-        else {
-            player = await Player_1.default.findOne({
-                userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
-            });
-            await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-        }
+        let player = await (0, utils_1.getPlayer)(interaction);
         const profileOption = new discord_js_1.StringSelectMenuBuilder()
             .setCustomId('profileOption')
             .setPlaceholder('Choose your profile action!')
@@ -44,28 +35,29 @@ exports.default = {
             .setValue('redeem')
             .setEmoji('🔑'));
         const profileEmbed = (0, config_1.configProfileEmbed)(interaction, player);
+        const profileComponentRow = new discord_js_1.ActionRowBuilder().addComponents(profileOption);
         const responseOptions = {
             embeds: [profileEmbed],
-            components: [new discord_js_1.ActionRowBuilder().addComponents(profileOption)],
+            components: [profileComponentRow],
         };
         let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
         const collectorFilter = (i) => i.user.id === interaction.user.id;
         try {
             while (true) {
-                let profileConfirmation = await response.awaitMessageComponent({
+                let confirmation = await response.awaitMessageComponent({
                     filter: collectorFilter,
                     time: 300000
                 });
                 // profileOption.options.forEach(option => {
-                //     if ('values' in profileConfirmation) {
-                //         if (profileConfirmation.values.includes(option.data.value)) {
+                //     if ('values' in confirmation) {
+                //         if (confirmation.values.includes(option.data.value)) {
                 //             option.setDefault(true);
                 //         }
                 //     }
                 // });
-                if (profileConfirmation.customId === 'profileOption' && 'values' in profileConfirmation) {
-                    if (profileConfirmation.values.includes('customize')) {
-                        player = await Player_1.default.findOne({
+                if (confirmation.customId === 'profileOption' && 'values' in confirmation) {
+                    if (confirmation.values.includes('customize')) {
+                        player = await models_1.PlayerModel.findOne({
                             userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
                         });
                         if (player) {
@@ -80,9 +72,8 @@ exports.default = {
                                 .setValue(player.bio)
                                 .setMaxLength(100)
                                 .setRequired(true);
-                            const customizeProfileModalRow = new discord_js_1.ActionRowBuilder().addComponents(bioInput);
-                            customizeProfileModal.addComponents(customizeProfileModalRow);
-                            await profileConfirmation.showModal(customizeProfileModal);
+                            customizeProfileModal.addComponents(new discord_js_1.ActionRowBuilder().addComponents(bioInput));
+                            await confirmation.showModal(customizeProfileModal);
                             const components = [new discord_js_1.ActionRowBuilder().addComponents(profileOption)];
                             response = await (followUp ? response.edit({ components }) : interaction.editReply({ components }));
                         }
@@ -91,19 +82,17 @@ exports.default = {
             }
         }
         catch (error) {
-            if (error instanceof Error) {
-                if (error.message === "Collector received no interactions before ending with reason: time") {
-                    profileEmbed.setFooter({
-                        text: `⏱️ This command is only active for 5 minutes. To use it again, please type /profile.`
-                    });
-                    await interaction.editReply({
-                        embeds: [profileEmbed],
-                        components: []
-                    });
-                }
-                else {
-                    console.log(`Profile Command Error: ${error}`);
-                }
+            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                profileEmbed.setFooter({
+                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /profile.`
+                });
+                await interaction.editReply({
+                    embeds: [profileEmbed],
+                    components: []
+                });
+            }
+            else {
+                console.log(`Profile Command Error: ${error}`);
             }
         }
     }

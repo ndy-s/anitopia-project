@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
-const getApplicationCommands_1 = require("../../utils/getApplicationCommands");
+const utils_1 = require("../../utils");
 exports.default = {
     name: 'delete-command',
     description: 'Removes a specified command',
@@ -22,7 +22,7 @@ exports.default = {
     permissionsRequired: [],
     callback: async (client, interaction) => {
         const commandName = interaction.options.get('command-name')?.value;
-        const applicationCommands = await (0, getApplicationCommands_1.default)(client);
+        const applicationCommands = await (0, utils_1.getApplicationCommands)(client);
         const existingCommand = applicationCommands.cache.find((cmd) => cmd.name === commandName);
         if (existingCommand) {
             await applicationCommands.delete(existingCommand.id);

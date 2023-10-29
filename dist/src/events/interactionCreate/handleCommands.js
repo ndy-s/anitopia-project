@@ -2,20 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const config_json_1 = require("../../../config.json");
-const getLocalCommands_1 = require("../../utils/getLocalCommands");
-const Player_1 = require("../../models/Player");
-const redis_1 = require("../../lib/redis");
-const commandNA_1 = require("../../commands/exceptions/commandNA");
-const cooldownMS_1 = require("../../commands/exceptions/cooldownMS");
 const config_1 = require("../../config");
+const utils_1 = require("../../utils");
+const exceptions_1 = require("../../commands/exceptions");
+const register_1 = require("../../commands/account/register");
 exports.default = async (client, interaction) => {
     if (!interaction.isChatInputCommand())
         return;
     if (!interaction.inGuild()) {
-        (0, commandNA_1.default)(interaction);
+        (0, exceptions_1.commandNA)(interaction);
         return;
     }
-    const localCommands = (0, getLocalCommands_1.default)();
+    const localCommands = (0, utils_1.getLocalCommands)();
     try {
         const commandObject = localCommands.find((cmd) => cmd.name === interaction.commandName);
         if (!commandObject)
@@ -85,27 +83,17 @@ exports.default = async (client, interaction) => {
             });
             return;
         }
-        if (await (0, cooldownMS_1.default)(interaction, commandObject) === false)
+        if (await (0, exceptions_1.cooldownMS)(interaction, commandObject) === false)
             return;
-        // Redis Caching
-        const result = await redis_1.default.get(interaction.user.id);
-        let player;
-        if (result) {
-            player = JSON.parse(result);
-        }
-        else {
-            player = await Player_1.default.findOne({
-                userId: 'id' in interaction.member ? interaction.member.id : undefined,
-            });
-            await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-        }
+        const player = await (0, utils_1.getPlayer)(interaction);
         // Temporary
-        commandObject.callback(client, interaction);
-        // if (!player) {
-        //     await register.callback(client, interaction);
-        // } else if (player) {
-        //     commandObject.callback(client, interaction);
-        // }
+        // commandObject.callback(client, interaction);
+        if (!player) {
+            await register_1.default.callback(client, interaction);
+        }
+        else if (player) {
+            commandObject.callback(client, interaction);
+        }
     }
     catch (error) {
         console.log(`There was an error running this handle command: ${error}`);

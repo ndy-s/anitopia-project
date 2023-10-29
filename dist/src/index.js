@@ -20,6 +20,14 @@ const client = new discord_js_1.Client({
         }
         await mongoose_1.default.connect(process.env.MONGODB_URI);
         console.log("Connected to Anitopia Database.");
+        // try {
+        //     await SkillModel.insertMany(passiveSkillsData);
+        //     await SkillModel.insertMany(activeSkillsData);
+        //     await CharacterModel.insertMany(charactersData);
+        //     console.log('Skills data has been inserted successfully.');
+        // } catch (error) {
+        //     console.error('An error occurred, skipping insert the data', error);
+        // }
         (0, eventHandler_1.default)(client);
         client.login(process.env.TOKEN);
     }

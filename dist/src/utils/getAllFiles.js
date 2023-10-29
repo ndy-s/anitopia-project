@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAllFiles = void 0;
 const fs = require("fs");
 const path = require("path");
-exports.default = (directory, foldersOnly = false) => {
+const getAllFiles = (directory, foldersOnly = false) => {
     let fileNames = [];
     try {
         const files = fs.readdirSync(directory, { withFileTypes: true });
@@ -25,3 +26,4 @@ exports.default = (directory, foldersOnly = false) => {
     }
     return fileNames;
 };
+exports.getAllFiles = getAllFiles;

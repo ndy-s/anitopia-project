@@ -20,7 +20,7 @@ export default {
     callback: async (client: Client, interaction: CommandInteraction, followUp = false) => {
         const mainOption = new StringSelectMenuBuilder()
             .setCustomId('mainOption')
-            .setPlaceholder('What would you like to do next?')
+            .setPlaceholder('Select a command from the list')
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Story')

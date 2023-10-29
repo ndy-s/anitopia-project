@@ -133,6 +133,19 @@ export default {
                 time: 300_000
             });
 
+            if (confirmation.customId === 'back') {
+                await character.callback(client, confirmation, false, true);
+            } else if (confirmation.customId === 'prev') {
+                await callback(client, confirmation, true, pageOptionValue - 1);
+            } else if (confirmation.customId === 'next') {
+                await callback(client, confirmation, true, pageOptionValue + 1);
+            } else if (confirmation.customId === 'searchPage') {
+                await searchPage(confirmation);
+            } else if (confirmation.customId === 'info') {
+                await searchCharacterInfo(confirmation);
+            }
+
+            // Function section
             async function searchPage (confirmation: CollectedInteraction) {
                 const searchCollectionPageModal = new ModalBuilder()
                     .setCustomId('searchCollectionPageModal')
@@ -279,20 +292,6 @@ export default {
                     }
                 }
             }
-
-
-            if (confirmation.customId === 'back') {
-                await character.callback(client, confirmation, false, true);
-            } else if (confirmation.customId === 'prev') {
-                await callback(client, confirmation, true, pageOptionValue - 1);
-            } else if (confirmation.customId === 'next') {
-                await callback(client, confirmation, true, pageOptionValue + 1);
-            } else if (confirmation.customId === 'searchPage') {
-                await searchPage(confirmation);
-            } else if (confirmation.customId === 'info') {
-                await searchCharacterInfo(confirmation);
-            }
-
         } catch (error) {
             if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
                 charaCollectionEmbed.setFooter({

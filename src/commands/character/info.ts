@@ -60,7 +60,7 @@ export default {
                 name: `${interaction.user.username}'s Character Info`,
                 iconURL: interaction.user.displayAvatarURL(),
             })
-            .setTitle(`${character.name} (${character.fullname})`)
+            .setTitle(`${character.name} (${character.fullname}) Lv. ${characterInfo.level}`)
             .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
             .addFields(
                 {
@@ -69,14 +69,19 @@ export default {
                     inline: true
                 },
                 {
-                    name: 'Series',
-                    value: `${character.series}`,
-                    inline: true
+                    name: 'EXP',
+                    value: `200/200`,
+                    inline: true,
                 },
                 {
                     name: `Rarity`,
                     value: `__**${rarity}**__`,
                     inline: true,
+                },
+                {
+                    name: 'Series',
+                    value: `${character.series}`,
+                    inline: true
                 },
                 {
                     name: 'Element',
@@ -89,25 +94,34 @@ export default {
                     inline: true
                 },
                 {
-                    name: `Health`,
-                    value: `${character.attributes.health}`,
-                    inline: true,
+                    name: `Attributes`,
+                    value: 
+                        `❤️ **Health**: ${characterInfo.attributes.health} • ` +
+                        `⚔️ **Attack**: ${characterInfo.attributes.attack} • ` +
+                        `🛡️ **Defense**: ${characterInfo.attributes.defense} • ` +
+                        `💨 **Speed**: ${characterInfo.attributes.speed}`,
+                    inline: false,
                 },
-                {
-                    name: `Attack`,
-                    value: `${character.attributes.attack}`,
-                    inline: true,
-                },
-                {
-                    name: `Defense`,
-                    value: `${character.attributes.defense}`,
-                    inline: true,
-                },
-                {
-                    name: `Speed`,
-                    value: `${character.attributes.speed}`,
-                    inline: true,
-                },
+                // {
+                //     name: `Health`,
+                //     value: `${characterInfo.attributes.health}`,
+                //     inline: false,
+                // },
+                // {
+                //     name: `Attack`,
+                //     value: `${characterInfo.attributes.attack}`,
+                //     inline: true,
+                // },
+                // {
+                //     name: `Defense`,
+                //     value: `${characterInfo.attributes.defense}`,
+                //     inline: false,
+                // },
+                // {
+                //     name: `Speed`,
+                //     value: `${characterInfo.attributes.speed}`,
+                //     inline: true,
+                // },
                 {
                     name: `Passive Skill`,
                     value: `**${character.passiveSkill.name}**: ${character.passiveSkill.descriptions.get(rarity)}`
@@ -128,7 +142,7 @@ export default {
 
         const backButton = new ButtonBuilder()
             .setCustomId('backCollection')
-            .setLabel('Back')
+            .setLabel('Collection')
             .setStyle(ButtonStyle.Secondary);
 
         const charaInfoComponentRow = new ActionRowBuilder<ButtonBuilder>()

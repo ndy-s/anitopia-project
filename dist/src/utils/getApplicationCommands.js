@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = async (client, guildId) => {
+exports.getApplicationCommands = void 0;
+const getApplicationCommands = async (client, guildId) => {
     let applicationCommands;
     if (guildId) {
         const guild = await client.guilds.fetch(guildId);
@@ -25,3 +26,4 @@ exports.default = async (client, guildId) => {
     await applicationCommands.fetch({ guildId });
     return applicationCommands;
 };
+exports.getApplicationCommands = getApplicationCommands;

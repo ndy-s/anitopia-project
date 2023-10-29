@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Cooldown_1 = require("../../models/Cooldown");
+const models_1 = require("../../models");
 exports.default = () => {
     setInterval(async () => {
         try {
-            const cooldowns = await Cooldown_1.default.find().select('endsAt');
+            const cooldowns = await models_1.CooldownModel.find().select('endsAt');
             for (const cooldown of cooldowns) {
                 if (Date.now() < cooldown.endsAt.getTime())
                     return;
-                await Cooldown_1.default.deleteOne({ _id: cooldown._id });
+                await models_1.CooldownModel.deleteOne({ _id: cooldown._id });
             }
         }
         catch (error) {
