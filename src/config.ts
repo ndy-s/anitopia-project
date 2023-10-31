@@ -53,7 +53,7 @@ export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmit
         )
         .setFooter({
             iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
-            text: `Tip: Use Player ID to connect with other players!`,
+            text: `Use player ID to connect with other players.`,
         });
 };
 

@@ -1,3 +1,5 @@
+import { Document, ObjectId } from "mongoose";
+
 interface IBalance {
     aniCoin: number;
     aniCrystal: number;
@@ -25,7 +27,23 @@ interface IScrolls {
     series: IScroll;
 }
 
-export interface IPlayerModel {
+export interface ILineup {
+    position: 'frontMiddle' | 'frontLeft' | 'frontRight' | 'backLeft' | 'backRight' | 'backMiddle';
+    character: ObjectId;
+}
+
+export interface ITeams {
+    name: string;
+    size: 3 | 5;
+    lineup: ILineup[];
+}
+
+interface IActiveteams {
+    teamOfThree: string | null;
+    teamOfFive: string | null;
+}
+
+export interface IPlayerModel extends Document {
     userId: string;
     guildId: string;
     playerId: string;
@@ -34,6 +52,8 @@ export interface IPlayerModel {
     experience: IExperience;
     dailyStreak: IDailyStreak;
     scrolls: IScrolls;
+    teams: ITeams;
+    activeTeams: IActiveteams;
     createdAt: Date;
     updatedAt: Date;
 }

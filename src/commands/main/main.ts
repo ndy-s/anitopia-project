@@ -54,7 +54,8 @@ export default {
             .setThumbnail('https://europe1.discourse-cdn.com/unity/original/3X/6/0/608e0f8940360c004564efc302d52054b7bc2493.jpeg')
             .setDescription(`Hello, ${interaction.user.username}! Are you ready to explore Anitopia? Use the dropdown menu below to navigate through the game.`)
             .setFooter({
-                text: 'Select an option from the dropdown menu to continue.'
+                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                text: 'Select an option from the menu bellow to get started.'
             });
 
         const mainComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(mainOption);

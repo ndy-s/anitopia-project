@@ -3,7 +3,7 @@ import { config } from "../../config";
 
 export default {
     name: 'ping',
-    description: 'Measures and displays the latency between the bot and the server',
+    description: 'Measures your ping time',
     cooldown: 5_000,
     options: [],
     deleted: false,

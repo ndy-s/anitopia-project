@@ -5,10 +5,11 @@ import { CharaCollectionModel } from "../../models";
 
 import collection from "./collection";
 import team from "./team";
+import { config } from "../../config";
 
 export default {
     name: 'character',
-    description: 'See and improve your characters, and form your team.',
+    description: 'Manage characters and teams in one place',
     cooldown: 5_000,
     options: [],
     deleted: false,
@@ -28,17 +29,17 @@ export default {
             .addOptions(
                 new StringSelectMenuOptionBuilder()
                     .setLabel(`Collection`)
-                    .setDescription('Take a look at your character collection')
+                    .setDescription('Browse through your collection of characters')
                     .setValue('collection')
                     .setEmoji('🖼️'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Enhance')
-                    .setDescription('Level up your characters for better performance')
+                    .setDescription('Level up your characters to make them stronger')
                     .setValue('enhance')
                     .setEmoji('⚡'),
                 new StringSelectMenuOptionBuilder()
                     .setLabel('Team')
-                    .setDescription('Create a powerful team with your characters')
+                    .setDescription('Build and manage teams for battles')
                     .setValue('team')
                     .setEmoji('🛡️'),
             );
@@ -49,9 +50,13 @@ export default {
                 name: interaction.user.username,
                 iconURL: interaction.user.displayAvatarURL(),
             })
-            .setTitle('Character')
+            .setTitle('Character Command Center')
             .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-            .setDescription(`Welcome to your character command center! Here, you can view your collection of characters, enhance their abilities, or form a powerful team. Choose an option from the menu to get started. If you need any help, don't hesitate to ask!`);
+            .setDescription(`Welcome to the Character Command Center! Here, you can manage all aspects of your characters.\n\n- **Collection**: Browse and learn more about your characters.\n- **Enhance**: Power up your characters to increase their abilities.\n- **Team**: Strategically form teams with your characters for battles.`)
+            .setFooter({
+                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                text: 'Select an option from the menu bellow for your character.',
+            });
 
         const characterComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(characterOption);
 

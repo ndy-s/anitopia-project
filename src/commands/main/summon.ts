@@ -61,6 +61,7 @@ export default {
                 },
             )
             .setFooter({
+                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: `For more information, please click the button below.`
             });
 

@@ -12,7 +12,8 @@ export async function getPlayer(interaction: CommandInteraction | CollectedInter
     } else {
         player = await PlayerModel.findOne({
             userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
-        });
+        }).populate('teams.lineup.character');
+
         await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
     }
     return player;
