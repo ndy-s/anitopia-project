@@ -4,12 +4,13 @@ import { config } from "../../config";
 import { getPlayer } from "../../utils";
 import { PlayerModel } from "../../models";
 import redis from "../../lib/redis";
+import detailTeamModal from "./detailTeamModal";
 
 export default {
     name: "createTeamModal",
     callback: async (client: Client, interaction: ModalSubmitInteraction) => {
         try {
-            const createTeamInput = interaction.fields.getTextInputValue('createTeamInput');
+            const createTeamInput = interaction.fields.getTextInputValue('createTeamInput').toUpperCase();
 
             function updateDescription(timeLeft: number) {
                 return `Hey there! You're on your way to creating a team called **${createTeamInput}**.\n\nAwesome! Now, would you like a **Team of 3** for tasks like floor levels and story missions? Or do you prefer a **Team of 5** for grand battles in event dungeons and raids?\n\nMake your choice! But remember, you've got \`⏳${timeLeft} second${timeLeft > 1 ? 's' : ''}\` before this process times out. If time runs out without a response, we'll have to cancel the process.`;
@@ -43,13 +44,13 @@ export default {
                 });
 
             const successEmbed = new EmbedBuilder()
-                .setColor('Green')
+                .setColor('Blurple')
                 .setAuthor({
                     name: `${interaction.user.username}`,
                     iconURL: interaction.user.displayAvatarURL(),
                 })
-                .setTitle(`✅ Team Successfully Created`)
-                .setDescription(`Congratulations! Your new team **${createTeamInput}** has been successfully created. You can now select it for battles.`)
+                .setTitle(`🎊 Team Successfully Created`)
+                .setDescription(`Congratulations! 🎉 Your new team **${createTeamInput}** has been successfully created. Now, let's get your team ready for battle!\n\nTo set up your team, you'll need to assign a unique character to each position. Each character is identified by a unique **Character ID**.\n\nOnce your lineup is set, you're all set to select this team for battles.`)
                 .setFooter({
                     iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                     text: config.messages.footerText,
@@ -125,6 +126,7 @@ export default {
                     }, 400);
                     await team.callback(client, confirmation, true)
                 } else if (confirmation.customId === 'teamof3') {
+                    clearInterval(intervalId);
                     const newTeam = {
                         name: createTeamInput,
                         size: 3,
@@ -142,12 +144,13 @@ export default {
                     );
 
                     await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-                        
-                    await interaction.followUp({
+
+                    await confirmation.deferUpdate();    
+                    await confirmation.followUp({
                         embeds: [successEmbed],
                         ephemeral: true
                     });
-
+                    return await detailTeamModal.callback(client, confirmation, createTeamInput, false);
                 }
                 
             } catch (error) {

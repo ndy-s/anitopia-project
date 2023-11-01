@@ -7,11 +7,11 @@ import { CharacterModel } from "../../models";
 
 export default {
     name: 'detailTeamModal',
-    callback: async function callback(client: Client, interaction: ModalSubmitInteraction | CollectedInteraction, teamInput: string | null = null) {
+    callback: async function callback(client: Client, interaction: ModalSubmitInteraction | CollectedInteraction, teamInput: string | null = null, doDeferUpdate: boolean = true) {
         try {
             let detailTeamInput = teamInput;
             if (teamInput === null && interaction.isModalSubmit()) {
-                detailTeamInput = interaction.fields.getTextInputValue('detailTeamInput');
+                detailTeamInput = interaction.fields.getTextInputValue('detailTeamInput').toUpperCase();
             }
 
             const player = await getPlayer(interaction);
@@ -98,17 +98,17 @@ export default {
                     .setDescription(`The team formation is based on the team size and the positions of the players. The team size is ${closestTeam.size}. The positions include front, back left, and back right.`)
                     .addFields(
                         {
-                            name: 'Front Middle Position',
+                            name: 'Position 1',
                             value: formatEmbedValue('frontMiddle'),
                             inline: true
                         }, 
                         {
-                            name: 'Back Left Position',
+                            name: 'Position 2',
                             value: formatEmbedValue('backLeft'),
                             inline: true
                         }, 
                         {
-                            name: 'Back Right Position',
+                            name: 'Position 3',
                             value: formatEmbedValue('backRight'),
                             inline: true
                         },
@@ -116,7 +116,11 @@ export default {
                             name: 'Total Attributes',
                             value: `❤️ **Health**: ${totalAttributes.health} • ⚔️ **Attack**: ${totalAttributes.attack} • 🛡️ **Defense**: ${totalAttributes.defense} • 💨 **Speed**: ${totalAttributes.speed}\n👊 **Power**: ${totalAttributes.health + totalAttributes.attack + totalAttributes.defense + totalAttributes.speed}`
                         },
-                    );
+                    )
+                    .setFooter({
+                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                        text: 'Select an option from the menu bellow to manage your team details.',
+                    });
 
                 const teamFormationOption = new StringSelectMenuBuilder()
                     .setCustomId('teamFormationOption')
@@ -128,19 +132,18 @@ export default {
                             .setValue('back')
                             .setEmoji('🔙'),
                         new StringSelectMenuOptionBuilder()
-                            .setLabel('Edit Team Formation')
-                            .setDescription('edit formation here')
+                            .setLabel('Edit Formation')
+                            .setDescription('Click here to modify your team formation')
                             .setValue('editTeamFormation')
+                            .setEmoji('🔄')
                     );
 
                 const teamFormationComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(teamFormationOption);
 
-                // this
-                if (interaction.isModalSubmit()) {
-                    console.log('DEFER UPDTED!');
+                if (interaction.isModalSubmit() && doDeferUpdate) {
                     await interaction.deferUpdate();
                 }
-                console.log('ini salah 2')
+
                 const response = await interaction.editReply({ 
                     embeds: [embed],
                     components: [teamFormationComponentRow]
@@ -165,7 +168,7 @@ export default {
 
                                 const frontMiddleInput = new TextInputBuilder()
                                     .setCustomId('frontMiddleInput')
-                                    .setLabel('Front Middle Position')
+                                    .setLabel(`Position 1 ${characters['frontMiddle'].character ? '• ' + characters['frontMiddle'].character.fullname : ''}`)
                                     .setPlaceholder('Enter Character ID')
                                     .setValue(characters['frontMiddle'].playerChara?.characterId ?? '')
                                     .setStyle(TextInputStyle.Short)
@@ -173,7 +176,7 @@ export default {
 
                                 const backLeftInput = new TextInputBuilder()
                                     .setCustomId('backLeftInput')
-                                    .setLabel('Back Left Position')
+                                    .setLabel(`Position 2 ${characters['backLeft'].character ? '• ' + characters['backLeft'].character.fullname : ''}`)
                                     .setPlaceholder('Enter Character ID')
                                     .setValue(characters['backLeft'].playerChara?.characterId ?? '')
                                     .setStyle(TextInputStyle.Short)
@@ -181,7 +184,7 @@ export default {
 
                                 const backRightInput = new TextInputBuilder()
                                     .setCustomId('backRightInput')
-                                    .setLabel('Back Right Position')
+                                    .setLabel(`Position 3 ${characters['backRight'].character ? '• ' + characters['backRight'].character.fullname : ''}`)
                                     .setPlaceholder('Enter Character ID')
                                     .setValue(characters['backRight'].playerChara?.characterId ?? '')
                                     .setStyle(TextInputStyle.Short)
@@ -219,14 +222,36 @@ export default {
                                         }
                                     }
                                 } catch (error) {
-                                    console.log(error);
+                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                        embed.setFooter({
+                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
+                                        });
+                        
+                                        await interaction.editReply({
+                                            embeds: [embed],
+                                            components: []
+                                        });
+                                    } else {
+                                        console.log(`Detail Team Command Error: ${error}`)
+                                    }
                                 }
                             }
                             await editTeamFormation(confirmation);
                         }
                     }
                 } catch (error) {
-                    console.log(error);
+                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                        embed.setFooter({
+                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
+                        });
+        
+                        await interaction.editReply({
+                            embeds: [embed],
+                            components: []
+                        });
+                    } else {
+                        console.log(`Detail Team Command Error: ${error}`)
+                    }
                 }
             }
         } catch (error) {

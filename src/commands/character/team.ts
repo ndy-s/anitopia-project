@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import character from "./character";
 import { getPlayer } from "../../utils";
+import { config } from "../../config";
 
 export default {
     name: 'team',
@@ -107,23 +108,39 @@ export default {
                 if (confirmation.values.includes('back')) {
                     await character.callback(client, confirmation, false, true);
                 } else if (confirmation.values.includes('create')) {
-                    const createTeamModal = new ModalBuilder()
+                    if (player.teams.length < 6) {
+                        const createTeamModal = new ModalBuilder()
                         .setCustomId('createTeamModal')
                         .setTitle('Create a New Team');
 
-                    const createTeamInput = new TextInputBuilder()
-                        .setCustomId('createTeamInput')
-                        .setLabel('Team Name')
-                        .setPlaceholder('Enter a unique alphanumeric team name')
-                        .setStyle(TextInputStyle.Short)
-                        .setRequired(true);
+                        const createTeamInput = new TextInputBuilder()
+                            .setCustomId('createTeamInput')
+                            .setLabel('Team Name')
+                            .setPlaceholder('Enter a unique alphanumeric team name')
+                            .setStyle(TextInputStyle.Short)
+                            .setRequired(true);
 
-                    createTeamModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(createTeamInput));
+                        createTeamModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(createTeamInput));
 
-                    if (!(confirmation instanceof ModalSubmitInteraction)) {
-                        await confirmation.showModal(createTeamModal);
+                        if (!(confirmation instanceof ModalSubmitInteraction)) {
+                            await confirmation.showModal(createTeamModal);
+                        }
+                    } else {
+                        const teamFullEmbed = new EmbedBuilder()
+                            .setColor('#FF0000')
+                            .setTitle('🚫 Team Limit Reached')
+                            .setDescription(`Uh-oh! 🚦 It seems you've reached your team limit. You currently have **6 teams**, which is the maximum allowed. But don't worry, there's a solution! 🛠️\n\nIf you're eager to create a new team, you'll need to **remove one of your existing teams first**. This might seem like a tough decision, but it's also an opportunity to strategize and optimize your teams. 🧠💡\n\nWe appreciate your understanding and cooperation. Happy team building! 😊🎉`)
+                            .setFooter({
+                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                                text: config.messages.footerText
+                            });
+
+                        await confirmation.deferUpdate();
+                        await confirmation.followUp({
+                            embeds: [teamFullEmbed],
+                            ephemeral: true
+                        });
                     }
-
                     await callback(client, confirmation, true, true);
                 } else if (confirmation.values.includes('viewOrUpdate')) {
                     const detailTeamModal = new ModalBuilder()
@@ -146,10 +163,19 @@ export default {
                     await callback(client, confirmation, true, true);
                 }
             }
-
-
         } catch (error) {
+            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                teamEmbed.setFooter({
+                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
+                });
 
+                await interaction.editReply({
+                    embeds: [teamEmbed],
+                    components: []
+                });
+            } else {
+                console.log(`Team Command Error: ${error}`)
+            }
         }
     }
 }
