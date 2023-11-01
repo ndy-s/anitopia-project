@@ -1,4 +1,5 @@
 import { Document, ObjectId } from "mongoose";
+import { ICharaCollectionModel } from "./ICharaCollectionModel";
 
 interface IBalance {
     aniCoin: number;
@@ -29,7 +30,7 @@ interface IScrolls {
 
 export interface ILineup {
     position: 'frontMiddle' | 'frontLeft' | 'frontRight' | 'backLeft' | 'backRight' | 'backMiddle';
-    character: ObjectId;
+    character: ObjectId | ICharaCollectionModel;
 }
 
 export interface ITeams {

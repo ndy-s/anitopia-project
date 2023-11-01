@@ -350,7 +350,7 @@ export default {
                                     characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId));
                                     characterSummonedTenEmbedArray[0].addFields({
                                         name: `🔹 ${summonedCharacterData.character.name}`,
-                                        value: `ID: \`${characterId}\`\nRarity: **${mapRarity(summonedCharacterData.rarity)}**`,
+                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
                                         inline: true,
                                     });
                                 }

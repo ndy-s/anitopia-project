@@ -1,5 +1,11 @@
 import { Document } from 'mongoose';
-import { IAttributes } from "./IAttributes";
+
+export interface IAttributes {
+    health: number;
+    attack: number;
+    defense: number;
+    speed: number;
+}
 
 interface ISkillReference {
     name: string;

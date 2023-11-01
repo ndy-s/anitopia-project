@@ -1,27 +1,92 @@
 import { ActionRowBuilder, Client, CollectedInteraction, EmbedBuilder, ModalBuilder, ModalSubmitInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { closest } from "fastest-levenshtein";
-import { getPlayer, hiddenValues } from "../../utils";
-import { ILineup, ITeams } from "../../interfaces";
+import { getPlayer, hiddenValues, mapRarity } from "../../utils";
+import { ICharaCollectionModel, ICharacterModel, ILineup, ITeams } from "../../interfaces";
 import team from "../character/team";
-import { PlayerModel } from "../../models";
+import { CharacterModel } from "../../models";
 
 export default {
     name: 'detailTeamModal',
     callback: async function callback(client: Client, interaction: ModalSubmitInteraction | CollectedInteraction, teamInput: string | null = null) {
         try {
             let detailTeamInput = teamInput;
-            if (interaction.isModalSubmit()) {
-                detailTeamInput = interaction.fields.getTextInputValue('detailTeamInput').toLowerCase();
+            if (teamInput === null && interaction.isModalSubmit()) {
+                detailTeamInput = interaction.fields.getTextInputValue('detailTeamInput');
             }
 
             const player = await getPlayer(interaction);
             const teamNames = player.teams.map((team: ITeams) => team.name);
             
             if (detailTeamInput !== null) {
-                const closestTeamName = closest(detailTeamInput, player.teams.map((team: ITeams) => team.name.toLowerCase()));
-                const closestTeam = player.teams.find((team: ITeams) => team.name.toLowerCase() === closestTeamName);
+                const closestTeamName = closest(detailTeamInput, teamNames);
+                const closestTeam = player.teams.find((team: ITeams) => team.name === closestTeamName);
 
-                console.log(JSON.stringify(closestTeam, null, 2));
+                // const positions = ['frontMiddle', 'backLeft', 'backRight'];
+                // const characterIds: string[] = [];
+                
+                // const lines = positions.map(position => closestTeam?.lineup.find((line: ILineup) => line.position === position));
+                
+                // const characters: Record<string, any> = {};
+                // lines.filter(line => line).forEach(line => {
+                //     characterIds.push(line?.character?.character);
+                //     characters[line.position] = { playerChara: line?.character };
+                // });
+
+                // const charactersData = await CharacterModel.find({ '_id': { $in: characterIds } });
+                // const charactersDataMap = charactersData.reduce((map: Record<string, ICharacterModel>, characterData) => {
+                //     map[characterData._id] = characterData;
+                //     return map;
+                // }, {});
+
+                // Object.keys(characters).forEach(position => {
+                //     const id = characters[position].playerChara?.character;
+                //     characters[position].character = charactersDataMap[id] || null;
+                // });
+
+                const positions = ['frontMiddle', 'backLeft', 'backRight'];
+                const characters: Record<string, any> = {};
+                const characterPromises: Promise<ICharacterModel>[] = [];
+
+                positions.forEach(position => {
+                    const line = closestTeam?.lineup.find((line: ILineup) => line.position === position);
+                    if (line) {
+                        characters[position] = { playerChara: line?.character };
+                        characterPromises.push(CharacterModel.findOne({ '_id': line?.character?.character }) as Promise<ICharacterModel>);
+                    }
+                });
+
+                const charactersData = await Promise.all(characterPromises);
+
+                charactersData.forEach((characterData, index) => {
+                    characters[positions[index]].character = characterData;
+                });
+
+                let totalAttributes = {
+                    health: 0,
+                    attack: 0,
+                    defense: 0,
+                    speed: 0
+                };
+                
+                Object.values(characters).forEach(character => {
+                    if (character.character) {
+                        totalAttributes.health += character.character.attributes.health;
+                        totalAttributes.attack += character.character.attributes.attack;
+                        totalAttributes.defense += character.character.attributes.defense;
+                        totalAttributes.speed += character.character.attributes.speed;
+                    }
+                });
+
+                const formatEmbedValue = (position: string) => {
+                    if (!characters[position].character) {
+                        return '🔸_**Empty Slot**_\n_None_\n_None_ • _None_';
+                    }
+                
+                    const character = characters[position].character;
+                    const playerChara = characters[position].playerChara;
+                
+                    return `🔹 **${character.name} Lv. ${playerChara.level}**\n${character.fullname}\n\`${playerChara.characterId}\` • __**${mapRarity(playerChara.rarity)}**__`;
+                };
 
                 const embed = new EmbedBuilder()
                     .setColor('Blurple')
@@ -29,35 +94,28 @@ export default {
                         name: `${interaction.user.username}`,
                         iconURL: interaction.user.displayAvatarURL(),
                     })
-                    .setTitle(`Team __${closestTeam.name}__ Formation`)
+                    .setTitle(`Team Formation • ${closestTeam.name}`)
                     .setDescription(`The team formation is based on the team size and the positions of the players. The team size is ${closestTeam.size}. The positions include front, back left, and back right.`)
                     .addFields(
                         {
                             name: 'Front Middle Position',
-                            value: (() => {
-                                const line = closestTeam?.lineup.find((line: ILineup) => line.position === 'frontMiddle');
-                                if (line.character) {
-                                    return `${line.character.character.name} **Lv**. ${line.character.level}\n**ID**: ${line.character.characterId} • __**${line.character.rarity}**__`;
-                                } else {
-                                    return 'None **Lv**. None\n**ID**: None • __**None**__';
-                                }
-                            })(),
+                            value: formatEmbedValue('frontMiddle'),
                             inline: true
-                        },
+                        }, 
                         {
                             name: 'Back Left Position',
-                            value: closestTeam.lineup.find((line: ILineup) => line.position === 'backLeft').name ?? 'None',
+                            value: formatEmbedValue('backLeft'),
                             inline: true
-                        },
+                        }, 
                         {
                             name: 'Back Right Position',
-                            value: closestTeam.lineup.find((line: ILineup) => line.position === 'backRight').name ?? 'None',
+                            value: formatEmbedValue('backRight'),
                             inline: true
                         },
                         {
                             name: 'Total Attributes',
-                            value: 'None'
-                        }
+                            value: `❤️ **Health**: ${totalAttributes.health} • ⚔️ **Attack**: ${totalAttributes.attack} • 🛡️ **Defense**: ${totalAttributes.defense} • 💨 **Speed**: ${totalAttributes.speed}\n👊 **Power**: ${totalAttributes.health + totalAttributes.attack + totalAttributes.defense + totalAttributes.speed}`
+                        },
                     );
 
                 const teamFormationOption = new StringSelectMenuBuilder()
@@ -77,9 +135,12 @@ export default {
 
                 const teamFormationComponentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(teamFormationOption);
 
+                // this
                 if (interaction.isModalSubmit()) {
+                    console.log('DEFER UPDTED!');
                     await interaction.deferUpdate();
                 }
+                console.log('ini salah 2')
                 const response = await interaction.editReply({ 
                     embeds: [embed],
                     components: [teamFormationComponentRow]
@@ -97,43 +158,71 @@ export default {
                         if (confirmation.values.includes('back')) {
                             await team.callback(client, confirmation, true);
                         } else if (confirmation.values.includes('editTeamFormation')) {
-                            const editTeamFormationModal = new ModalBuilder()
-                                .setCustomId('editTeamFormationModal')
-                                .setTitle('Edit Team Formation');
+                            async function editTeamFormation(confirmation: CollectedInteraction | ModalSubmitInteraction) {
+                                const editTeamFormationModal = new ModalBuilder()
+                                    .setCustomId('editTeamFormationModal')
+                                    .setTitle('Edit Team Formation');
 
-                            const frontMiddleInput = new TextInputBuilder()
-                                .setCustomId('frontMiddleInput')
-                                .setLabel('Front Middle Position')
-                                .setPlaceholder('Enter Character ID')
-                                .setStyle(TextInputStyle.Short);
+                                const frontMiddleInput = new TextInputBuilder()
+                                    .setCustomId('frontMiddleInput')
+                                    .setLabel('Front Middle Position')
+                                    .setPlaceholder('Enter Character ID')
+                                    .setValue(characters['frontMiddle'].playerChara?.characterId ?? '')
+                                    .setStyle(TextInputStyle.Short)
+                                    .setRequired(false);
 
-                            const backLeftInput = new TextInputBuilder()
-                                .setCustomId('backLeftInput')
-                                .setLabel('Back Left Position')
-                                .setPlaceholder('Enter Character ID')
-                                .setStyle(TextInputStyle.Short);
+                                const backLeftInput = new TextInputBuilder()
+                                    .setCustomId('backLeftInput')
+                                    .setLabel('Back Left Position')
+                                    .setPlaceholder('Enter Character ID')
+                                    .setValue(characters['backLeft'].playerChara?.characterId ?? '')
+                                    .setStyle(TextInputStyle.Short)
+                                    .setRequired(false);
 
-                            const backRightInput = new TextInputBuilder()
-                                .setCustomId('backRightInput')
-                                .setLabel('Back Right Position')
-                                .setPlaceholder('Enter Character ID')
-                                .setStyle(TextInputStyle.Short);
+                                const backRightInput = new TextInputBuilder()
+                                    .setCustomId('backRightInput')
+                                    .setLabel('Back Right Position')
+                                    .setPlaceholder('Enter Character ID')
+                                    .setValue(characters['backRight'].playerChara?.characterId ?? '')
+                                    .setStyle(TextInputStyle.Short)
+                                    .setRequired(false);
 
-                            editTeamFormationModal.addComponents(
-                                new ActionRowBuilder<TextInputBuilder>().addComponents(frontMiddleInput),
-                                new ActionRowBuilder<TextInputBuilder>().addComponents(backLeftInput),
-                                new ActionRowBuilder<TextInputBuilder>().addComponents(backRightInput),
-                            );
+                                editTeamFormationModal.addComponents(
+                                    new ActionRowBuilder<TextInputBuilder>().addComponents(frontMiddleInput),
+                                    new ActionRowBuilder<TextInputBuilder>().addComponents(backLeftInput),
+                                    new ActionRowBuilder<TextInputBuilder>().addComponents(backRightInput),
+                                );
 
-                            hiddenValues.set(interaction.user.id, closest(detailTeamInput, teamNames));
-                            console.log(hiddenValues.get(interaction.user.id));
+                                if (!(confirmation instanceof ModalSubmitInteraction)) {
+                                    await confirmation.showModal(editTeamFormationModal);
+                                }
 
+                                hiddenValues.set(interaction.user.id, closestTeamName);
 
-                            if (!(confirmation instanceof ModalSubmitInteraction)) {
-                                await confirmation.showModal(editTeamFormationModal);
+                                teamFormationOption.setCustomId('teamFormationOptionModal');
+
+                                const response = await confirmation.editReply({
+                                    components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(teamFormationOption)]
+                                });
+
+                                try {
+                                    const confirmation = await response.awaitMessageComponent({
+                                        filter: collectorFilter,
+                                        time: 300_000
+                                    });
+
+                                    if (confirmation.customId === 'teamFormationOptionModal' && 'values' in confirmation) {
+                                        if (confirmation.values.includes('back')) {
+                                            await team.callback(client, confirmation, true);
+                                        } else if (confirmation.values.includes('editTeamFormation')) {
+                                            await editTeamFormation(confirmation);
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.log(error);
+                                }
                             }
-
-                            await callback(client, confirmation, closestTeamName);
+                            await editTeamFormation(confirmation);
                         }
                     }
                 } catch (error) {

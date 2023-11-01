@@ -1,6 +1,5 @@
 import { Document, ObjectId } from "mongoose";
-import { IAttributes } from "./IAttributes";
-import { ICharacterModel } from "./ICharacterModel";
+import { ICharacterModel, IAttributes } from "./ICharacterModel";
 
 export interface ICharaCollectionModel extends Document {
     playerId: ObjectId;
