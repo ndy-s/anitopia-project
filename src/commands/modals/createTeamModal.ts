@@ -11,6 +11,26 @@ export default {
     callback: async (client: Client, interaction: ModalSubmitInteraction) => {
         try {
             const createTeamInput = interaction.fields.getTextInputValue('createTeamInput').toUpperCase();
+            const hasSymbols = /[^A-Za-z0-9 ]/.test(createTeamInput);
+
+            if (hasSymbols) {
+                const symbolErrorEmbed = new EmbedBuilder()
+                    .setColor('#FF0000')
+                    .setTitle('⚠️ Invalid Team Name')
+                    .setDescription(`It looks like the team name **${createTeamInput}** has some special characters. For team names, please stick to letters and numbers. Let's give it another shot!`)
+                    .setFooter({
+                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                        text: config.messages.footerText
+                    });
+            
+                await interaction.deferUpdate();
+                await interaction.followUp({
+                    embeds: [symbolErrorEmbed],
+                    ephemeral: true
+                });
+
+                return;
+            }
 
             function updateDescription(timeLeft: number) {
                 return `Hey there! You're on your way to creating a team called **${createTeamInput}**.\n\nAwesome! Now, would you like a **Team of 3** for tasks like floor levels and story missions? Or do you prefer a **Team of 5** for grand battles in event dungeons and raids?\n\nMake your choice! But remember, you've got \`⏳${timeLeft} second${timeLeft > 1 ? 's' : ''}\` before this process times out. If time runs out without a response, we'll have to cancel the process.`;
@@ -36,8 +56,8 @@ export default {
                     name: `${interaction.user.username}`,
                     iconURL: interaction.user.displayAvatarURL(),
                 })
-                .setTitle(`⚠️ Team Creation Cancelled`)
-                .setDescription(`The team creation process has been cancelled. You can always start the process again when you're ready.`)
+                .setTitle(`⛔ Team Creation Cancelled`)
+                .setDescription(`The team creation process has been **cancelled**. But hey, there's always another time! Whenever you're ready to start the process again, we're here to assist you.`)
                 .setFooter({
                     iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                     text: config.messages.footerText,

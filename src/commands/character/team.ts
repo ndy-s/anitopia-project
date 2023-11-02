@@ -161,6 +161,42 @@ export default {
                     }
 
                     await callback(client, confirmation, true, true);
+                } else if (confirmation.values.includes('delete')) {
+                    if (player.teams.length > 0) {
+                        const deleteTeamModal = new ModalBuilder()
+                            .setCustomId('deleteTeamModal')
+                            .setTitle('Delete a Team');
+                        
+                        const deleteTeamInput = new TextInputBuilder()
+                            .setCustomId('deleteTeamInput')
+                            .setLabel('Team Name')
+                            .setPlaceholder('Enter the name of the team you wish to delete')
+                            .setStyle(TextInputStyle.Short)
+                            .setRequired(true);
+
+                        deleteTeamModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(deleteTeamInput));
+
+                        if (!(confirmation instanceof ModalSubmitInteraction)) {
+                            await confirmation.showModal(deleteTeamModal);
+                        }
+                    } else {
+                        const noTeamEmbed = new EmbedBuilder()
+                            .setColor('#0099ff')
+                            .setTitle('🔍 No Teams Found')
+                            .setDescription(`It seems you don't have any teams yet. But don't worry, creating your first team is a great step towards exciting battles and quests! 🚀\n\nTo get started, you can use the **Create Team** option. This will allow you to form a new team and start your journey.`)
+                            .setFooter({
+                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                                text: config.messages.footerText
+                            });
+
+                        await confirmation.deferUpdate();
+                        await confirmation.followUp({
+                            embeds: [noTeamEmbed],
+                            ephemeral: true
+                        });
+                    }
+
+                    await callback(client, confirmation, true, true);
                 }
             }
         } catch (error) {
