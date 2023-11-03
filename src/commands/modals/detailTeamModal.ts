@@ -132,6 +132,11 @@ export default {
                             .setValue('back')
                             .setEmoji('🔙'),
                         new StringSelectMenuOptionBuilder()
+                            .setLabel('Activate Team')
+                            .setDescription('Activate this team for your upcoming battles!')
+                            .setValue('active')
+                            .setEmoji('🚀'),
+                        new StringSelectMenuOptionBuilder()
                             .setLabel('Edit Formation')
                             .setDescription('Click here to modify your team formation')
                             .setValue('editTeamFormation')

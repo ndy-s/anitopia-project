@@ -57,7 +57,7 @@ export default {
                     iconURL: interaction.user.displayAvatarURL(),
                 })
                 .setTitle(`⛔ Team Creation Cancelled`)
-                .setDescription(`The team creation process has been **cancelled**. But hey, there's always another time! Whenever you're ready to start the process again, we're here to assist you.`)
+                .setDescription(`Your **${createTeamInput}** team creation process has been **cancelled**. But hey, there's always another time! Whenever you're ready to start the process again, we're here to assist you.`)
                 .setFooter({
                     iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                     text: config.messages.footerText,
