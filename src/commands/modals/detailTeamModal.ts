@@ -20,7 +20,6 @@ export default {
             if (detailTeamInput !== null) {
                 const closestTeamName = closest(detailTeamInput, teamNames);
                 const closestTeam = player.teams.find((team: ITeams) => team.name === closestTeamName);
-
                 // const positions = ['frontMiddle', 'backLeft', 'backRight'];
                 // const characterIds: string[] = [];
                 
@@ -43,7 +42,7 @@ export default {
                 //     characters[position].character = charactersDataMap[id] || null;
                 // });
 
-                const positions = ['frontMiddle', 'backLeft', 'backRight'];
+                const positions = closestTeam.size === 3 ? ['frontMiddle', 'backLeft', 'backRight'] : ['frontLeft', 'frontRight', 'backLeft', 'backMiddle', 'backRight'];
                 const characters: Record<string, any> = {};
                 const characterPromises: Promise<ICharacterModel>[] = [];
 
@@ -88,7 +87,7 @@ export default {
                     return `🔹 **${character.name} Lv. ${playerChara.level}**\n${character.fullname}\n\`${playerChara.characterId}\` • __**${mapRarity(playerChara.rarity)}**__`;
                 };
 
-                const embed = new EmbedBuilder()
+                const teamDetailEmbed = new EmbedBuilder()
                     .setColor('Blurple')
                     .setAuthor({
                         name: `${interaction.user.username}`,
@@ -96,31 +95,27 @@ export default {
                     })
                     .setTitle(`Team Formation • ${closestTeam.name}`)
                     .setDescription(`The team formation is based on the team size and the positions of the players. The team size is ${closestTeam.size}. The positions include front, back left, and back right.`)
-                    .addFields(
-                        {
-                            name: 'Position 1',
-                            value: formatEmbedValue('frontMiddle'),
-                            inline: true
-                        }, 
-                        {
-                            name: 'Position 2',
-                            value: formatEmbedValue('backLeft'),
-                            inline: true
-                        }, 
-                        {
-                            name: 'Position 3',
-                            value: formatEmbedValue('backRight'),
-                            inline: true
-                        },
-                        {
-                            name: 'Total Attributes',
-                            value: `❤️ **Health**: ${totalAttributes.health} • ⚔️ **Attack**: ${totalAttributes.attack} • 🛡️ **Defense**: ${totalAttributes.defense} • 💨 **Speed**: ${totalAttributes.speed}\n👊 **Power**: ${totalAttributes.health + totalAttributes.attack + totalAttributes.defense + totalAttributes.speed}`
-                        },
-                    )
                     .setFooter({
                         iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: 'Select an option from the menu bellow to manage your team details.',
                     });
+
+
+                const totalAttributesValue = `❤️ **Health**: ${totalAttributes.health} • ⚔️ **Attack**: ${totalAttributes.attack} • 🛡️ **Defense**: ${totalAttributes.defense} • 💨 **Speed**: ${totalAttributes.speed}\n👊 **Power**: ${totalAttributes.health + totalAttributes.attack + totalAttributes.defense + totalAttributes.speed}`;
+                    
+                const teamDetailEmbedFields = positions.map((position, index) => ({
+                    name: `Position ${index + 1}`,
+                    value: formatEmbedValue(position),
+                    inline: true
+                }));
+                    
+                teamDetailEmbedFields.push({
+                    name: 'Total Attributes',
+                    value: totalAttributesValue,
+                    inline: false
+                });
+                    
+                teamDetailEmbed.addFields(...teamDetailEmbedFields);
 
                 const teamFormationOption = new StringSelectMenuBuilder()
                     .setCustomId('teamFormationOption')
@@ -150,7 +145,7 @@ export default {
                 }
 
                 const response = await interaction.editReply({ 
-                    embeds: [embed],
+                    embeds: [teamDetailEmbed],
                     components: [teamFormationComponentRow]
                 });
 
@@ -171,35 +166,21 @@ export default {
                                     .setCustomId('editTeamFormationModal')
                                     .setTitle('Edit Team Formation');
 
-                                const frontMiddleInput = new TextInputBuilder()
-                                    .setCustomId('frontMiddleInput')
-                                    .setLabel(`Position 1 ${characters['frontMiddle'].character ? '• ' + characters['frontMiddle'].character.fullname : ''}`)
-                                    .setPlaceholder('Enter Character ID')
-                                    .setValue(characters['frontMiddle'].playerChara?.characterId ?? '')
-                                    .setStyle(TextInputStyle.Short)
-                                    .setRequired(false);
+                                const inputs = positions.map((position) => {
+                                    const character = characters[position];
+                                    const label = `Position ${positions.indexOf(position) + 1} ${character.character ? '• ' + character.character.fullname : ''}`;
+                                    return new TextInputBuilder()
+                                        .setCustomId(`${position}Input`)
+                                        .setLabel(label)
+                                        .setPlaceholder('Enter Character ID')
+                                        .setValue(character.playerChara?.characterId ?? '')
+                                        .setStyle(TextInputStyle.Short)
+                                        .setRequired(false);
+                                });
 
-                                const backLeftInput = new TextInputBuilder()
-                                    .setCustomId('backLeftInput')
-                                    .setLabel(`Position 2 ${characters['backLeft'].character ? '• ' + characters['backLeft'].character.fullname : ''}`)
-                                    .setPlaceholder('Enter Character ID')
-                                    .setValue(characters['backLeft'].playerChara?.characterId ?? '')
-                                    .setStyle(TextInputStyle.Short)
-                                    .setRequired(false);
-
-                                const backRightInput = new TextInputBuilder()
-                                    .setCustomId('backRightInput')
-                                    .setLabel(`Position 3 ${characters['backRight'].character ? '• ' + characters['backRight'].character.fullname : ''}`)
-                                    .setPlaceholder('Enter Character ID')
-                                    .setValue(characters['backRight'].playerChara?.characterId ?? '')
-                                    .setStyle(TextInputStyle.Short)
-                                    .setRequired(false);
-
-                                editTeamFormationModal.addComponents(
-                                    new ActionRowBuilder<TextInputBuilder>().addComponents(frontMiddleInput),
-                                    new ActionRowBuilder<TextInputBuilder>().addComponents(backLeftInput),
-                                    new ActionRowBuilder<TextInputBuilder>().addComponents(backRightInput),
-                                );
+                                inputs.forEach((input) => {
+                                    editTeamFormationModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(input));
+                                });
 
                                 if (!(confirmation instanceof ModalSubmitInteraction)) {
                                     await confirmation.showModal(editTeamFormationModal);
@@ -228,12 +209,12 @@ export default {
                                     }
                                 } catch (error) {
                                     if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                        embed.setFooter({
+                                        teamDetailEmbed.setFooter({
                                             text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
                                         });
                         
                                         await interaction.editReply({
-                                            embeds: [embed],
+                                            embeds: [teamDetailEmbed],
                                             components: []
                                         });
                                     } else {
@@ -246,12 +227,12 @@ export default {
                     }
                 } catch (error) {
                     if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                        embed.setFooter({
+                        teamDetailEmbed.setFooter({
                             text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
                         });
         
                         await interaction.editReply({
-                            embeds: [embed],
+                            embeds: [teamDetailEmbed],
                             components: []
                         });
                     } else {

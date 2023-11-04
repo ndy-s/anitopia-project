@@ -171,6 +171,34 @@ export default {
                         ephemeral: true
                     });
                     return await detailTeamModal.callback(client, confirmation, createTeamInput, false);
+                } else if (confirmation.customId === 'teamof5') {
+                    clearInterval(intervalId);
+                    const newTeam = {
+                        name: createTeamInput,
+                        size: 5,
+                        lineup: [
+                            { position: 'frontLeft' },
+                            { position: 'frontRight' },
+                            { position: 'backLeft' },
+                            { position: 'backMiddle' },
+                            { position: 'backRight' }
+                        ]
+                    };
+
+                    const player = await PlayerModel.findOneAndUpdate(
+                        { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+                        { $push: { teams: newTeam } },
+                        { new: true }
+                    );
+
+                    await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+
+                    await confirmation.deferUpdate();    
+                    await confirmation.followUp({
+                        embeds: [successEmbed],
+                        ephemeral: true
+                    });
+                    return await detailTeamModal.callback(client, confirmation, createTeamInput, false);
                 }
                 
             } catch (error) {
