@@ -48,11 +48,13 @@ export default {
 
                 positions.forEach(position => {
                     const line = closestTeam?.lineup.find((line: ILineup) => line.position === position);
+
                     if (line) {
                         characters[position] = { playerChara: line?.character };
                         characterPromises.push(CharacterModel.findOne({ '_id': line?.character?.character }) as Promise<ICharacterModel>);
                     }
                 });
+
 
                 const charactersData = await Promise.all(characterPromises);
 
