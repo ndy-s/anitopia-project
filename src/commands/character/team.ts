@@ -71,7 +71,7 @@ export default {
                     .setValue('create')
                     .setEmoji('🆕'),
                 new StringSelectMenuOptionBuilder()
-                    .setLabel('View or  Team')
+                    .setLabel('View or Update Team')
                     .setDescription('View or update your team details')
                     .setValue('viewOrUpdate')
                     .setEmoji('🔍'),

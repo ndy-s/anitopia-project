@@ -117,12 +117,10 @@ export default {
             
                 if (timeLeft === 0) {
                     clearInterval(intervalId);
-                    setTimeout(async () => {
-                        await interaction.followUp({
-                            embeds: [cancelEmbed],
-                            ephemeral: true
-                        });
-                    }, 400);
+                    await interaction.followUp({
+                        embeds: [cancelEmbed],
+                        ephemeral: true
+                    });
                     await team.callback(client, interaction, true, true)
                 }
             }, 1000);
@@ -138,12 +136,10 @@ export default {
 
                 if (confirmation.customId === 'cancel') {
                     clearInterval(intervalId);
-                    setTimeout(async () => {
-                        await interaction.followUp({
-                            embeds: [cancelEmbed],
-                            ephemeral: true
-                        });
-                    }, 400);
+                    await interaction.followUp({
+                        embeds: [cancelEmbed],
+                        ephemeral: true
+                    });
                     await team.callback(client, confirmation, true)
                 } else if (confirmation.customId === 'teamof3') {
                     clearInterval(intervalId);

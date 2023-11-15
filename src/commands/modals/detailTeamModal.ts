@@ -3,7 +3,9 @@ import { closest } from "fastest-levenshtein";
 import { getPlayer, hiddenValues, mapRarity } from "../../utils";
 import { ICharaCollectionModel, ICharacterModel, ILineup, ITeams } from "../../interfaces";
 import team from "../character/team";
-import { CharacterModel } from "../../models";
+import { CharacterModel, PlayerModel } from "../../models";
+import redis from "../../lib/redis";
+import { config } from "../../config";
 
 export default {
     name: 'detailTeamModal',
@@ -14,7 +16,7 @@ export default {
                 detailTeamInput = interaction.fields.getTextInputValue('detailTeamInput').toUpperCase();
             }
 
-            const player = await getPlayer(interaction);
+            let player = await getPlayer(interaction);
             const teamNames = player.teams.map((team: ITeams) => team.name);
             
             if (detailTeamInput !== null) {
@@ -55,9 +57,7 @@ export default {
                     }
                 });
 
-
                 const charactersData = await Promise.all(characterPromises);
-
                 charactersData.forEach((characterData, index) => {
                     characters[positions[index]].character = characterData;
                 });
@@ -119,6 +119,8 @@ export default {
                     
                 teamDetailEmbed.addFields(...teamDetailEmbedFields);
 
+                const teamField = closestTeam.size === 3 ? 'teamOfThree' : 'teamOfFive';
+                const isTeamActive = player.activeTeams[teamField] === closestTeamName;
                 const teamFormationOption = new StringSelectMenuBuilder()
                     .setCustomId('teamFormationOption')
                     .setPlaceholder('Select an action for your team formation')
@@ -128,11 +130,19 @@ export default {
                             .setDescription('Return to the team menu')
                             .setValue('back')
                             .setEmoji('🔙'),
-                        new StringSelectMenuOptionBuilder()
-                            .setLabel('Activate Team')
-                            .setDescription('Activate this team for your upcoming battles!')
-                            .setValue('active')
-                            .setEmoji('🚀'),
+                        ...(isTeamActive ? [
+                            new StringSelectMenuOptionBuilder()
+                                .setLabel('Rest Team')
+                                .setDescription('Deactivate your team to give them a rest!')
+                                .setValue('deactivate')
+                                .setEmoji('💤')
+                        ] : [
+                            new StringSelectMenuOptionBuilder()
+                                .setLabel('Activate Team')
+                                .setDescription('Prepare your team for the upcoming battles!')
+                                .setValue('activate')
+                                .setEmoji('🚀')
+                        ]),
                         new StringSelectMenuOptionBuilder()
                             .setLabel('Edit Formation')
                             .setDescription('Click here to modify your team formation')
@@ -162,6 +172,62 @@ export default {
                     if (confirmation.customId === 'teamFormationOption' && 'values' in confirmation) {
                         if (confirmation.values.includes('back')) {
                             await team.callback(client, confirmation, true);
+                        } else if (confirmation.values.includes('activate')) {
+                            const teamSize = closestTeam.size === 3 ? 'Team of 3' : 'Team of 5';
+                            
+                            player = await PlayerModel.findOneAndUpdate(
+                                { 
+                                    userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+                                },
+                                { $set: { [`activeTeams.${teamField}`]: closestTeamName } },
+                                { new: true }
+                            ).populate('teams.lineup.character');
+                            
+                            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+                            
+                            const activationEmbed = new EmbedBuilder()
+                                .setColor('Blurple')
+                                .setTitle('✅ Team Activation Successful')
+                                .setDescription(`Your **${teamSize}** named **${closestTeamName}** has been successfully activated.`)
+                                .setFooter({
+                                    iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                                    text: `${config.messages.footerText}`
+                                });
+                            
+                            await confirmation.deferUpdate();
+                            await confirmation.followUp({
+                                embeds: [activationEmbed],
+                                ephemeral: true,
+                            });
+                            await callback(client, confirmation, closestTeamName, true);
+                        } else if (confirmation.values.includes('deactivate')) {
+                            const teamSize = closestTeam.size === 3 ? 'teamOfThree' : 'teamOfFive';
+                        
+                            player = await PlayerModel.findOneAndUpdate(
+                                { 
+                                    userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
+                                },
+                                { $unset: { [`activeTeams.${teamSize}`]: "" } },
+                                { new: true }
+                            ).populate('teams.lineup.character');
+                        
+                            await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+                        
+                            const deactivationEmbed = new EmbedBuilder()
+                                .setColor('Blurple')
+                                .setTitle('✅ Team Deactivation Successful')
+                                .setDescription(`Your **${teamSize.replace('teamOf', 'team of ')}** named **${closestTeamName}** has been successfully deactivated.`)
+                                .setFooter({
+                                    iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
+                                    text: `${config.messages.footerText}`
+                                });
+                        
+                            await confirmation.deferUpdate();
+                            await confirmation.followUp({
+                                embeds: [deactivationEmbed],
+                                ephemeral: true,
+                            });
+                            await callback(client, confirmation, closestTeamName, true);
                         } else if (confirmation.values.includes('editTeamFormation')) {
                             async function editTeamFormation(confirmation: CollectedInteraction | ModalSubmitInteraction) {
                                 const editTeamFormationModal = new ModalBuilder()
@@ -204,7 +270,7 @@ export default {
 
                                     if (confirmation.customId === 'teamFormationOptionModal' && 'values' in confirmation) {
                                         if (confirmation.values.includes('back')) {
-                                            await team.callback(client, confirmation, true);
+                                            await team.callback(client, confirmation);
                                         } else if (confirmation.values.includes('editTeamFormation')) {
                                             await editTeamFormation(confirmation);
                                         }

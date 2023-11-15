@@ -11,7 +11,6 @@ export default {
     callback: async (client: Client, interaction: ModalSubmitInteraction) => {
         try {
             const teamName = hiddenValues.get(interaction.user.id);
-            
             const positions = interaction.fields.fields.size === 3 ? ['frontMiddle', 'backLeft', 'backRight'] : ['frontLeft', 'frontRight', 'backLeft', 'backMiddle', 'backRight'];
 
             const inputs: string[] = [];
