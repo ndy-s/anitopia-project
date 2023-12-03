@@ -1,6 +1,7 @@
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { WeeklySeriesModel } from '../../models/WeeklySeriesModel';
 import { CharacterModel } from '../../models';
+import { IWeeklySeriesModel } from '../../interfaces';
 
 const ONE_WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -42,7 +43,7 @@ export default () => {
             return randomizedSeriesList[0];
         }
 
-        function updateWeeklySeries(weeklySeries: any, series: string) {
+        function updateWeeklySeries(weeklySeries: IWeeklySeriesModel, series: string) {
             weeklySeries.seriesName = series;
             weeklySeries.endsDate = new Date(Date.now() + ONE_WEEK_IN_MS);
             return weeklySeries.save();
