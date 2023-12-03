@@ -763,7 +763,17 @@ export default {
                             await handleSummonedTenCharacterPage(confirmation);
                         }
                     } catch (error) {
-
+                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                            eliteScrollEmbed.setFooter({
+                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                            });
+                            await confirmation.editReply({
+                                embeds: [eliteScrollEmbed],
+                                components: []
+                            });
+                        } else {
+                            console.log(`Summon Command - Elite Scroll Error: ${error}`);
+                        }
                     }
                 }
 
@@ -839,13 +849,7 @@ export default {
                         } else if (confirmation.customId === 'summonOne') {
                             async function handleSummonedCharacterPage(confirmation: CollectedInteraction) {
                                 const cachedCurrentSeries = await redis.get('WEEKLY-SERIES');
-
-                                let currentSeries;
-                                if (cachedCurrentSeries) {
-                                    currentSeries = JSON.parse(cachedCurrentSeries);
-                                } else {
-                                    currentSeries = await WeeklySeriesModel.findOne();
-                                }
+                                const currentSeries = cachedCurrentSeries ? JSON.parse(cachedCurrentSeries) : await WeeklySeriesModel.findOne();
 
                                 const characters = await getAllCharacters(currentSeries.seriesName);
                                 const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
@@ -921,17 +925,178 @@ export default {
                                         await handleSummonedCharacterPage(confirmation);
                                     }
                                 } catch (error) {
-
+                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                        characterSummonedEmbed.setFooter({
+                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                        });
+                                        await confirmation.editReply({
+                                            embeds: [characterSummonedEmbed],
+                                            components: []
+                                        });
+                                    } else {
+                                        console.log(`Elite Scroll Summon Error: ${error}`);
+                                    }
                                 }
-
                             }
 
                             await handleSummonedCharacterPage(confirmation);
+                        } else if (confirmation.customId === 'summonTen') {
+                            async function handleSummonedTenCharacterPage(confirmation: CollectedInteraction) {
+                                const cachedCurrentSeries = await redis.get('WEEKLY-SERIES');
+                                const currentSeries = cachedCurrentSeries ? JSON.parse(cachedCurrentSeries) : await WeeklySeriesModel.findOne();
+
+                                const characters = await getAllCharacters(currentSeries.seriesName);
+                                const summonedCharacterDataArray = await summonCharacters(
+                                    characters, 
+                                    {
+                                        5: 0, // Common
+                                        4: 0, // Uncommon
+                                        3: 53, // Rare
+                                        2: 43, // Epic
+                                        1: 4 // Legendary
+                                    },
+                                    player.scrolls.elite.guaranteed,
+                                    10
+                                );
+
+                                player = await PlayerModel.findOneAndUpdate(
+                                    { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+                                    { 
+                                        $inc: { 
+                                            'scrolls.series.count': -10, 
+                                        },
+                                    },
+                                    { new: true}
+                                ).populate('teams.lineup.character');
+                        
+                                await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+
+                                const characterSummonedTenEmbedArray = [
+                                    new EmbedBuilder()
+                                        .setColor('Blurple')
+                                        .setAuthor({
+                                            name: interaction.user.username,
+                                            iconURL: interaction.user.displayAvatarURL(),
+                                        })
+                                        .setTitle('Series Scroll Summon')
+                                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                                        .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
+                                ];
+                                
+                                for (const summonedCharacterData of summonedCharacterDataArray) {
+                                    const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
+                                    const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+
+                                    const newCharaCollection = new CharaCollectionModel({
+                                        playerId: player._id,
+                                        characterId: characterId,
+                                        character: summonedCharacterData.character._id,
+                                        rarity: summonedCharacterData.rarity,
+                                        attributes: {
+                                            health: summonedCharacterData.character.attributes.health,
+                                            attack: summonedCharacterData.character.attributes.attack,
+                                            defense: summonedCharacterData.character.attributes.defense,
+                                            speed: summonedCharacterData.character.attributes.speed,
+                                        }
+                                    });
+                                    await newCharaCollection.save();
+
+                                    characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series'));
+                                    characterSummonedTenEmbedArray[0].addFields({
+                                        name: `🔹 ${summonedCharacterData.character.name}`,
+                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
+                                        inline: true,
+                                    });
+                                }
+
+                                characterSummonedTenEmbedArray[0].addFields({
+                                    name: `New characters have joined your collection!`,
+                                    value: `Check them out with ${config.commands.collectionCommandTag}. You've got ${player.scrolls.series.count} Series Scroll${player.scrolls.series.count > 1 ? 's' : ''} left.`,
+                                    inline: false,
+                                });
+
+                                const prevButton = new ButtonBuilder()
+                                    .setCustomId('prev')
+                                    .setStyle(ButtonStyle.Primary)
+                                    .setEmoji('⬅️');
+
+                                const nextButton = new ButtonBuilder()
+                                    .setCustomId('next')
+                                    .setStyle(ButtonStyle.Primary)
+                                    .setEmoji('➡️');
+
+                                const characterSummonedTenComponentRow = new ActionRowBuilder<ButtonBuilder>()
+                                .addComponents(
+                                    backButton,
+                                    prevButton,
+                                    nextButton,
+                                    summonTenButton
+                                        .setLabel('Summon 10')
+                                        .setDisabled(player.scrolls.series.count < 10 ? true : false)
+                                );
+
+                                async function handlePages(confirmation: CollectedInteraction, currentPage: number = 0) {
+                                    const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
+                                        .setFooter({
+                                            text: `Page ${currentPage + 1} of ${characterSummonedTenEmbedArray.length} • Click the ⬅️ or ➡️ button to navigate.`
+                                        });
+
+                                    prevButton.setDisabled(currentPage < 1 ? true : false);
+                                    nextButton.setDisabled(currentPage === (characterSummonedTenEmbedArray.length - 1) ? true : false);
+
+                                    await confirmation.deferUpdate();
+                                    const response = await confirmation.editReply({
+                                        embeds: [characterSummonedTenEmbed],
+                                        components: [characterSummonedTenComponentRow],
+                                    });
+
+                                    try {
+                                        const confirmation = await response.awaitMessageComponent({
+                                            filter: collectorFilter,
+                                            time: 300_000
+                                        });
+                            
+                                        if (confirmation.customId === 'back') {
+                                            await handleSeriesPage(confirmation);
+                                        } else if (confirmation.customId === 'summonTen') {
+                                            await handleSummonedTenCharacterPage(confirmation);
+                                        } else if (confirmation.customId === 'prev') {
+                                            await handlePages(confirmation, currentPage - 1);
+                                        } else if (confirmation.customId === 'next') {
+                                            await handlePages(confirmation, currentPage + 1);
+                                        }
+                                    } catch (error) {
+                                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                            characterSummonedTenEmbed.setFooter({
+                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                            });
+                                            await confirmation.editReply({
+                                                embeds: [characterSummonedTenEmbed],
+                                                components: []
+                                            });
+                                        } else {
+                                            console.log(`Multiple Series Scroll Summon Error: ${error}`);
+                                        }
+                                    }
+                                }
+                                await handlePages(confirmation);
+                            }
+
+                            await handleSummonedTenCharacterPage(confirmation);
                         }
-                    } catch (eror) {
-
+                    } catch (error) {
+                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                            seriesScrollEmbed.setFooter({
+                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                            });
+                            await confirmation.editReply({
+                                embeds: [seriesScrollEmbed],
+                                components: []
+                            });
+                        } else {
+                            console.log(`Summon Command - Series Scroll Error: ${error}`);
+                        }
                     }
-
                 }
 
                 await handleSeriesPage(confirmation);
