@@ -9,15 +9,18 @@ const rarityAdjustments = {
     2: 150,
     1: 200 // Legendary
 };
-async function summonCharacters(characters, rarityChances, guaranted, numCharacters = 1) {
+async function summonCharacters(characters, rarityChances, guaranted, numCharacters = 1, guarantedRarity = 'epic') {
     const summonedCharacters = [];
     for (let i = 0; i < numCharacters; i++) {
         const randomIndex = Math.floor(Math.random() * characters.length);
         const character = JSON.parse(JSON.stringify(characters[randomIndex]));
         let rarity;
         const randomNum = Math.random() * 100;
-        if (guaranted === 0) {
+        if (guaranted === 0 && guarantedRarity == 'epic') {
             rarity = 2; // Epic
+        }
+        else if (guaranted === 0 && guarantedRarity == 'legendary') {
+            rarity = 1; // Legendary
         }
         else if (randomNum < rarityChances[5]) {
             rarity = 5; // Common

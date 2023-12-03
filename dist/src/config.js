@@ -48,11 +48,11 @@ const configProfileEmbed = (interaction, player) => {
     })
         .setFooter({
         iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512 }),
-        text: `Tip: Use Player ID to connect with other players!`,
+        text: `Use player ID to connect with other players.`,
     });
 };
 exports.configProfileEmbed = configProfileEmbed;
-const configCharacterSummonedEmbed = (interaction, summonedCharacterData, characterId) => {
+const configCharacterSummonedEmbed = (interaction, summonedCharacterData, characterId, scrollName = 'Novice') => {
     const rarity = (0, utils_1.mapRarity)(summonedCharacterData.rarity);
     return new discord_js_1.EmbedBuilder()
         .setColor('Blurple')
@@ -60,9 +60,9 @@ const configCharacterSummonedEmbed = (interaction, summonedCharacterData, charac
         name: interaction.user.username,
         iconURL: interaction.user.displayAvatarURL(),
     })
-        .setTitle('Novice Scroll Summon')
+        .setTitle(`${scrollName} Scroll Summon`)
         .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-        .setDescription(`Congratulations! You've successfully summoned **${summonedCharacterData.character.name} (${summonedCharacterData.character.fullname})** with the Novice Scroll.`)
+        .setDescription(`Congratulations! You've successfully summoned **${summonedCharacterData.character.name} (${summonedCharacterData.character.fullname})** with the ${scrollName} Scroll.`)
         .addFields({
         name: 'Character ID',
         value: `\`${characterId}\``,

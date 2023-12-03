@@ -102,6 +102,22 @@ exports.default = {
                 filter: collectorFilter,
                 time: 300000
             });
+            if (confirmation.customId === 'back') {
+                await character_1.default.callback(client, confirmation, false, true);
+            }
+            else if (confirmation.customId === 'prev') {
+                await callback(client, confirmation, true, pageOptionValue - 1);
+            }
+            else if (confirmation.customId === 'next') {
+                await callback(client, confirmation, true, pageOptionValue + 1);
+            }
+            else if (confirmation.customId === 'searchPage') {
+                await searchPage(confirmation);
+            }
+            else if (confirmation.customId === 'info') {
+                await searchCharacterInfo(confirmation);
+            }
+            // Function section
             async function searchPage(confirmation) {
                 const searchCollectionPageModal = new discord_js_1.ModalBuilder()
                     .setCustomId('searchCollectionPageModal')
@@ -226,21 +242,6 @@ exports.default = {
                         console.log(`Collection Command Error: ${error}`);
                     }
                 }
-            }
-            if (confirmation.customId === 'back') {
-                await character_1.default.callback(client, confirmation, false, true);
-            }
-            else if (confirmation.customId === 'prev') {
-                await callback(client, confirmation, true, pageOptionValue - 1);
-            }
-            else if (confirmation.customId === 'next') {
-                await callback(client, confirmation, true, pageOptionValue + 1);
-            }
-            else if (confirmation.customId === 'searchPage') {
-                await searchPage(confirmation);
-            }
-            else if (confirmation.customId === 'info') {
-                await searchCharacterInfo(confirmation);
             }
         }
         catch (error) {

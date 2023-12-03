@@ -57,7 +57,7 @@ export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmit
         });
 };
 
-export const configCharacterSummonedEmbed = (interaction: CommandInteraction | CollectedInteraction, summonedCharacterData: any, characterId: string) => {
+export const configCharacterSummonedEmbed = (interaction: CommandInteraction | CollectedInteraction, summonedCharacterData: any, characterId: string, scrollName: string = 'Novice') => {
     const rarity = mapRarity(summonedCharacterData.rarity);
 
     return new EmbedBuilder()
@@ -66,9 +66,9 @@ export const configCharacterSummonedEmbed = (interaction: CommandInteraction | C
             name: interaction.user.username,
             iconURL: interaction.user.displayAvatarURL(),
         })
-        .setTitle('Novice Scroll Summon')
+        .setTitle(`${scrollName} Scroll Summon`)
         .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-        .setDescription(`Congratulations! You've successfully summoned **${summonedCharacterData.character.name} (${summonedCharacterData.character.fullname})** with the Novice Scroll.`)
+        .setDescription(`Congratulations! You've successfully summoned **${summonedCharacterData.character.name} (${summonedCharacterData.character.fullname})** with the ${scrollName} Scroll.`)
         .addFields(
             {
                 name: 'Character ID',

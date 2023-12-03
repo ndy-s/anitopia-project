@@ -2,6 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayerModel = void 0;
 const mongoose_1 = require("mongoose");
+const lineupSchema = new mongoose_1.Schema({
+    position: {
+        type: String,
+        enum: ['frontMiddle', 'frontLeft', 'frontRight', 'backLeft', 'backRight', 'backMiddle'],
+        required: true,
+    },
+    character: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: 'CharaCollection',
+        default: null
+    }
+}, { _id: false });
 const playerSchema = new mongoose_1.Schema({
     userId: {
         type: String,
@@ -85,6 +97,33 @@ const playerSchema = new mongoose_1.Schema({
                 type: Number,
                 default: 0
             }
+        }
+    },
+    teams: [{
+            name: {
+                type: String,
+                required: true,
+                unique: true,
+                maxLength: 15
+            },
+            size: {
+                type: Number,
+                enum: [3, 5],
+                required: true
+            },
+            lineup: {
+                type: [lineupSchema],
+                required: true
+            }
+        }],
+    activeTeams: {
+        teamOfThree: {
+            type: String,
+            default: null
+        },
+        teamOfFive: {
+            type: String,
+            default: null
         }
     }
 }, { timestamps: true });

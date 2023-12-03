@@ -4,7 +4,7 @@ const discord_js_1 = require("discord.js");
 const config_1 = require("../../config");
 exports.default = {
     name: 'ping',
-    description: 'Measures and displays the latency between the bot and the server',
+    description: 'Measures your ping time',
     cooldown: 5000,
     options: [],
     deleted: false,

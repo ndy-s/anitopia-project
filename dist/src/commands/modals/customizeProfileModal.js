@@ -9,7 +9,7 @@ exports.default = {
     callback: async (client, interaction) => {
         try {
             const bioInput = interaction.fields.getTextInputValue('bioInput');
-            let player = await models_1.PlayerModel.findOneAndUpdate({ userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined }, { bio: bioInput }, { new: true });
+            let player = await models_1.PlayerModel.findOneAndUpdate({ userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined }, { bio: bioInput }, { new: true }).populate('teams.lineup.character');
             await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
             const profileEmbed = (0, config_1.configProfileEmbed)(interaction, player);
             await interaction.deferUpdate();

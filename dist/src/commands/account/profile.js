@@ -20,7 +20,7 @@ exports.default = {
         let player = await (0, utils_1.getPlayer)(interaction);
         const profileOption = new discord_js_1.StringSelectMenuBuilder()
             .setCustomId('profileOption')
-            .setPlaceholder('Choose your profile action!')
+            .setPlaceholder('Select an action for your profile')
             .addOptions(new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel(`Customize Profile`)
             .setDescription('Personalize your profile to make it uniquely yours')

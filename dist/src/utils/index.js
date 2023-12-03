@@ -25,3 +25,4 @@ __exportStar(require("./getLocalModals"), exports);
 __exportStar(require("./getPlayer"), exports);
 __exportStar(require("./summonCharacters"), exports);
 __exportStar(require("./mapRarity"), exports);
+__exportStar(require("./hiddenValues"), exports);

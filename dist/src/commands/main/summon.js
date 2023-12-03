@@ -51,6 +51,7 @@ exports.default = {
             inline: true
         })
             .setFooter({
+            iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512 }),
             text: `For more information, please click the button below.`
         });
         const noviceScrollButton = new discord_js_1.ButtonBuilder()
@@ -170,7 +171,7 @@ exports.default = {
                                     $set: {
                                         'scrolls.novice.lastClaim': (currentDate - lastClaimTimestamp >= cooldownDuration) ? Date.now() : lastClaimTimestamp
                                     }
-                                }, { new: true });
+                                }, { new: true }).populate('teams.lineup.character');
                                 await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                                 const newCharaCollection = new models_1.CharaCollectionModel({
                                     playerId: player._id,
@@ -244,7 +245,7 @@ exports.default = {
                                     $set: {
                                         'scrolls.novice.guaranteed': player.scrolls.novice.guaranteed - 10 < 0 ? 100 - (10 - player.scrolls.novice.guaranteed) : player.scrolls.novice.guaranteed - 10,
                                     }
-                                }, { new: true });
+                                }, { new: true }).populate('teams.lineup.character');
                                 await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                                 const characterSummonedTenEmbedArray = [
                                     new discord_js_1.EmbedBuilder()
@@ -276,7 +277,7 @@ exports.default = {
                                     characterSummonedTenEmbedArray.push((0, config_1.configCharacterSummonedEmbed)(interaction, summonedCharacterData, characterId));
                                     characterSummonedTenEmbedArray[0].addFields({
                                         name: `🔹 ${summonedCharacterData.character.name}`,
-                                        value: `ID: \`${characterId}\`\nRarity: **${(0, utils_1.mapRarity)(summonedCharacterData.rarity)}**`,
+                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${(0, utils_1.mapRarity)(summonedCharacterData.rarity)}**__`,
                                         inline: true,
                                     });
                                 }
@@ -296,7 +297,7 @@ exports.default = {
                                 const characterSummonedTenComponentRow = new discord_js_1.ActionRowBuilder()
                                     .addComponents(backButton, prevButton, nextButton, summonTenButton
                                     .setLabel('Summon 10')
-                                    .setDisabled(player.scrolls.novice.count < 1 ? true : false));
+                                    .setDisabled(player.scrolls.novice.count < 10 ? true : false));
                                 async function handlePages(confirmation, currentPage = 0) {
                                     const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
                                         .setFooter({
@@ -363,6 +364,323 @@ exports.default = {
                     }
                 }
                 await handleNovicePage(confirmation);
+            }
+            else if (confirmation.customId === 'elite') {
+                async function handleElitePage(confirmation) {
+                    const eliteScrollEmbed = new discord_js_1.EmbedBuilder()
+                        .setColor('Blurple')
+                        .setAuthor({
+                        name: interaction.user.username,
+                        iconURL: interaction.user.displayAvatarURL(),
+                    })
+                        .setTitle('Summoning Altar • Elite Scroll')
+                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                        .setDescription(`Step right up and try your luck with the **Elite Scroll**! For just **5,000 AniCoins**, you can summon a character to join your team. Who knows who you might meet?\n\nYou have a **50% chance** to summon an **Uncommon** character, a **42% chance** for a **Rare** one, a **7.5% chance** to get an **Epic** character, and if luck is really on your side, a **0.5% chance** to summon a **Legendary** character!`)
+                        .addFields({
+                        name: 'Owned',
+                        value: `${player.scrolls.elite.count} Elite Scroll${player.scrolls.elite.count > 1 ? 's' : ''}`,
+                        inline: true
+                    }, {
+                        name: 'Guaranteed Legendary',
+                        value: player.scrolls.elite.guaranteed > 1 ? `${player.scrolls.elite.guaranteed} Summons Left` : player.scrolls.elite.guaranteed === 1 ? '1 Summon Left' : 'Available',
+                        inline: true,
+                    })
+                        .setFooter({
+                        text: `Tip: .`
+                    });
+                    const backButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId('back')
+                        .setLabel('Back')
+                        .setStyle(discord_js_1.ButtonStyle.Secondary);
+                    const summonOneButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId('summonOne')
+                        .setLabel('Summon 1')
+                        .setStyle(discord_js_1.ButtonStyle.Primary)
+                        .setEmoji('🟣')
+                        .setDisabled(player.scrolls.elite.count < 1 ? true : false);
+                    const summonTenButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId('summonTen')
+                        .setLabel('Summon 10')
+                        .setStyle(discord_js_1.ButtonStyle.Primary)
+                        .setEmoji('🟣')
+                        .setDisabled(player.scrolls.elite.count < 10 ? true : false);
+                    const eliteSummonComponentRow = new discord_js_1.ActionRowBuilder()
+                        .addComponents(backButton, summonOneButton, summonTenButton);
+                    await confirmation.deferUpdate();
+                    const response = await confirmation.editReply({
+                        embeds: [eliteScrollEmbed],
+                        components: [eliteSummonComponentRow]
+                    });
+                    try {
+                        const confirmation = await response.awaitMessageComponent({
+                            filter: collectorFilter,
+                            time: 300000
+                        });
+                        if (confirmation.customId === 'back') {
+                            callbackFunction.callback(client, confirmation, false, true);
+                        }
+                        else if (confirmation.customId === 'summonOne') {
+                            async function handleSummonedCharacterPage(confirmation) {
+                                const characters = await (0, utils_1.getAllCharacters)();
+                                const latestCharacter = await models_1.CharaCollectionModel.findOne().sort({ createdAt: -1 });
+                                const characterId = (0, utils_1.generateUniqueID)(latestCharacter?.characterId);
+                                const [summonedCharacterData] = await (0, utils_1.summonCharacters)(characters, {
+                                    5: 0,
+                                    4: 50,
+                                    3: 42,
+                                    2: 7.5,
+                                    1: 0.5 // Legendary
+                                }, player.scrolls.elite.guaranteed, 1, 'legendary');
+                                player = await models_1.PlayerModel.findOneAndUpdate({ userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined }, {
+                                    $inc: {
+                                        'scrolls.elite.count': -1,
+                                        'scrolls.elite.guaranteed': player.scrolls.elite.guaranteed === 0 ? 100 : -1
+                                    },
+                                }, { new: true }).populate('teams.lineup.character');
+                                await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+                                const newCharaCollection = new models_1.CharaCollectionModel({
+                                    playerId: player._id,
+                                    characterId: characterId,
+                                    character: summonedCharacterData.character._id,
+                                    rarity: summonedCharacterData.rarity,
+                                    attributes: {
+                                        health: summonedCharacterData.character.attributes.health,
+                                        attack: summonedCharacterData.character.attributes.attack,
+                                        defense: summonedCharacterData.character.attributes.defense,
+                                        speed: summonedCharacterData.character.attributes.speed,
+                                    }
+                                });
+                                const characterSummonedEmbed = (0, config_1.configCharacterSummonedEmbed)(interaction, summonedCharacterData, characterId, 'Elite');
+                                characterSummonedEmbed.setFooter({
+                                    text: `New character added, see it with /collection. You've got ${player.scrolls.elite.count} Elite Scroll${player.scrolls.elite.count > 1 ? 's' : ''} left.`
+                                });
+                                const characterSummonedComponentRow = new discord_js_1.ActionRowBuilder()
+                                    .addComponents(backButton, summonOneButton
+                                    .setLabel('Summon 1')
+                                    .setDisabled(player.scrolls.elite.count < 1 ? true : false));
+                                await newCharaCollection.save();
+                                await confirmation.deferUpdate();
+                                const response = await confirmation.editReply({
+                                    embeds: [characterSummonedEmbed],
+                                    components: [characterSummonedComponentRow]
+                                });
+                                try {
+                                    const confirmation = await response.awaitMessageComponent({
+                                        filter: collectorFilter,
+                                        time: 300000
+                                    });
+                                    if (confirmation.customId === 'back') {
+                                        await handleElitePage(confirmation);
+                                    }
+                                    else if (confirmation.customId === 'summonOne') {
+                                        await handleSummonedCharacterPage(confirmation);
+                                    }
+                                }
+                                catch (error) {
+                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                        characterSummonedEmbed.setFooter({
+                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                        });
+                                        await confirmation.editReply({
+                                            embeds: [characterSummonedEmbed],
+                                            components: []
+                                        });
+                                    }
+                                    else {
+                                        console.log(`Elite Scroll Summon Error: ${error}`);
+                                    }
+                                }
+                            }
+                            await handleSummonedCharacterPage(confirmation);
+                        }
+                        else if (confirmation.customId === 'summonTen') {
+                            async function handleSummonedTenCharacterPage(confirmation) {
+                                const characters = await (0, utils_1.getAllCharacters)();
+                                const summonedCharacterDataArray = await (0, utils_1.summonCharacters)(characters, {
+                                    5: 0,
+                                    4: 50,
+                                    3: 42,
+                                    2: 7.5,
+                                    1: 0.5 // Legendary
+                                }, player.scrolls.elite.guaranteed, 10, 'legendary');
+                                player = await models_1.PlayerModel.findOneAndUpdate({ userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined }, {
+                                    $inc: {
+                                        'scrolls.elite.count': -10,
+                                    },
+                                    $set: {
+                                        'scrolls.elite.guaranteed': player.scrolls.elite.guaranteed - 10 < 0 ? 100 - (10 - player.scrolls.elite.guaranteed) : player.scrolls.elite.guaranteed - 10,
+                                    }
+                                }, { new: true }).populate('teams.lineup.character');
+                                await redis_1.default.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+                                const characterSummonedTenEmbedArray = [
+                                    new discord_js_1.EmbedBuilder()
+                                        .setColor('Blurple')
+                                        .setAuthor({
+                                        name: interaction.user.username,
+                                        iconURL: interaction.user.displayAvatarURL(),
+                                    })
+                                        .setTitle('Elite Scroll Summon')
+                                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                                        .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
+                                ];
+                                for (const summonedCharacterData of summonedCharacterDataArray) {
+                                    const latestCharacter = await models_1.CharaCollectionModel.findOne().sort({ createdAt: -1 });
+                                    const characterId = (0, utils_1.generateUniqueID)(latestCharacter?.characterId);
+                                    const newCharaCollection = new models_1.CharaCollectionModel({
+                                        playerId: player._id,
+                                        characterId: characterId,
+                                        character: summonedCharacterData.character._id,
+                                        rarity: summonedCharacterData.rarity,
+                                        attributes: {
+                                            health: summonedCharacterData.character.attributes.health,
+                                            attack: summonedCharacterData.character.attributes.attack,
+                                            defense: summonedCharacterData.character.attributes.defense,
+                                            speed: summonedCharacterData.character.attributes.speed,
+                                        }
+                                    });
+                                    await newCharaCollection.save();
+                                    characterSummonedTenEmbedArray.push((0, config_1.configCharacterSummonedEmbed)(interaction, summonedCharacterData, characterId, 'Elite'));
+                                    characterSummonedTenEmbedArray[0].addFields({
+                                        name: `🔹 ${summonedCharacterData.character.name}`,
+                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${(0, utils_1.mapRarity)(summonedCharacterData.rarity)}**__`,
+                                        inline: true,
+                                    });
+                                }
+                                characterSummonedTenEmbedArray[0].addFields({
+                                    name: `New characters have joined your collection!`,
+                                    value: `Check them out with ${config_1.config.commands.collectionCommandTag}. You've got ${player.scrolls.elite.count} Elite Scroll${player.scrolls.elite.count > 1 ? 's' : ''} left.`,
+                                    inline: false,
+                                });
+                                const prevButton = new discord_js_1.ButtonBuilder()
+                                    .setCustomId('prev')
+                                    .setStyle(discord_js_1.ButtonStyle.Primary)
+                                    .setEmoji('⬅️');
+                                const nextButton = new discord_js_1.ButtonBuilder()
+                                    .setCustomId('next')
+                                    .setStyle(discord_js_1.ButtonStyle.Primary)
+                                    .setEmoji('➡️');
+                                const characterSummonedTenComponentRow = new discord_js_1.ActionRowBuilder()
+                                    .addComponents(backButton, prevButton, nextButton, summonTenButton
+                                    .setLabel('Summon 10')
+                                    .setDisabled(player.scrolls.elite.count < 10 ? true : false));
+                                async function handlePages(confirmation, currentPage = 0) {
+                                    const characterSummonedTenEmbed = characterSummonedTenEmbedArray[currentPage]
+                                        .setFooter({
+                                        text: `Page ${currentPage + 1} of ${characterSummonedTenEmbedArray.length} • Click the ⬅️ or ➡️ button to navigate.`
+                                    });
+                                    prevButton.setDisabled(currentPage < 1 ? true : false);
+                                    nextButton.setDisabled(currentPage === (characterSummonedTenEmbedArray.length - 1) ? true : false);
+                                    await confirmation.deferUpdate();
+                                    const response = await confirmation.editReply({
+                                        embeds: [characterSummonedTenEmbed],
+                                        components: [characterSummonedTenComponentRow],
+                                    });
+                                    try {
+                                        const confirmation = await response.awaitMessageComponent({
+                                            filter: collectorFilter,
+                                            time: 300000
+                                        });
+                                        if (confirmation.customId === 'back') {
+                                            await handleElitePage(confirmation);
+                                        }
+                                        else if (confirmation.customId === 'summonTen') {
+                                            await handleSummonedTenCharacterPage(confirmation);
+                                        }
+                                        else if (confirmation.customId === 'prev') {
+                                            await handlePages(confirmation, currentPage - 1);
+                                        }
+                                        else if (confirmation.customId === 'next') {
+                                            await handlePages(confirmation, currentPage + 1);
+                                        }
+                                    }
+                                    catch (error) {
+                                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
+                                            characterSummonedTenEmbed.setFooter({
+                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
+                                            });
+                                            await confirmation.editReply({
+                                                embeds: [characterSummonedTenEmbed],
+                                                components: []
+                                            });
+                                        }
+                                        else {
+                                            console.log(`Multiple Elite Scroll Summon Error: ${error}`);
+                                        }
+                                    }
+                                }
+                                await handlePages(confirmation);
+                            }
+                            await handleSummonedTenCharacterPage(confirmation);
+                        }
+                    }
+                    catch (error) {
+                    }
+                }
+                await handleElitePage(confirmation);
+            }
+            else if (confirmation.customId === 'series') {
+                async function handleSeriesPage(confirmation) {
+                    const seriesScrollEmbed = new discord_js_1.EmbedBuilder()
+                        .setColor('Blurple')
+                        .setAuthor({
+                        name: interaction.user.username,
+                        iconURL: interaction.user.displayAvatarURL(),
+                    })
+                        .setTitle('Summoning Altar • Series Scroll')
+                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                        .setDescription(`Welcome to the Summoning Altar! This week, we're offering **Series Scroll**. For just **50,000 AniCoins**, you can summon character from a specific anime series to join your team. But hurry, this offer is only available for a week!\n\nHere's the rarity breakdown for the character in the scroll:\n- **Rare**: 53%\n- **Epic**: 43%\n- **Legendary**: 4%\n\nGood luck, and may the odds be ever in your favor!`)
+                        .addFields({
+                        name: 'Owned',
+                        value: `${player.scrolls.series.count} Series Scroll${player.scrolls.series.count > 1 ? 's' : ''}`,
+                        inline: true
+                    }, {
+                        name: 'Current Series',
+                        value: 'This week only!',
+                        inline: true,
+                    })
+                        .setFooter({
+                        text: `Tip: Don't miss out on these limited-time packs!`
+                    });
+                    const backButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId('back')
+                        .setLabel('Back')
+                        .setStyle(discord_js_1.ButtonStyle.Secondary);
+                    const summonOneButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId('summonOne')
+                        .setLabel('Summon 1')
+                        .setStyle(discord_js_1.ButtonStyle.Primary)
+                        .setEmoji('🟣')
+                        .setDisabled(player.scrolls.series.count < 1 ? true : false);
+                    const summonTenButton = new discord_js_1.ButtonBuilder()
+                        .setCustomId('summonTen')
+                        .setLabel('Summon 10')
+                        .setStyle(discord_js_1.ButtonStyle.Primary)
+                        .setEmoji('🟣')
+                        .setDisabled(player.scrolls.series.count < 10 ? true : false);
+                    const seriesSummonComponentRow = new discord_js_1.ActionRowBuilder()
+                        .addComponents(backButton, summonOneButton, summonTenButton);
+                    await confirmation.deferUpdate();
+                    const response = await confirmation.editReply({
+                        embeds: [seriesScrollEmbed],
+                        components: [seriesSummonComponentRow]
+                    });
+                    try {
+                        const confirmation = await response.awaitMessageComponent({
+                            filter: collectorFilter,
+                            time: 300000
+                        });
+                        if (confirmation.customId === 'back') {
+                            callbackFunction.callback(client, confirmation, false, true);
+                        }
+                        else if (confirmation.customId === 'summonOne') {
+                            async function handleSummonedCharacterPage(confirmation) {
+                            }
+                        }
+                    }
+                    catch (eror) {
+                    }
+                }
+                await handleSeriesPage(confirmation);
             }
         }
         catch (error) {

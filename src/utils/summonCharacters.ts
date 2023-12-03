@@ -16,7 +16,7 @@ const rarityAdjustments = {
     1: 200 // Legendary
 };
 
-export async function summonCharacters(characters: ICharacterModel[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1) {
+export async function summonCharacters(characters: ICharacterModel[], rarityChances: RarityChances, guaranted: number, numCharacters: number = 1, guarantedRarity: string = 'epic') {
     const summonedCharacters = [];
 
     for (let i = 0; i < numCharacters; i++) {
@@ -26,8 +26,10 @@ export async function summonCharacters(characters: ICharacterModel[], rarityChan
         let rarity: keyof RarityChances;
         const randomNum = Math.random() * 100;
 
-        if (guaranted === 0) {
+        if (guaranted === 0 && guarantedRarity == 'epic') {
             rarity = 2; // Epic
+        } else if (guaranted === 0 && guarantedRarity == 'legendary') {
+            rarity = 1; // Legendary
         } else if (randomNum < rarityChances[5]) {
             rarity = 5; // Common
         } else if (randomNum < rarityChances[5] + rarityChances[4]) {

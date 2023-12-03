@@ -3,9 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
 const utils_1 = require("../../utils");
 const collection_1 = require("./collection");
+const team_1 = require("./team");
 exports.default = {
     name: 'character',
-    description: 'See and improve your characters, and form your team.',
+    description: 'Manage characters and teams in one place',
     cooldown: 5000,
     options: [],
     deleted: false,
@@ -18,18 +19,18 @@ exports.default = {
         let player = await (0, utils_1.getPlayer)(interaction);
         const characterOption = new discord_js_1.StringSelectMenuBuilder()
             .setCustomId('characterOption')
-            .setPlaceholder('Choose an action for your character!')
+            .setPlaceholder('Select an action for your character')
             .addOptions(new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel(`Collection`)
-            .setDescription('Take a look at your character collection')
+            .setDescription('Browse through your collection of characters')
             .setValue('collection')
             .setEmoji('🖼️'), new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel('Enhance')
-            .setDescription('Level up your characters for better performance')
+            .setDescription('Level up your characters to make them stronger')
             .setValue('enhance')
             .setEmoji('⚡'), new discord_js_1.StringSelectMenuOptionBuilder()
             .setLabel('Team')
-            .setDescription('Create a powerful team with your characters')
+            .setDescription('Build and manage teams for battles')
             .setValue('team')
             .setEmoji('🛡️'));
         const characterEmbed = new discord_js_1.EmbedBuilder()
@@ -38,9 +39,13 @@ exports.default = {
             name: interaction.user.username,
             iconURL: interaction.user.displayAvatarURL(),
         })
-            .setTitle('Characters')
+            .setTitle('Character Command Center')
             .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-            .setDescription(`Welcome to your character command center! Here, you can view your collection of characters, enhance their abilities, or form a powerful team. Choose an option from the menu to get started. If you need any help, don't hesitate to ask!`);
+            .setDescription(`Welcome to the Character Command Center! Here, you can manage all aspects of your characters.\n\n- **Collection**: Browse and learn more about your characters.\n- **Enhance**: Power up your characters to increase their abilities.\n- **Team**: Strategically form teams with your characters for battles.`)
+            .setFooter({
+            iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512 }),
+            text: 'Select an option from the menu bellow for your character.',
+        });
         const characterComponentRow = new discord_js_1.ActionRowBuilder().addComponents(characterOption);
         const responseOptions = {
             embeds: [characterEmbed],
@@ -64,6 +69,9 @@ exports.default = {
             if (confirmation.customId === 'characterOption' && 'values' in confirmation) {
                 if (confirmation.values.includes('collection')) {
                     await collection_1.default.callback(client, confirmation, true);
+                }
+                else if (confirmation.values.includes('team')) {
+                    await team_1.default.callback(client, confirmation, true);
                 }
             }
         }

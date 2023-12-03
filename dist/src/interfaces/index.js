@@ -20,3 +20,4 @@ __exportStar(require("./IPlayerModel"), exports);
 __exportStar(require("./ISkillModel"), exports);
 __exportStar(require("./ICharacterModel"), exports);
 __exportStar(require("./ICharaCollectionModel"), exports);
+__exportStar(require("./IWeeklySeriesModel"), exports);
