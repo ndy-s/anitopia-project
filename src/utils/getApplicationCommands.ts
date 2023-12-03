@@ -6,18 +6,18 @@ export const getApplicationCommands = async (client: Client, guildId?: string) =
     if (guildId) {
         const guild: Guild | null = await client.guilds.fetch(guildId);
 
-        if (guild) {
-            applicationCommands = guild.commands;
-        } else {
+        if (!guild) {
             throw new Error(`Guild with ID ${guildId} not found.`);
         }
 
+        applicationCommands = guild.commands;
+
     } else {
-        if (client.application) {
-            applicationCommands = client.application.commands;
-        } else {
+        if (!client.application) {
             throw new Error("Client application is not available.");
         }
+
+        applicationCommands = client.application.commands;
     }
 
     if (!applicationCommands) {

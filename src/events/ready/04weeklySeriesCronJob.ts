@@ -1,9 +1,11 @@
 import * as cron from 'node-cron';
+import redis from '../../lib/redis';
 import { WeeklySeriesModel } from '../../models/WeeklySeriesModel';
 import { CharacterModel } from '../../models';
 import { IWeeklySeriesModel } from '../../interfaces';
 
 const ONE_WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
+const REDIS_KEY = 'WEEKLY-SERIES'; 
 
 export default () => {
     try {
@@ -46,6 +48,9 @@ export default () => {
         function updateWeeklySeries(weeklySeries: IWeeklySeriesModel, series: string) {
             weeklySeries.seriesName = series;
             weeklySeries.endsDate = new Date(Date.now() + ONE_WEEK_IN_MS);
+
+            redis.set(REDIS_KEY, JSON.stringify(weeklySeries), 'EX', 60);
+            
             return weeklySeries.save();
         }
 
@@ -54,6 +59,9 @@ export default () => {
                 seriesName: series,
                 endsDate: new Date(Date.now() + ONE_WEEK_IN_MS),
             });
+            
+            redis.set(REDIS_KEY, JSON.stringify(newWeeklySeries), 'EX', 60);
+            
             return newWeeklySeries.save();
         }
 

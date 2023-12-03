@@ -4,6 +4,15 @@ import redis from "../../lib/redis";
 import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID, mapRarity } from "../../utils";
 import { config, configCharacterSummonedEmbed } from "../../config";
 import { PlayerModel, CharaCollectionModel } from "../../models";
+import { WeeklySeriesModel } from "../../models/WeeklySeriesModel";
+
+enum Rarity {
+    Common = 5,
+    Uncommon = 4,
+    Rare = 3,
+    Epic = 2,
+    Legendary = 1,
+}
 
 export default {
     name: 'summon',
@@ -206,6 +215,7 @@ export default {
                                         1: 0 // Legendary
                                     },
                                     player.scrolls.novice.guaranteed,
+                                    Rarity.Epic
                                 );                                
 
                                 player = await PlayerModel.findOneAndUpdate(
@@ -298,7 +308,8 @@ export default {
                                         1: 0 // Legendary
                                     },
                                     player.scrolls.novice.guaranteed,
-                                    10
+                                    10,
+                                    Rarity.Epic
                                 );
 
                                 player = await PlayerModel.findOneAndUpdate(
@@ -529,7 +540,7 @@ export default {
                                     },
                                     player.scrolls.elite.guaranteed,
                                     1,
-                                    'legendary'
+                                    Rarity.Legendary
                                 );
 
                                 player = await PlayerModel.findOneAndUpdate(
@@ -619,7 +630,7 @@ export default {
                                     },
                                     player.scrolls.elite.guaranteed,
                                     10,
-                                    'legendary'
+                                    Rarity.Legendary
                                 );
 
                                 player = await PlayerModel.findOneAndUpdate(
@@ -827,7 +838,95 @@ export default {
                             callbackFunction.callback(client, confirmation, false, true);
                         } else if (confirmation.customId === 'summonOne') {
                             async function handleSummonedCharacterPage(confirmation: CollectedInteraction) {
+                                const cachedCurrentSeries = await redis.get('WEEKLY-SERIES');
+
+                                let currentSeries;
+                                if (cachedCurrentSeries) {
+                                    currentSeries = JSON.parse(cachedCurrentSeries);
+                                } else {
+                                    currentSeries = await WeeklySeriesModel.findOne();
+                                }
+
+                                const characters = await getAllCharacters(currentSeries.seriesName);
+                                const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
+                                const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+
+                                const [summonedCharacterData] = await summonCharacters(
+                                    characters, 
+                                    {
+                                        5: 0, // Common
+                                        4: 0, // Uncommon
+                                        3: 53, // Rare
+                                        2: 43, // Epic
+                                        1: 4 // Legendary
+                                    },
+                                    player.scrolls.elite.guaranteed,
+                                    1
+                                );
+
+                                player = await PlayerModel.findOneAndUpdate(
+                                    { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+                                    { 
+                                        $inc: { 
+                                            'scrolls.series.count': -1, 
+                                        },
+                                    },
+                                    { new: true}
+                                ).populate('teams.lineup.character');
+                        
+                                await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+
+                                const newCharaCollection = new CharaCollectionModel({
+                                    playerId: player._id,
+                                    characterId: characterId,
+                                    character: summonedCharacterData.character._id,
+                                    rarity: summonedCharacterData.rarity,
+                                    attributes: {
+                                        health: summonedCharacterData.character.attributes.health,
+                                        attack: summonedCharacterData.character.attributes.attack,
+                                        defense: summonedCharacterData.character.attributes.defense,
+                                        speed: summonedCharacterData.character.attributes.speed,
+                                    }
+                                });
+
+                                const characterSummonedEmbed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series');
+                                characterSummonedEmbed.setFooter({
+                                    text: `New character added, see it with /collection. You've got ${player.scrolls.series.count} Series Scroll${player.scrolls.series.count > 1 ? 's' : ''} left.`
+                                });
+
+                                const characterSummonedComponentRow = new ActionRowBuilder<ButtonBuilder>()
+                                .addComponents(
+                                    backButton,
+                                    summonOneButton
+                                        .setLabel('Summon 1')
+                                        .setDisabled(player.scrolls.series.count < 1 ? true : false)
+                                );
+
+                                await newCharaCollection.save();
+                                await confirmation.deferUpdate();
+                                const response = await confirmation.editReply({
+                                    embeds: [characterSummonedEmbed],
+                                    components: [characterSummonedComponentRow]
+                                });
+
+                                try {
+                                    const confirmation = await response.awaitMessageComponent({
+                                        filter: collectorFilter,
+                                        time: 300_000
+                                    });
+
+                                    if (confirmation.customId === 'back') {
+                                        await handleSeriesPage(confirmation);
+                                    } else if (confirmation.customId === 'summonOne') {
+                                        await handleSummonedCharacterPage(confirmation);
+                                    }
+                                } catch (error) {
+
+                                }
+
                             }
+
+                            await handleSummonedCharacterPage(confirmation);
                         }
                     } catch (eror) {
 

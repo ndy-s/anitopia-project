@@ -1,20 +1,18 @@
 import { CollectedInteraction, CommandInteraction } from "discord.js";
 import redis from "../lib/redis";
-
 import { PlayerModel } from "../models";
 
 export async function getPlayer(interaction: CommandInteraction | CollectedInteraction) {
-    const result = await redis.get(interaction.user.id);
-    let player;
+    const cachedPlayer = await redis.get(interaction.user.id);
 
-    if (result) {
-        player = JSON.parse(result);
+    if (cachedPlayer) {
+        return JSON.parse(cachedPlayer);
     } else {
-        player = await PlayerModel.findOne({
+        const player = await PlayerModel.findOne({
             userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
         }).populate('teams.lineup.character');
 
         await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+        return player;
     }
-    return player;
 }

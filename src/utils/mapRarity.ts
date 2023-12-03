@@ -1,10 +1,17 @@
-
-export const mapRarity = (rarity: number): string => {
-    return {
-        5: 'Common',
-        4: 'Uncommon',
-        3: 'Rare',
-        2: 'Epic',
-        1: 'Legendary'
-    }[rarity] ?? 'Common';
+enum Rarity {
+    Common = 5,
+    Uncommon = 4,
+    Rare = 3,
+    Epic = 2,
+    Legendary = 1,
 }
+
+export const mapRarity = (rarity: Rarity): string => {
+    return {
+        [Rarity.Common]: 'Common',
+        [Rarity.Uncommon]: 'Uncommon',
+        [Rarity.Rare]: 'Rare',
+        [Rarity.Epic]: 'Epic',
+        [Rarity.Legendary]: 'Legendary',
+    }[rarity] ?? 'Common';
+};

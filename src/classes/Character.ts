@@ -47,10 +47,13 @@ export class Character {
     }
 
     applyElementalEffect(damage: number, targetElement: string): number {
-        if (this.elementsData[this.element]['strength'] === targetElement) {
+        const strength = this.elementsData[this.element]['strength'];
+        const weakness = this.elementsData[this.element]['weakness'];
+
+        if (strength === targetElement) {
             console.log(`Strong element! Initial Damage ${damage}`);
             return damage * 1.5;
-        } else if (this.elementsData[this.element]['weakness'] === targetElement) {
+        } else if (weakness === targetElement) {
             console.log(`Weak element! Initial Damage ${damage}`);
             return damage * 0.75;
         } else {
@@ -70,10 +73,7 @@ export class Character {
             }
 
             this.displayDamage = damage;
-            target.health -= damage;
-
-            console.log(`Target ${target.name} got damage ${damage}, HP: ${target.health}/${target.maxHealth}`);
-            console.log(``);
+            this.inflictDamage(target, damage);
         } else {
             console.log(`Attack missed!`);
         }
@@ -81,31 +81,37 @@ export class Character {
         this.skillCooldown = 3;
     }
 
-    attackCalculation (target: Character) {
+    attackCalculation(target: Character) {
         if (this.skillCooldown === 0) {
             this.useActiveSkill(target);
         } else {
-            let damage = Math.max(0, Math.ceil(((2 * this.attack ** 2 + this.attack) / (this.attack + this.defense ** 0.85)) + Math.log(this.health) * (Math.random() * 1.2 - 0.1)));
-            damage = this.applyElementalEffect(damage, target.element);
-
-            if (this.calculateAccuracy() && this.calculateDodge(target)) {
-                if (this.calculateCrit()) {
-                    damage *= 2;
-                    console.log(`Critical hit! Damage is increased to ${damage}`);
-                }
-
-                this.displayDamage = damage;
-                target.health -= damage;
-
-                console.log(`Target ${target.name} got damage ${damage}, HP: ${target.health}/${target.maxHealth}`);
-                console.log(``);
-            } else {
-                console.log(`Attack missed!`);
-            }
+            const damage = this.calculatePhysicalDamage(target);
+            this.inflictDamage(target, damage);
     
             if (this.skillCooldown > 0) {
                 this.skillCooldown--;
             }
+        }
+    }
+
+    private calculatePhysicalDamage(target: Character): number {
+        return Math.max(0, Math.ceil(((2 * this.attack ** 2 + this.attack) / (this.attack + this.defense ** 0.85)) + Math.log(this.health) * (Math.random() * 1.2 - 0.1)));
+    }
+
+    private inflictDamage(target: Character, damage: number) {
+        if (this.calculateAccuracy() && this.calculateDodge(target)) {
+            if (this.calculateCrit()) {
+                damage *= 2;
+                console.log(`Critical hit! Damage is increased to ${damage}`);
+            }
+
+            this.displayDamage = damage;
+            target.health -= damage;
+
+            console.log(`Target ${target.name} got damage ${damage}, HP: ${target.health}/${target.maxHealth}`);
+            console.log(``);
+        } else {
+            console.log(`Attack missed!`);
         }
     }
 }
