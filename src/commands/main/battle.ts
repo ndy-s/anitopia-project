@@ -2,6 +2,8 @@ import { ActionRowBuilder, Attachment, AttachmentBuilder, ButtonBuilder, ButtonS
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { Character } from "../../classes/Character";
 import { Team } from "../../classes/Team";
+import { getPlayer } from "../../utils";
+import { ITeams } from "../../interfaces";
 
 export default {
     name: 'battle',
@@ -71,41 +73,23 @@ export default {
                 
                 // const attachment = new AttachmentBuilder(buffer, {name: 'image.png'})
 
-                let PlayerA1 = new Character(
-                    'Kirito', // name
-                    1000, // health
-                    90, // attack
-                    60, // defense
-                    80, // speed
-                    100, // level
-                    'Common', // rarity
-                    'Aqua', // element
-                    3, // cooldown
-                );
 
-                let PlayerA2 = new Character(
-                    'Asuna', // name
-                    900, // health
-                    80, // attack
-                    60, // defense
-                    100, // speed
-                    100, // level
-                    'Common', // rarity
-                    'Lumen', // element
-                    3, // cooldown
-                );
+                const player = await getPlayer(interaction);
+                const activeTeamOfThree = player.teams.find((team: ITeams) => team.name === player.activeTeams.teamOfThree);
 
-                let PlayerA3 = new Character(
-                    'Nana', // name
-                    1000, // health
-                    90, // attack
-                    60, // defense
-                    30, // speed
-                    100, // level
-                    'Common', // rarity
-                    'Aero', // element
-                    3, // cooldown
-                );
+                const characterDataPlayerA = activeTeamOfThree.lineup.map((characterObject: any) => {
+                    return new Character(
+                        characterObject.character.character.name,
+                        characterObject.character.attributes.health * 10,
+                        characterObject.character.attributes.attack,
+                        characterObject.character.attributes.defense,    
+                        characterObject.character.attributes.speed,
+                        characterObject.character.level,
+                        characterObject.character.rarity,
+                        characterObject.character.character.element,
+                        3
+                    );
+                });
 
                 let PlayerB1 = new Character(
                     'Goblin', // name
@@ -143,10 +127,10 @@ export default {
                     3, // cooldown
                 );
 
-                let teamA = new Team([PlayerA1, PlayerA2, PlayerA3]);
+                let teamA = new Team(characterDataPlayerA);
                 let teamB = new Team([PlayerB1, PlayerB2, PlayerB3]);
 
-                let allCharacters = [PlayerA1, PlayerA2, PlayerA3, PlayerB1, PlayerB2, PlayerB3];
+                let allCharacters = [...characterDataPlayerA, PlayerB1, PlayerB2, PlayerB3];
 
                 await confirmation.deferUpdate();
                 await confirmation.editReply({
@@ -162,7 +146,9 @@ export default {
                                 },
                                 {
                                     name: `Player A Team`,
-                                    value: `${PlayerA1.name}:${PlayerA1.health}/${PlayerA1.maxHealth} \n${PlayerA2.name}: ${PlayerA2.health}/${PlayerA2.maxHealth} \n${PlayerA3.name}: ${PlayerA3.health}/${PlayerA3.maxHealth}`,
+                                    value: characterDataPlayerA
+                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${character.health}/${character.maxHealth}`)
+                                        .join('\n'),
                                     inline: true
                                 },
                                 {
@@ -194,7 +180,7 @@ export default {
 
                     for (let character of allCharacters) {
                         if (character.health > 0) {
-                            let enemyTeamPlayers = teamA.hasMember(character) ? [PlayerB1, PlayerB2, PlayerB3] : [PlayerA1, PlayerA2, PlayerA3];
+                            let enemyTeamPlayers = teamA.hasMember(character) ? [PlayerB1, PlayerB2, PlayerB3] : [...characterDataPlayerA];
 
                             for (let enemy of enemyTeamPlayers) {
                                 if (enemy.health > 0) {
@@ -216,7 +202,9 @@ export default {
                                                         },
                                                         {
                                                             name: `Player A Team`,
-                                                            value: `${PlayerA1.name}:${PlayerA1.health}/${PlayerA1.maxHealth} \n${PlayerA2.name}: ${PlayerA2.health}/${PlayerA2.maxHealth} \n${PlayerA3.name}: ${PlayerA3.health}/${PlayerA3.maxHealth}`,
+                                                            value: characterDataPlayerA
+                                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${character.health}/${character.maxHealth}`)
+                                                                .join('\n'),
                                                             inline: true
                                                         },
                                                         {

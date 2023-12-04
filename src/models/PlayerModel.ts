@@ -103,7 +103,6 @@ const playerSchema = new Schema({
         name: {
             type: String,
             required: true,
-            unique: true,
             maxLength: 15
         },
         size: {

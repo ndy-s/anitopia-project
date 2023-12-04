@@ -202,8 +202,8 @@ export default {
                                 currentDate = new Date().getTime();
                                 const characters = await getAllCharacters();
 
-                                const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
-                                const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+                                const latestCharacter = await CharaCollectionModel.findOne().sort({ _id : -1 });
+                                const [characterId] = generateUniqueID(latestCharacter?.characterId as string | null);
                             
                                 const [summonedCharacterData] = await summonCharacters(
                                     characters, 
@@ -311,22 +311,7 @@ export default {
                                     10,
                                     Rarity.Epic
                                 );
-
-                                player = await PlayerModel.findOneAndUpdate(
-                                    { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
-                                    { 
-                                        $inc: { 
-                                            'scrolls.novice.count': -10, 
-                                        },
-                                        $set: {
-                                            'scrolls.novice.guaranteed': player.scrolls.novice.guaranteed - 10 < 0 ? 100 - (10 - player.scrolls.novice.guaranteed) : player.scrolls.novice.guaranteed - 10,
-                                        }
-                                    },
-                                    { new: true}
-                                ).populate('teams.lineup.character');
-                        
-                                await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-
+                                                            
                                 const characterSummonedTenEmbedArray = [
                                     new EmbedBuilder()
                                         .setColor('Blurple')
@@ -339,30 +324,84 @@ export default {
                                         .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
 
-                                for (const summonedCharacterData of summonedCharacterDataArray) {
-                                    const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
-                                    const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+                                const session = await CharaCollectionModel.startSession();
+                                let retries = 5;
 
-                                    const newCharaCollection = new CharaCollectionModel({
-                                        playerId: player._id,
-                                        characterId: characterId,
-                                        character: summonedCharacterData.character._id,
-                                        rarity: summonedCharacterData.rarity,
-                                        attributes: {
-                                            health: summonedCharacterData.character.attributes.health,
-                                            attack: summonedCharacterData.character.attributes.attack,
-                                            defense: summonedCharacterData.character.attributes.defense,
-                                            speed: summonedCharacterData.character.attributes.speed,
-                                        }
-                                    });
-                                    await newCharaCollection.save();
+                                while (retries > 0) {
+                                    session.startTransaction();
+                                    
+                                    try {
+                                        const latestCharacter = await CharaCollectionModel.findOne().sort({ _id : -1 });
+                                        const characterIdArray = generateUniqueID(latestCharacter?.characterId as string | null, 10);
+        
+                                        player = await PlayerModel.findOneAndUpdate(
+                                            { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+                                            { 
+                                                $inc: { 
+                                                    'scrolls.novice.count': -10, 
+                                                },
+                                                $set: {
+                                                    'scrolls.novice.guaranteed': player.scrolls.novice.guaranteed - 10 < 0 ? 100 - (10 - player.scrolls.novice.guaranteed) : player.scrolls.novice.guaranteed - 10,
+                                                }
+                                            },
+                                            { new: true}
+                                        ).populate('teams.lineup.character');
 
-                                    characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId));
-                                    characterSummonedTenEmbedArray[0].addFields({
-                                        name: `🔹 ${summonedCharacterData.character.name}`,
-                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
-                                        inline: true,
-                                    });
+                                        await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+                                                                        
+                                        const charaCollectionDocuments = summonedCharacterDataArray.map((summonedCharacterData, index) => ({
+                                            playerId: player._id,
+                                            characterId: characterIdArray[index],
+                                            character: summonedCharacterData.character._id,
+                                            rarity: summonedCharacterData.rarity,
+                                            attributes: {
+                                                health: summonedCharacterData.character.attributes.health,
+                                                attack: summonedCharacterData.character.attributes.attack,
+                                                defense: summonedCharacterData.character.attributes.defense,
+                                                speed: summonedCharacterData.character.attributes.speed,
+                                            }
+                                        }));
+
+                                        await CharaCollectionModel.insertMany(charaCollectionDocuments);
+
+                                        await session.commitTransaction();
+
+                                        characterSummonedTenEmbedArray.push(
+                                            ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
+                                                const characterId = characterIdArray[index];
+                                            
+                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
+                                                characterSummonedTenEmbedArray[0].addFields({
+                                                    name: `🔹 ${summonedCharacterData.character.name}`,
+                                                    value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
+                                                    inline: true,
+                                                });
+                                            
+                                                return embed;
+                                            })
+                                          );
+
+                                        // for (const [index, summonedCharacterData] of summonedCharacterDataArray.entries()) {
+                                        //     characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterIdArray[index], 'Elite'));
+                                        //     characterSummonedTenEmbedArray[0].addFields({
+                                        //         name: `🔹 ${summonedCharacterData.character.name}`,
+                                        //         value: `${summonedCharacterData.character.fullname}\n\`${characterIdArray[index]}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
+                                        //         inline: true,
+                                        //     });
+                                        // }
+
+                                        break;
+                                    } catch (error) {
+                                        console.error('Transaction failed. Retrying...', error);
+                                        await session.abortTransaction();
+                                        retries--;
+                                    } finally {
+                                        session.endSession();
+                                    }
+                                }
+                                
+                                if (retries === 0) {
+                                    console.error('Transaction failed after retries. Handle accordingly.');
                                 }
 
                                 characterSummonedTenEmbedArray[0].addFields({
@@ -527,7 +566,7 @@ export default {
                                 const characters = await getAllCharacters();
 
                                 const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
-                                const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+                                const [characterId] = generateUniqueID(latestCharacter?.characterId as string | null);
 
                                 const [summonedCharacterData] = await summonCharacters(
                                     characters, 
@@ -780,6 +819,18 @@ export default {
                 await handleElitePage(confirmation);
             } else if (confirmation.customId === 'series') {
                 async function handleSeriesPage(confirmation: CollectedInteraction) {
+                    const cachedCurrentSeries = await redis.get('WEEKLY-SERIES');
+                    const currentSeries = cachedCurrentSeries ? JSON.parse(cachedCurrentSeries) : await WeeklySeriesModel.findOne();
+
+                    const currentDate = new Date();
+                    const endsDate = new Date(currentSeries.endsDate);
+                    const timeRemaining = endsDate.getTime() - currentDate.getTime();
+
+                    // Calculate remaining time in days, hours, and minutes
+                    const daysRemaining = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                    const hoursRemaining = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutesRemaining = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+
                     const seriesScrollEmbed = new EmbedBuilder()
                         .setColor('Blurple')
                         .setAuthor({
@@ -796,8 +847,13 @@ export default {
                                 inline: true
                             },
                             {
-                                name: 'Current Series',
-                                value: 'This week only!',
+                                name: 'Weekly Series',
+                                value: `**${currentSeries.seriesName}**`,
+                                inline: true,
+                            },
+                            {
+                                name: 'Refresh Cooldown',
+                                value: `\`⏳${daysRemaining}d ${hoursRemaining}h ${minutesRemaining}m\``,
                                 inline: true,
                             }
                         )
@@ -848,12 +904,9 @@ export default {
                             callbackFunction.callback(client, confirmation, false, true);
                         } else if (confirmation.customId === 'summonOne') {
                             async function handleSummonedCharacterPage(confirmation: CollectedInteraction) {
-                                const cachedCurrentSeries = await redis.get('WEEKLY-SERIES');
-                                const currentSeries = cachedCurrentSeries ? JSON.parse(cachedCurrentSeries) : await WeeklySeriesModel.findOne();
-
                                 const characters = await getAllCharacters(currentSeries.seriesName);
                                 const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
-                                const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+                                const [characterId] = generateUniqueID(latestCharacter?.characterId as string | null);
 
                                 const [summonedCharacterData] = await summonCharacters(
                                     characters, 
@@ -942,9 +995,6 @@ export default {
                             await handleSummonedCharacterPage(confirmation);
                         } else if (confirmation.customId === 'summonTen') {
                             async function handleSummonedTenCharacterPage(confirmation: CollectedInteraction) {
-                                const cachedCurrentSeries = await redis.get('WEEKLY-SERIES');
-                                const currentSeries = cachedCurrentSeries ? JSON.parse(cachedCurrentSeries) : await WeeklySeriesModel.findOne();
-
                                 const characters = await getAllCharacters(currentSeries.seriesName);
                                 const summonedCharacterDataArray = await summonCharacters(
                                     characters, 
