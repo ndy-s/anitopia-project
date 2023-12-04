@@ -1,15 +1,12 @@
-export const generateUniqueID = (latestUserToken: string | null) => {
+export const generateUniqueID = (latestUserToken: string | null, numGenerated = 1) => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const charactersLength = characters.length;
+    const codeArrayStore = [];
 
-    if (latestUserToken) {
-        const length = Math.max(latestUserToken.length, 4);
+    let tempLatestUserToken = latestUserToken;
 
-        if (latestUserToken === '9'.repeat(length)) {
-            return 'A' + 'A'.repeat(length);
-        }
-
-        const codeArray = Array.from(latestUserToken);
+    function incrementToken(token: string) {
+        const codeArray = Array.from(token);
 
         for (let i = codeArray.length - 1; i >= 0; i--) {
             const charIndex = characters.indexOf(codeArray[i]);
@@ -25,5 +22,23 @@ export const generateUniqueID = (latestUserToken: string | null) => {
         return codeArray.join('');
     }
 
-    return 'AAAA';
+    while (numGenerated > 0) {
+        if (tempLatestUserToken) {
+            const length = Math.max(tempLatestUserToken.length, 4);
+
+            if (tempLatestUserToken === '9'.repeat(length)) {
+                return ['A' + 'A'.repeat(length)];
+            }
+
+            tempLatestUserToken = incrementToken(tempLatestUserToken);
+            codeArrayStore.push(tempLatestUserToken);
+            numGenerated--;
+        } else {
+            codeArrayStore.push('AAAA');
+            tempLatestUserToken = 'AAAA';
+            numGenerated--;
+        }
+    }
+
+    return codeArrayStore;
 };
