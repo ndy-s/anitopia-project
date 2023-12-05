@@ -370,7 +370,7 @@ export default {
                                             ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
                                                 const characterId = characterIdArray[index];
                                             
-                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
+                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Novice');
                                                 characterSummonedTenEmbedArray[0].addFields({
                                                     name: `🔹 ${summonedCharacterData.character.name}`,
                                                     value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
@@ -379,20 +379,14 @@ export default {
                                             
                                                 return embed;
                                             })
-                                          );
-
-                                        // for (const [index, summonedCharacterData] of summonedCharacterDataArray.entries()) {
-                                        //     characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterIdArray[index], 'Elite'));
-                                        //     characterSummonedTenEmbedArray[0].addFields({
-                                        //         name: `🔹 ${summonedCharacterData.character.name}`,
-                                        //         value: `${summonedCharacterData.character.fullname}\n\`${characterIdArray[index]}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
-                                        //         inline: true,
-                                        //     });
-                                        // }
+                                        );
 
                                         break;
                                     } catch (error) {
                                         console.error('Transaction failed. Retrying...', error);
+
+                                        // Handle specific error cases and possibly retry selectively
+
                                         await session.abortTransaction();
                                         retries--;
                                     } finally {
@@ -565,7 +559,7 @@ export default {
                             async function handleSummonedCharacterPage(confirmation: CollectedInteraction) {
                                 const characters = await getAllCharacters();
 
-                                const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
+                                const latestCharacter = await CharaCollectionModel.findOne().sort({ _id : -1 });
                                 const [characterId] = generateUniqueID(latestCharacter?.characterId as string | null);
 
                                 const [summonedCharacterData] = await summonCharacters(
@@ -672,21 +666,6 @@ export default {
                                     Rarity.Legendary
                                 );
 
-                                player = await PlayerModel.findOneAndUpdate(
-                                    { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
-                                    { 
-                                        $inc: { 
-                                            'scrolls.elite.count': -10, 
-                                        },
-                                        $set: {
-                                            'scrolls.elite.guaranteed': player.scrolls.elite.guaranteed - 10 < 0 ? 100 - (10 - player.scrolls.elite.guaranteed) : player.scrolls.elite.guaranteed - 10,
-                                        }
-                                    },
-                                    { new: true}
-                                ).populate('teams.lineup.character');
-                        
-                                await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-
                                 const characterSummonedTenEmbedArray = [
                                     new EmbedBuilder()
                                         .setColor('Blurple')
@@ -698,31 +677,79 @@ export default {
                                         .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
                                         .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
+
+                                const session = await CharaCollectionModel.startSession();
+                                let retries = 5;
                                 
-                                for (const summonedCharacterData of summonedCharacterDataArray) {
-                                    const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
-                                    const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+                                while (retries > 0) {
+                                    session.startTransaction();
 
-                                    const newCharaCollection = new CharaCollectionModel({
-                                        playerId: player._id,
-                                        characterId: characterId,
-                                        character: summonedCharacterData.character._id,
-                                        rarity: summonedCharacterData.rarity,
-                                        attributes: {
-                                            health: summonedCharacterData.character.attributes.health,
-                                            attack: summonedCharacterData.character.attributes.attack,
-                                            defense: summonedCharacterData.character.attributes.defense,
-                                            speed: summonedCharacterData.character.attributes.speed,
-                                        }
-                                    });
-                                    await newCharaCollection.save();
+                                    try {
+                                        const latestCharacter = await CharaCollectionModel.findOne().sort({ _id : -1 });
+                                        const characterIdArray = generateUniqueID(latestCharacter?.characterId as string | null, 10);
+                                        
+                                        player = await PlayerModel.findOneAndUpdate(
+                                            { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+                                            { 
+                                                $inc: { 
+                                                    'scrolls.elite.count': -10,
+                                                },
+                                                $set: {
+                                                    'scrolls.elite.guaranteed': player.scrolls.elite.guaranteed - 10 < 0 ? 100 - (10 - player.scrolls.elite.guaranteed) : player.scrolls.elite.guaranteed - 10,
+                                                }
+                                            },
+                                            { new: true}
+                                        ).populate('teams.lineup.character');
+                                
+                                        await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
-                                    characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite'));
-                                    characterSummonedTenEmbedArray[0].addFields({
-                                        name: `🔹 ${summonedCharacterData.character.name}`,
-                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
-                                        inline: true,
-                                    });
+                                        const charaCollectionDocuments = summonedCharacterDataArray.map((summonedCharacterData, index) => ({
+                                            playerId: player._id,
+                                            characterId: characterIdArray[index],
+                                            character: summonedCharacterData.character._id,
+                                            rarity: summonedCharacterData.rarity,
+                                            attributes: {
+                                                health: summonedCharacterData.character.attributes.health,
+                                                attack: summonedCharacterData.character.attributes.attack,
+                                                defense: summonedCharacterData.character.attributes.defense,
+                                                speed: summonedCharacterData.character.attributes.speed,
+                                            }
+                                        }));
+
+                                        await CharaCollectionModel.insertMany(charaCollectionDocuments);
+
+                                        await session.commitTransaction();
+
+                                        characterSummonedTenEmbedArray.push(
+                                            ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
+                                                const characterId = characterIdArray[index];
+                                            
+                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
+                                                characterSummonedTenEmbedArray[0].addFields({
+                                                    name: `🔹 ${summonedCharacterData.character.name}`,
+                                                    value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
+                                                    inline: true,
+                                                });
+                                            
+                                                return embed;
+                                            })
+                                        );
+
+                                        break;
+                                    } catch (error) {
+                                        console.error('Transaction failed. Retrying...', error);
+
+                                        // Handle specific error cases and possibly retry selectively
+
+                                        await session.abortTransaction();
+                                        retries--;
+                                    } finally {
+                                        session.endSession();
+                                    }
+                                }
+
+                                if (retries === 0) {
+                                    console.error('Transaction failed after retries. Handle accordingly.');
                                 }
 
                                 characterSummonedTenEmbedArray[0].addFields({
@@ -905,7 +932,7 @@ export default {
                         } else if (confirmation.customId === 'summonOne') {
                             async function handleSummonedCharacterPage(confirmation: CollectedInteraction) {
                                 const characters = await getAllCharacters(currentSeries.seriesName);
-                                const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
+                                const latestCharacter = await CharaCollectionModel.findOne().sort({ _id : -1 });
                                 const [characterId] = generateUniqueID(latestCharacter?.characterId as string | null);
 
                                 const [summonedCharacterData] = await summonCharacters(
@@ -1009,18 +1036,6 @@ export default {
                                     10
                                 );
 
-                                player = await PlayerModel.findOneAndUpdate(
-                                    { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
-                                    { 
-                                        $inc: { 
-                                            'scrolls.series.count': -10, 
-                                        },
-                                    },
-                                    { new: true}
-                                ).populate('teams.lineup.character');
-                        
-                                await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
-
                                 const characterSummonedTenEmbedArray = [
                                     new EmbedBuilder()
                                         .setColor('Blurple')
@@ -1032,31 +1047,76 @@ export default {
                                         .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
                                         .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
+
+                                const session = await CharaCollectionModel.startSession();
+                                let retries = 5;
+
+                                while (retries > 0) {
+                                    session.startTransaction();
+                                    
+                                    try {
+                                        const latestCharacter = await CharaCollectionModel.findOne().sort({ _id : -1 });
+                                        const characterIdArray = generateUniqueID(latestCharacter?.characterId as string | null, 10);
+
+                                        player = await PlayerModel.findOneAndUpdate(
+                                            { userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined },
+                                            { 
+                                                $inc: { 
+                                                    'scrolls.series.count': -10, 
+                                                },
+                                            },
+                                            { new: true}
+                                        ).populate('teams.lineup.character');
                                 
-                                for (const summonedCharacterData of summonedCharacterDataArray) {
-                                    const latestCharacter = await CharaCollectionModel.findOne().sort({ createdAt : -1 });
-                                    const characterId = generateUniqueID(latestCharacter?.characterId as string | null);
+                                        await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
+                                    
+                                        const charaCollectionDocuments = summonedCharacterDataArray.map((summonedCharacterData, index) => ({
+                                            playerId: player._id,
+                                            characterId: characterIdArray[index],
+                                            character: summonedCharacterData.character._id,
+                                            rarity: summonedCharacterData.rarity,
+                                            attributes: {
+                                                health: summonedCharacterData.character.attributes.health,
+                                                attack: summonedCharacterData.character.attributes.attack,
+                                                defense: summonedCharacterData.character.attributes.defense,
+                                                speed: summonedCharacterData.character.attributes.speed,
+                                            }
+                                        }));
 
-                                    const newCharaCollection = new CharaCollectionModel({
-                                        playerId: player._id,
-                                        characterId: characterId,
-                                        character: summonedCharacterData.character._id,
-                                        rarity: summonedCharacterData.rarity,
-                                        attributes: {
-                                            health: summonedCharacterData.character.attributes.health,
-                                            attack: summonedCharacterData.character.attributes.attack,
-                                            defense: summonedCharacterData.character.attributes.defense,
-                                            speed: summonedCharacterData.character.attributes.speed,
-                                        }
-                                    });
-                                    await newCharaCollection.save();
+                                        await CharaCollectionModel.insertMany(charaCollectionDocuments);
 
-                                    characterSummonedTenEmbedArray.push(configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series'));
-                                    characterSummonedTenEmbedArray[0].addFields({
-                                        name: `🔹 ${summonedCharacterData.character.name}`,
-                                        value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
-                                        inline: true,
-                                    });
+                                        await session.commitTransaction();
+
+                                        characterSummonedTenEmbedArray.push(
+                                            ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
+                                                const characterId = characterIdArray[index];
+                                            
+                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series');
+                                                characterSummonedTenEmbedArray[0].addFields({
+                                                    name: `🔹 ${summonedCharacterData.character.name}`,
+                                                    value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
+                                                    inline: true,
+                                                });
+                                            
+                                                return embed;
+                                            })
+                                        );
+
+                                        break;
+                                    } catch (error) {
+                                        console.error('Transaction failed. Retrying...', error);
+
+                                        // Handle specific error cases and possibly retry selectively
+
+                                        await session.abortTransaction();
+                                        retries--;
+                                    } finally {
+                                        session.endSession();
+                                    }
+                                }
+
+                                if (retries === 0) {
+                                    console.error('Transaction failed after retries. Handle accordingly.');
                                 }
 
                                 characterSummonedTenEmbedArray[0].addFields({
