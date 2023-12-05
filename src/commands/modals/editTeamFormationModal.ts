@@ -60,15 +60,21 @@ export default {
             let player = await getPlayer(interaction);
             const currentLineup = player.teams.find((team: Record<string, string>) => team.name === teamName).lineup;
 
-            const newLineup = await Promise.all(inputs.map(async (input, index) => {
-                const getChara = await CharaCollectionModel.findOne({ playerId: player._id, characterId: input });
+            const newLineupPromises = inputs.map(async (input, index) => {
+                const characterInfo = await CharaCollectionModel.findOne({ playerId: player._id, characterId: input });
                 const position = positions[index];
+            
                 return {
                     position: position,
-                    character: (getChara ? getChara._id : currentLineup.find((char: Record<string, string>) => char.position === position)?.character) ?? null,
+                    character: input == null || input == '' ? null : (
+                        characterInfo ? characterInfo._id :
+                        currentLineup.find((char: Record<string, string>) => char.position === position)?.character
+                    ) ?? null,
                 };
-            }));
-
+            });
+            
+            const newLineup = await Promise.all(newLineupPromises);
+            
             player = await PlayerModel.findOneAndUpdate(
                 { 
                     userId: interaction.member && 'id' in interaction.member ? interaction.member.id : undefined,
@@ -76,23 +82,32 @@ export default {
                 },
                 { $set: { 'teams.$.lineup': newLineup } },
                 { new: true }
-            ).populate('teams.lineup.character');
+            ).populate({
+                path: 'teams.lineup.character',
+                populate: {
+                    path: 'character'
+                },
+            });
+            
             await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
             const createNotFoundField = (position: string, character: ICharaCollectionModel | null, input: string) => {
-                let status = input == null || input === '' ? '**Empty**' : character ? '**Updated**' : '**Not Found**';
-                let characterID = input == null || input === '' ? '_None_' : `Character ID: \`${input}\``;
-                let positionStatus = character ? '✅' : '⚠️';
+                const isEmptyInput = input == null || input === '';
+                const isCharacterFound = character && character.characterId ? character.characterId == input : character;
+
+                const status = isEmptyInput ? '**Empty**' : (isCharacterFound ? '**Updated**' : '**Not Found**');
+                const characterID = isEmptyInput ? '_None_' : `Character ID: \`${input}\``;
+                const positionStatus = isCharacterFound ? '✅' : '⚠️';
             
                 return { 
                     name: `${positionStatus} Position ${position}`, 
                     value: `${characterID}\nStatus: ${status}`, 
                     inline: true 
                 };
-            }
-            
+            };
+
             const isValidCharacter = (character: ICharaCollectionModel | null, input: string) => {
-                return !character && !(input == null || input.trim() === '');
+                return (character && character.characterId) ? character.characterId !== input : !character && !(input == null || input.trim() === '');
             }
             
             if (newLineup.some((lineup, index) => isValidCharacter(lineup.character, inputs[index]))) {
