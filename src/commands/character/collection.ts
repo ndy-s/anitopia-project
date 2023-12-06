@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, Interaction, InteractionCollector, InteractionResponse, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
 
 import { getPlayer, mapRarity } from "../../utils";
-import { pageNF } from "../exceptions";
+import { actionNA, pageNF } from "../exceptions";
 import { ICharaCollectionModel, ICharacterModel } from "../../interfaces";
 import { CharaCollectionModel } from "../../models";
 
@@ -125,7 +125,17 @@ export default {
 
         const response = editReply ? await interaction.editReply(responseOptions) : await interaction.reply(responseOptions);
 
-        const collectorFilter = (i: { user: { id: string }}) => i.user.id === interaction.user.id;
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
+
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({

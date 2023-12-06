@@ -5,6 +5,7 @@ import { getPlayer } from "../../utils";
 import { PlayerModel } from "../../models";
 import redis from "../../lib/redis";
 import detailTeamModal from "./detailTeamModal";
+import { actionNA } from "../exceptions";
 
 export default {
     name: "createTeamModal",
@@ -19,7 +20,6 @@ export default {
                     .setTitle('⚠️ Invalid Team Name')
                     .setDescription(`It looks like the team name **${createTeamInput}** has some special characters. For team names, please stick to letters and numbers. Let's give it another shot!`)
                     .setFooter({
-                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: config.messages.footerText
                     });
             
@@ -46,7 +46,6 @@ export default {
                 .setTitle(`Select Your Team Size`)
                 .setDescription(updateDescription(timeLeft))
                 .setFooter({
-                    iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                     text: 'Click the cancel button to abort this process.'
                 });
 
@@ -59,7 +58,6 @@ export default {
                 .setTitle(`⛔ Team Creation Cancelled`)
                 .setDescription(`Your **${createTeamInput}** team creation process has been **cancelled**. But hey, there's always another time! Whenever you're ready to start the process again, we're here to assist you.`)
                 .setFooter({
-                    iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                     text: config.messages.footerText,
                 });
 
@@ -72,7 +70,6 @@ export default {
                 .setTitle(`🎊 Team Successfully Created`)
                 .setDescription(`Congratulations! 🎉 Your new team **${createTeamInput}** has been successfully created. Now, let's get your team ready for battle!\n\nTo set up your team, you'll need to assign a unique character to each position. Each character is identified by a unique **Character ID**.\n\nOnce your lineup is set, you're all set to select this team for battles.`)
                 .setFooter({
-                    iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                     text: config.messages.footerText,
                 });
 
@@ -125,9 +122,18 @@ export default {
                 }
             }, 1000);
             
-
-            const collectorFilter = (i: { user: { id: string }}) => i.user.id === interaction.user.id;
-
+            const collectorFilter = (i: {
+                reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+                user: { id: string; username: string; };
+            }) => {
+                if (i.user.id !== interaction.user.id) {
+                    actionNA(i, interaction.user.username);
+                    return false;
+                }
+    
+                return true;
+            };
+    
             try {
                 const confirmation = await response.awaitMessageComponent({
                     filter: collectorFilter,

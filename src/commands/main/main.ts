@@ -3,6 +3,7 @@ import { ActionRowBuilder, Client, CommandInteraction, EmbedBuilder, StringSelec
 import profile from "../account/profile";
 import character from "../character/character";
 import summon from "./summon";
+import { actionNA } from "../exceptions";
 
 export default {
     name: 'main',
@@ -54,7 +55,6 @@ export default {
             .setThumbnail('https://europe1.discourse-cdn.com/unity/original/3X/6/0/608e0f8940360c004564efc302d52054b7bc2493.jpeg')
             .setDescription(`Hello, ${interaction.user.username}! Are you ready to explore Anitopia? Use the dropdown menu below to navigate through the game.`)
             .setFooter({
-                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: 'Select an option from the menu bellow to get started.'
             });
 
@@ -66,8 +66,18 @@ export default {
         };
 
         const response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
+        
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
 
-        const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({

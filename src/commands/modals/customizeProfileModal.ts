@@ -36,7 +36,6 @@ export default {
                         .setTitle('Profile Updated Successfully 🎉')
                         .setDescription(`Great job, ${interaction.user.username}! Your **Biography** have been successfully updated. Your unique personality shines through your profile! 🌟\n\nNow, let's dive back into the world of Anitopia. Your adventure awaits! 🚀`)
                         .setFooter({
-                            iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                             text: config.messages.footerText
                         })
                 ],

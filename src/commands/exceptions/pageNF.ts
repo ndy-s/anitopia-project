@@ -11,7 +11,6 @@ export const pageNF = (
         .setColor('#FF0000')
         .setTitle('🔍 Page Not Found')
         .setFooter({
-            iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
             text: config.messages.footerText
         });
 

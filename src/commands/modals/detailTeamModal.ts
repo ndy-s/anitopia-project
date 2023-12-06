@@ -6,6 +6,7 @@ import team from "../character/team";
 import { CharacterModel, PlayerModel } from "../../models";
 import redis from "../../lib/redis";
 import { config } from "../../config";
+import { actionNA } from "../exceptions";
 
 export default {
     name: 'detailTeamModal',
@@ -98,7 +99,6 @@ export default {
                     .setTitle(`Team Formation • ${closestTeam.name}`)
                     .setDescription(`The team formation is based on the team size and the positions of the players. The team size is ${closestTeam.size}. The positions include front, back left, and back right.`)
                     .setFooter({
-                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: 'Select an option from the menu bellow to manage your team details.',
                     });
 
@@ -161,8 +161,18 @@ export default {
                     components: [teamFormationComponentRow]
                 });
 
-                const collectorFilter = (i: { user: { id: string }}) => i.user.id === interaction.user.id;
-
+                const collectorFilter = (i: {
+                    reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+                    user: { id: string; username: string; };
+                }) => {
+                    if (i.user.id !== interaction.user.id) {
+                        actionNA(i, interaction.user.username);
+                        return false;
+                    }
+        
+                    return true;
+                };
+        
                 try {
                     const confirmation = await response.awaitMessageComponent({
                         filter: collectorFilter,
@@ -188,7 +198,6 @@ export default {
                             .setTitle( `✅ Team ${activate ? 'Activation' : 'Deactivation'} Successful`)
                             .setDescription(`Your **${teamSize}** named **${closestTeamName}** has been successfully ${activate ? 'activated' : 'deactivated'}.`)
                             .setFooter({
-                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                                 text: `${config.messages.footerText}`
                             });
 

@@ -3,7 +3,7 @@ import redis from "../../lib/redis";
 
 import { config } from "../../config";
 import { getPlayer, generateUniqueID } from "../../utils";
-import { registrationNA } from "../exceptions";
+import { actionNA, registrationNA } from "../exceptions";
 import { PlayerModel } from "../../models";
 
 import profile from "./profile";
@@ -64,13 +64,25 @@ export default {
             components: [registerComponentRow],
         });
 
-        const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
+
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
+
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({
                 filter: collectorFilter,
                 time: 300_000
             });
+            
     
             if (confirmation.customId === 'createAccount') {
                 await confirmation.deferUpdate();
@@ -103,7 +115,6 @@ export default {
                             .setTitle(`Congratulations ${interaction.user.username}!`)
                             .setDescription(`Congratulations <@!${interaction.user.id}>! 🎉 Your account has been successfully set up. Your epic journey in the world of Anitopia is about to unfold. Use ${config.commands.profileCommandTag} to check out your profile, and kickstart your adventure with ${config.commands.mainCommandTag}. Have a fantastic journey!`)
                             .setFooter({
-                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                                 text: config.messages.footerText
                             })
                     ],

@@ -5,6 +5,7 @@ import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID, mapRar
 import { config, configCharacterSummonedEmbed } from "../../config";
 import { PlayerModel, CharaCollectionModel } from "../../models";
 import { WeeklySeriesModel } from "../../models/WeeklySeriesModel";
+import { actionNA } from "../exceptions";
 
 enum Rarity {
     Common = 5,
@@ -111,8 +112,18 @@ export default {
         } else {
             response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
         }
+        
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
 
-        const collectorFilter = (i: { user: { id: string } }) => i.user.id === interaction.user.id;
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({

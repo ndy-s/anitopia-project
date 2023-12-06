@@ -6,6 +6,7 @@ import { CharaCollectionModel } from "../../models";
 import collection from "./collection";
 import team from "./team";
 import { config } from "../../config";
+import { actionNA } from "../exceptions";
 
 export default {
     name: 'character',
@@ -54,7 +55,6 @@ export default {
             .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
             .setDescription(`Welcome to the Character Command Center! Here, you can manage all aspects of your characters.\n\n- **Collection**: Browse and learn more about your characters.\n- **Enhance**: Power up your characters to increase their abilities.\n- **Team**: Strategically form teams with your characters for battles.`)
             .setFooter({
-                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: 'Select an option from the menu bellow for your character.',
             });
 
@@ -73,8 +73,18 @@ export default {
         } else {
             response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
         }
+        
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
 
-        const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({

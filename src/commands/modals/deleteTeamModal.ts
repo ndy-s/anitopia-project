@@ -21,7 +21,6 @@ export default {
                     .setTitle('⚠️ Team Not Found')
                     .setDescription(`Hmm, it seems like the team **${deleteTeamInput}** doesn't exist. Please make sure you've entered the correct team name. Remember, team names are case-sensitive. So, 'TeamA' and 'teama' are considered different teams. Let's try again!`)
                     .setFooter({
-                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: config.messages.footerText
                     });
             
@@ -44,7 +43,6 @@ export default {
                     .setTitle('🎉 Team Deletion Successful')
                     .setDescription(`Your team **${deleteTeamInput}**, has been successfully deleted. You can now create a new team or manage your existing teams. Remember, every end is a new beginning.`)
                     .setFooter({
-                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: config.messages.footerText
                     });
     

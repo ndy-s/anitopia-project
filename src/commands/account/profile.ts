@@ -4,6 +4,7 @@ import redis from "../../lib/redis";
 import { configProfileEmbed } from "../../config";
 import { getPlayer } from "../../utils";
 import { PlayerModel } from "../../models";
+import { actionNA } from "../exceptions";
 
 export default {
     name: 'profile',
@@ -53,7 +54,17 @@ export default {
 
         let response = followUp ? await interaction.followUp(responseOptions) : await interaction.reply(responseOptions);
 
-        const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
+
+            return true;
+        };
 
         try {
             while (true) {
@@ -61,15 +72,6 @@ export default {
                     filter: collectorFilter,
                     time: 300_000
                 });
-
-
-                // profileOption.options.forEach(option => {
-                //     if ('values' in confirmation) {
-                //         if (confirmation.values.includes(option.data.value)) {
-                //             option.setDefault(true);
-                //         }
-                //     }
-                // });
 
                 if (confirmation.customId === 'profileOption' && 'values' in confirmation) {
                     if (confirmation.values.includes('customize')) {

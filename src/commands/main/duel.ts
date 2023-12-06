@@ -80,7 +80,17 @@ export default {
             components: [duelComponentRow],
         });
 
-        const collectorFilter = (i: { user: { id: string; }; }) => i.user.id === interaction.user.id;
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
+
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({
@@ -96,23 +106,35 @@ export default {
                         iconURL: interaction.user.displayAvatarURL(),
                     })
                     .setTitle('Duel Request')
-                    .setDescription(`Hey **${opponentUser}**! **${interaction.user.username} (${player.playerId})** is challenging you to a friendly duel!`)
+                    .setDescription(`Hello **${opponentUser}**! You've been invited by **${interaction.user.username} (${player.playerId})** for a friendly **Team of 3** duel! Are you ready for the challenge?`)
+                    .addFields(
+                        {
+                            name: `${interaction.user.username} (Challenger)`,
+                            value: `**Team Name**: ${player.activeTeams.teamOfThree}\n**Power**:`,
+                            inline: true,
+                        },
+                        {
+                            name: `${opponentUser.username} (Opponent)`,
+                            value: `**Team Name**: ${getOpponentUser.activeTeams.teamOfThree}\n**Power**:`,
+                            inline: true,
+                        }
+                    )
                     .setFooter({
-                        text: 'Click the confirm button to start the battle.',
+                        text: 'Click the accept button to start the duel.',
                     });
 
-                const confirmButton = new ButtonBuilder()
-                    .setCustomId('confirmPVP')
-                    .setLabel('Confirm')
-                    .setStyle(ButtonStyle.Primary);
+                const acceptButton = new ButtonBuilder()
+                    .setCustomId('accept')
+                    .setLabel('Accept')
+                    .setStyle(ButtonStyle.Success);
             
-                const cancelButton = new ButtonBuilder()
-                    .setCustomId('cancelPVP')
-                    .setLabel('Cancel')
-                    .setStyle(ButtonStyle.Secondary);
+                const declineButton = new ButtonBuilder()
+                    .setCustomId('decline')
+                    .setLabel('Decline')
+                    .setStyle(ButtonStyle.Danger);
 
                 const duelRequestComponentRow = new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents(confirmButton, cancelButton);
+                    .addComponents(acceptButton, declineButton);
 
                 await confirmation.deferUpdate();
                 const response = await confirmation.editReply({
@@ -122,21 +144,10 @@ export default {
 
                 const collectorFilter = (interaction: {
                     reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
-                    user: { id: string; username: string; displayAvatarURL(): string | undefined };
+                    user: { id: string; username: string; };
                 }) => {
                     if (interaction.user.id !== opponentUser.id) {
-                        interaction.reply({
-                            embeds: [
-                                new EmbedBuilder()
-                                    .setColor('#FF0000')
-                                    .setTitle('🚫 Action Not Allowed')
-                                    .setDescription(`Sorry, **${interaction.user.username}**! You are not authorized to perform this action. Currently, only **${opponentUser.username}** has the permission to do so.`)
-                                    .setFooter({
-                                        text: config.messages.footerText,
-                                    })
-                            ],
-                            ephemeral: true,
-                        });
+                        actionNA(interaction, opponentUser.username);
                         return false;
                     }
                 
@@ -149,7 +160,7 @@ export default {
                         time: 300_000
                     });
 
-                    if (confirmation.customId === 'confirmPVP') {
+                    if (confirmation.customId === 'accept') {
                         // const megumin = await loadImage('C:/Storage/Programming/Project Dev/Anitopia/src/public/megumin.png');
                         // const chainsawman = await loadImage('C:/Storage/Programming/Project Dev/Anitopia/src/public/chainsawman.png');
                         // const background = await loadImage('C:/Storage/Programming/Project Dev/Anitopia/src/public/background.png');

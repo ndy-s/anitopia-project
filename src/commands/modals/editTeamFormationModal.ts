@@ -25,7 +25,6 @@ export default {
                     .setTitle('🚫 Duplicate Characters Detected')
                     .setDescription('It seems like you have used the same character in multiple positions. In order to create a balanced team, each position must have a unique character. \n\nCould you please adjust your lineup and try again? We appreciate your patience and cooperation! 😊')
                     .setFooter({
-                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: `${config.messages.footerText}`
                     });
                     
@@ -117,7 +116,6 @@ export default {
                     .setDescription('We encountered a problem with one or more of your inputs. It seems like some characters were not found in our database. For these positions, we have kept your previous characters. The other characters have been updated to your new inputs.')
                     .addFields(newLineup.map((lineup, index) => createNotFoundField(lineup.position, lineup.character, inputs[index])))
                     .setFooter({
-                        iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                         text: `${config.messages.footerText}`
                     });
                     

@@ -3,7 +3,7 @@ import { CharaCollectionModel } from "../../models";
 import { ICharacterModel } from "../../interfaces";
 import { mapRarity } from "../../utils";
 import collection from "./collection";
-import { characterNF } from "../exceptions";
+import { actionNA, characterNF } from "../exceptions";
 
 export default {
     name: 'info',
@@ -136,7 +136,6 @@ export default {
                 }
             )
             .setFooter({
-                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: `Guess what? There are ${characterCount} ${rarity} ${character.name} in existence!`
             });
 
@@ -159,7 +158,17 @@ export default {
         if ('deferUpdate' in interaction && charaIdInput) await interaction.deferUpdate();
         const response = charaIdInput ? await interaction.editReply(responseOptions): await interaction.reply(responseOptions);
 
-        const collectorFilter = (i: { user: { id: string }}) => i.user.id === interaction.user.id;
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
+
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({

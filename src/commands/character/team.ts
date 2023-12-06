@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteract
 import character from "./character";
 import { getPlayer } from "../../utils";
 import { config } from "../../config";
+import { actionNA } from "../exceptions";
 
 export default {
     name: 'team',
@@ -52,7 +53,6 @@ export default {
             .setDescription(`This is your current lineup of teams for battles. You can have one **Active Team of 3** and one **Active Team of 5** selected for battles at any time. The other teams are available for selection.`)
             .addFields(...teamFields)
             .setFooter({
-                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                 text: 'Select an option from the menu bellow to manage your team.',
             });
     
@@ -96,7 +96,17 @@ export default {
 
         const response = editReply ? await interaction.editReply(responseOptions) : await interaction.reply(responseOptions);
 
-        const collectorFilter = (i: { user: { id: string }}) => i.user.id === interaction.user.id;
+        const collectorFilter = (i: {
+            reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
+            user: { id: string; username: string; };
+        }) => {
+            if (i.user.id !== interaction.user.id) {
+                actionNA(i, interaction.user.username);
+                return false;
+            }
+
+            return true;
+        };
 
         try {
             const confirmation = await response.awaitMessageComponent({
@@ -131,7 +141,6 @@ export default {
                             .setTitle('🚫 Team Limit Reached')
                             .setDescription(`Uh-oh! 🚦 It seems you've reached your team limit. You currently have **6 teams**, which is the maximum allowed. But don't worry, there's a solution! 🛠️\n\nIf you're eager to create a new team, you'll need to **remove one of your existing teams first**. This might seem like a tough decision, but it's also an opportunity to strategize and optimize your teams. 🧠💡\n\nWe appreciate your understanding and cooperation. Happy team building! 😊🎉`)
                             .setFooter({
-                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                                 text: config.messages.footerText
                             });
 
@@ -185,7 +194,6 @@ export default {
                             .setTitle('🔍 No Teams Found')
                             .setDescription(`It seems you don't have any teams yet. But don't worry, creating your first team is a great step towards exciting battles and quests! 🚀\n\nTo get started, you can use the **Create Team** option. This will allow you to form a new team and start your journey.`)
                             .setFooter({
-                                iconURL: interaction.client.user.displayAvatarURL({ extension: 'png', size: 512}),
                                 text: config.messages.footerText
                             });
 
