@@ -4,6 +4,7 @@ import { ICharacterModel } from "../../interfaces";
 import { mapRarity } from "../../utils";
 import collection from "./collection";
 import { actionNA, characterNF } from "../exceptions";
+import { IPlayerModel } from '../../interfaces/IPlayerModel';
 
 export default {
     name: 'info',
@@ -40,10 +41,16 @@ export default {
             return characterNF(interaction, 'symbols');
         }
 
-        const characterInfo = await CharaCollectionModel.findOne({ characterId: characterIdOptionValue }).populate('character');
+        const characterInfo = await CharaCollectionModel.findOne({ characterId: characterIdOptionValue }).populate('character').populate('playerId');
 
         if (!characterInfo || !characterInfo.character) {
             return characterNF(interaction);
+        }
+
+        const isIPlayerModel = (obj: any): obj is IPlayerModel => obj && typeof obj.userId === 'string';
+
+        if (isIPlayerModel(characterInfo.playerId) && characterInfo.playerId.userId !== interaction.user.id) {
+            return characterNF(interaction, 'notOwned');
         }
 
         const rarity = mapRarity(Number(characterInfo.rarity));
@@ -102,26 +109,6 @@ export default {
                         `💨 **Speed**: ${characterInfo.attributes.speed}`,
                     inline: false,
                 },
-                // {
-                //     name: `Health`,
-                //     value: `${characterInfo.attributes.health}`,
-                //     inline: false,
-                // },
-                // {
-                //     name: `Attack`,
-                //     value: `${characterInfo.attributes.attack}`,
-                //     inline: true,
-                // },
-                // {
-                //     name: `Defense`,
-                //     value: `${characterInfo.attributes.defense}`,
-                //     inline: false,
-                // },
-                // {
-                //     name: `Speed`,
-                //     value: `${characterInfo.attributes.speed}`,
-                //     inline: true,
-                // },
                 {
                     name: `Passive Skill`,
                     value: `**${character.passiveSkill.name}**: ${character.passiveSkill.descriptions.get(rarity)}`
