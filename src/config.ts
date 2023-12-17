@@ -11,6 +11,7 @@ export const config = {
         profileCommandTag: "</profile:1160505037873754194>",
         summonCommandTag: "</summon:1160947915456512000>",
         collectionCommandTag: "</collection:1166709129792978964>",
+        teamCommandTag: "</team:1168077016168411166>",
     },
 };
 

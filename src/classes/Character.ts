@@ -108,7 +108,7 @@ export class Character {
             this.displayDamage = damage;
             target.health -= damage;
 
-            console.log(`Target ${target.name} got damage ${damage}, HP: ${target.health}/${target.maxHealth}`);
+            console.log(`Target ${target.name} got damage ${damage}, HP: ${Math.max(target.health, 0)}/${target.maxHealth}`);
             console.log(``);
         } else {
             console.log(`Attack missed!`);

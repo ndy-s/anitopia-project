@@ -3,10 +3,10 @@ import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { Character } from "../../classes/Character";
 import { Team } from "../../classes/Team";
 import { getPlayer } from "../../utils";
-import { ITeams } from "../../interfaces";
+import { IPlayerModel, ITeams } from "../../interfaces";
 import { PlayerModel } from "../../models";
 import { config } from "../../config";
-import { actionNA, playerIssue } from "../exceptions";
+import { actionNA, playerIssue, teamNF } from "../exceptions";
 
 export default {
     name: 'duel',
@@ -48,6 +48,11 @@ export default {
         }
 
         const player = await getPlayer(interaction);
+
+        if (player.activeTeams.teamOfThree === null) {
+            teamNF(interaction);
+            return;
+        }
 
         const duelEmbed = new EmbedBuilder()
             .setColor('Blurple')
@@ -99,39 +104,70 @@ export default {
             });
 
             if (confirmation.customId === 'teamOf3') {
+                let timeLeft = 30;
+                
+                function findTeam(player: IPlayerModel, teamName: string): ITeams {
+                    return player.teams.find(team => team.name === teamName)!;
+                }
+                
+                const activeTeamOfThree: ITeams = findTeam(player, player.activeTeams.teamOfThree);
+                const opponentActiveTeamOfThree: ITeams = findTeam(getOpponentUser, getOpponentUser?.activeTeams?.teamOfThree ?? '');
+
                 const duelRequestEmbed = new EmbedBuilder()
                     .setColor('Blurple')
                     .setAuthor({
                         name: interaction.user.username,
                         iconURL: interaction.user.displayAvatarURL(),
-                    })
-                    .setTitle('Duel Request')
-                    .setDescription(`Hello **${opponentUser}**! You've been invited by **${interaction.user.username} (${player.playerId})** for a friendly **Team of 3** duel! Are you ready for the challenge?`)
-                    .addFields(
+                    });
+
+
+                if (getOpponentUser.activeTeams.teamOfThree === null) {
+                    duelRequestEmbed.setTitle(`⚠️ Duel Request Failed`);
+                    duelRequestEmbed.setDescription(`**${opponentUser.username} (Opponent)** doesn't have an active team set yet. Unfortunately, this **Team of 3** duel can't start until the opponent sets up an active team.`);
+                    duelRequestEmbed.setFooter({
+                        text: `⏳ This command will be automatically deleted in ${timeLeft} seconds.`,
+                    });
+                } else {
+                    const calculatePower = (team: ITeams) => {
+                        let power = 0;
+                        team.lineup.forEach(character => {
+                            if (character.character && 'attributes' in character.character) {
+                              power += Object.values(character.character.attributes).reduce((sum, attribute) => sum + attribute, 0);
+                            }
+                        });
+                        return power;
+                    };
+
+                    duelRequestEmbed.setTitle('Duel Request');
+                    duelRequestEmbed.setDescription(`Hello **${opponentUser}**! You've been invited by **${interaction.user.username} (${player.playerId})** for a friendly **Team of 3** duel! Are you ready for the challenge?`);
+                    duelRequestEmbed.addFields(
                         {
                             name: `${interaction.user.username} (Challenger)`,
-                            value: `**Team Name**: ${player.activeTeams.teamOfThree}\n**Power**:`,
+                            value: `**Team Name**: ${player.activeTeams.teamOfThree}\n**Power**: ${calculatePower(activeTeamOfThree)}`,
                             inline: true,
                         },
                         {
                             name: `${opponentUser.username} (Opponent)`,
-                            value: `**Team Name**: ${getOpponentUser.activeTeams.teamOfThree}\n**Power**:`,
+                            value: `**Team Name**: ${getOpponentUser.activeTeams.teamOfThree ?? '_None_'}\n**Power**: ${calculatePower(opponentActiveTeamOfThree)}`,
                             inline: true,
                         }
                     )
-                    .setFooter({
+                    duelRequestEmbed.setFooter({
                         text: 'Click the accept button to start the duel.',
                     });
+                }
 
                 const acceptButton = new ButtonBuilder()
                     .setCustomId('accept')
                     .setLabel('Accept')
-                    .setStyle(ButtonStyle.Success);
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(getOpponentUser.activeTeams.teamOfThree === null ? true : false);
             
                 const declineButton = new ButtonBuilder()
                     .setCustomId('decline')
                     .setLabel('Decline')
-                    .setStyle(ButtonStyle.Danger);
+                    .setStyle(ButtonStyle.Danger)
+                    .setDisabled(getOpponentUser.activeTeams.teamOfThree === null ? true : false);
 
                 const duelRequestComponentRow = new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(acceptButton, declineButton);
@@ -141,6 +177,40 @@ export default {
                     embeds: [duelRequestEmbed],
                     components: [duelRequestComponentRow],
                 })
+
+                const cancelEmbed = new EmbedBuilder()
+                    .setColor('Red')
+                    .setAuthor({
+                        name: `${interaction.user.username}`,
+                        iconURL: interaction.user.displayAvatarURL(),
+                    })
+                    .setTitle(`⛔ Duel Request Cancelled`)
+                    .setDescription(`Hey **${interaction.user.username}**, quick update! Your duel request didn't go through because **${opponentUser.username} (Opponent)** needs to set up an active team first. Could you kindly remind your opponent to set an active team use ${config.commands.teamCommandTag} command? Once that's done, you're all set for an exciting duel!`)
+                    .setFooter({
+                        text: config.messages.footerText,
+                    });
+
+                if (getOpponentUser.activeTeams.teamOfThree === null) {
+                    const intervalId = setInterval(async () => {
+                        timeLeft--;
+                        duelRequestEmbed.setFooter({
+                            text: `⏳ This command will be automatically deleted in ${timeLeft} seconds.`,
+                        });
+
+                        await interaction.editReply({
+                            embeds: [duelRequestEmbed],
+                        });
+
+                        if (timeLeft === 0) {
+                            clearInterval(intervalId);
+                            await interaction.deleteReply();
+                            await interaction.followUp({
+                                embeds: [cancelEmbed],
+                                ephemeral: true
+                            });
+                        }
+                    }, 1000);
+                }
 
                 const collectorFilter = (interaction: {
                     reply(arg0: { embeds: EmbedBuilder[]; ephemeral: boolean; }): unknown;               
@@ -188,37 +258,40 @@ export default {
                         
                         // const attachment = new AttachmentBuilder(buffer, {name: 'image.png'})
         
-                        const activeTeamOfThree = player.teams.find((team: ITeams) => team.name === player.activeTeams.teamOfThree);
-                        const opponentActiveTeamOfThree = getOpponentUser?.teams?.find((team: ITeams) => team.name === getOpponentUser.activeTeams.teamOfThree);
-        
                         const characterDataPlayerA = activeTeamOfThree.lineup.map((characterObject: any) => {
-                            return new Character(
-                                characterObject.character.character.name,
-                                characterObject.character.attributes.health * 10,
-                                characterObject.character.attributes.attack,
-                                characterObject.character.attributes.defense,    
-                                characterObject.character.attributes.speed,
-                                characterObject.character.level,
-                                characterObject.character.rarity,
-                                characterObject.character.character.element,
-                                3
-                            );
-                        });
-        
+                            if (characterObject && characterObject.character) {
+                                return new Character(
+                                    characterObject.character.character.name,
+                                    characterObject.character.attributes.health * 10,
+                                    characterObject.character.attributes.attack,
+                                    characterObject.character.attributes.defense,    
+                                    characterObject.character.attributes.speed,
+                                    characterObject.character.level,
+                                    characterObject.character.rarity,
+                                    characterObject.character.character.element,
+                                    3
+                                );
+                            }
+                            return null;
+                        }).filter((character: Character | null) => character !== null) as Character[];
+
                         const characterDataPlayerB = opponentActiveTeamOfThree.lineup.map((characterObject: any) => {
-                            return new Character(
-                                characterObject.character.character.name,
-                                characterObject.character.attributes.health * 10,
-                                characterObject.character.attributes.attack,
-                                characterObject.character.attributes.defense,    
-                                characterObject.character.attributes.speed,
-                                characterObject.character.level,
-                                characterObject.character.rarity,
-                                characterObject.character.character.element,
-                                3
-                            );
-                        });
-        
+                            if (characterObject && characterObject.character) {
+                                return new Character(
+                                    characterObject.character.character.name,
+                                    (characterObject.character.attributes.health) * 10,
+                                    characterObject.character.attributes.attack,
+                                    characterObject.character.attributes.defense,
+                                    characterObject.character.attributes.speed,
+                                    characterObject.character.level,
+                                    characterObject.character.rarity,
+                                    characterObject.character.character.element,
+                                    3
+                                );
+                            }
+                            return null;
+                        }).filter((character: Character | null) => character !== null) as Character[];
+
                         let PlayerB1 = new Character(
                             'Goblin', // name
                             1000, // health
@@ -251,14 +324,14 @@ export default {
                                         {
                                             name: `Player A Team`,
                                             value: characterDataPlayerA
-                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${character.health}/${character.maxHealth}`)
+                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
                                                 .join('\n'),
                                             inline: true
                                         },
                                         {
                                             name: `Player B Team`,
                                             value: characterDataPlayerB
-                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${character.health}/${character.maxHealth}`)
+                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
                                                 .join('\n'),
                                             inline: true
                                         },
@@ -309,14 +382,14 @@ export default {
                                                                 {
                                                                     name: `Player A Team`,
                                                                     value: characterDataPlayerA
-                                                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${character.health}/${character.maxHealth}`)
+                                                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
                                                                         .join('\n'),
                                                                     inline: true
                                                                 },
                                                                 {
                                                                     name: `Player B Team`,
                                                                     value: characterDataPlayerB
-                                                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${character.health}/${character.maxHealth}`)
+                                                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
                                                                         .join('\n'),
                                                                     inline: true
                                                                 },
@@ -342,6 +415,7 @@ export default {
                     }
 
                 } catch (error) {
+                    console.log(error);
                 }
 
             }

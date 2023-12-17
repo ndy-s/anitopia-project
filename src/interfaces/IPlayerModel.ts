@@ -53,7 +53,7 @@ export interface IPlayerModel extends Document {
     experience: IExperience;
     dailyStreak: IDailyStreak;
     scrolls: IScrolls;
-    teams: ITeams;
+    teams: ITeams[];
     activeTeams: IActiveteams;
     createdAt: Date;
     updatedAt: Date;

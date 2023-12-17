@@ -72,10 +72,10 @@ export default {
                 
                 Object.values(characters).forEach(character => {
                     if (character.character) {
-                        totalAttributes.health += character.character.attributes.health;
-                        totalAttributes.attack += character.character.attributes.attack;
-                        totalAttributes.defense += character.character.attributes.defense;
-                        totalAttributes.speed += character.character.attributes.speed;
+                        totalAttributes.health += character.playerChara.attributes.health;
+                        totalAttributes.attack += character.playerChara.attributes.attack;
+                        totalAttributes.defense += character.playerChara.attributes.defense;
+                        totalAttributes.speed += character.playerChara.attributes.speed;
                     }
                 });
 
