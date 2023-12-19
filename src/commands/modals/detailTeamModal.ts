@@ -179,7 +179,7 @@ export default {
                         time: 300_000
                     });
 
-                    async function updateActiveTeam(confirmation: CollectedInteraction, activate = true, ) {
+                    async function updateActiveTeam(confirmation: CollectedInteraction, activate = true) {
                         const teamSize = closestTeam.size === 3 ? 'Team of 3' : 'Team of 5';
                         const updateField = activate ? { $set: { [`activeTeams.${teamField}`]: closestTeamName } } : { $unset: { [`activeTeams.${teamField}`]: "" } };
 
@@ -189,8 +189,13 @@ export default {
                             },
                             updateField,
                             { new: true }
-                        ).populate('teams.lineup.character');
-                    
+                        ).populate({
+                            path: 'teams.lineup.character',
+                            populate: {
+                                path: 'character'
+                            },
+                        });
+
                         await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                     
                         const updateActiveTeamEmbed = new EmbedBuilder()

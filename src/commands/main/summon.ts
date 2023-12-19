@@ -241,7 +241,12 @@ export default {
                                         }
                                     },
                                     { new: true}
-                                ).populate('teams.lineup.character');
+                                ).populate({
+                                    path: 'teams.lineup.character',
+                                    populate: {
+                                        path: 'character'
+                                    },
+                                });
                         
                                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
@@ -356,7 +361,12 @@ export default {
                                                 }
                                             },
                                             { new: true}
-                                        ).populate('teams.lineup.character');
+                                        ).populate({
+                                            path: 'teams.lineup.character',
+                                            populate: {
+                                                path: 'character'
+                                            },
+                                        });
 
                                         await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                                                                         
@@ -596,7 +606,12 @@ export default {
                                         },
                                     },
                                     { new: true}
-                                ).populate('teams.lineup.character');
+                                ).populate({
+                                    path: 'teams.lineup.character',
+                                    populate: {
+                                        path: 'character'
+                                    },
+                                });
                         
                                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
@@ -710,7 +725,12 @@ export default {
                                                 }
                                             },
                                             { new: true}
-                                        ).populate('teams.lineup.character');
+                                        ).populate({
+                                            path: 'teams.lineup.character',
+                                            populate: {
+                                                path: 'character'
+                                            },
+                                        });
                                 
                                         await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
@@ -967,7 +987,12 @@ export default {
                                         },
                                     },
                                     { new: true}
-                                ).populate('teams.lineup.character');
+                                ).populate({
+                                    path: 'teams.lineup.character',
+                                    populate: {
+                                        path: 'character'
+                                    },
+                                });
                         
                                 await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
 
@@ -1077,7 +1102,12 @@ export default {
                                                 },
                                             },
                                             { new: true}
-                                        ).populate('teams.lineup.character');
+                                        ).populate({
+                                            path: 'teams.lineup.character',
+                                            populate: {
+                                                path: 'character'
+                                            },
+                                        });
                                 
                                         await redis.set(interaction.user.id, JSON.stringify(player), 'EX', 60);
                                     

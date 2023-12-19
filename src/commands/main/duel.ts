@@ -6,7 +6,7 @@ import { getPlayer } from "../../utils";
 import { IPlayerModel, ITeams } from "../../interfaces";
 import { PlayerModel } from "../../models";
 import { config } from "../../config";
-import { actionNA, playerIssue, teamNF } from "../exceptions";
+import { actionNA, playerIssue } from "../exceptions";
 
 export default {
     name: 'duel',
@@ -32,7 +32,6 @@ export default {
         const userOptionValue: string = String(interaction.options.get('user')?.value);
 
         const opponentUser = await client.users.fetch(userOptionValue);
-
         const getOpponentUser = await PlayerModel.findOne({ 
             userId: userOptionValue 
         }).populate({
@@ -48,11 +47,6 @@ export default {
         }
 
         const player = await getPlayer(interaction);
-
-        if (player.activeTeams.teamOfThree === null) {
-            teamNF(interaction);
-            return;
-        }
 
         const duelEmbed = new EmbedBuilder()
             .setColor('Blurple')
@@ -77,9 +71,7 @@ export default {
             .setDisabled(true)
             .setStyle(ButtonStyle.Primary);
 
-        const duelComponentRow = new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(teamOf3Button, teamOf5Button);
-
+        const duelComponentRow = new ActionRowBuilder<ButtonBuilder>().addComponents(teamOf3Button, teamOf5Button);
         const response = await interaction.reply({
             embeds: [duelEmbed],
             components: [duelComponentRow],
@@ -105,14 +97,14 @@ export default {
 
             if (confirmation.customId === 'teamOf3') {
                 let timeLeft = 30;
-                
-                function findTeam(player: IPlayerModel, teamName: string): ITeams {
-                    return player.teams.find(team => team.name === teamName)!;
-                }
+            
+                const findTeam = (player: IPlayerModel, teamName: string): ITeams => player.teams.find(team => team.name === teamName)!;
                 
                 const activeTeamOfThree: ITeams = findTeam(player, player.activeTeams.teamOfThree);
                 const opponentActiveTeamOfThree: ITeams = findTeam(getOpponentUser, getOpponentUser?.activeTeams?.teamOfThree ?? '');
 
+                const teamHasCharacters = (team: ITeams): boolean => team?.lineup.some(member => member.character !== null) ?? false;
+                
                 const duelRequestEmbed = new EmbedBuilder()
                     .setColor('Blurple')
                     .setAuthor({
@@ -120,12 +112,17 @@ export default {
                         iconURL: interaction.user.displayAvatarURL(),
                     });
 
-
-                if (getOpponentUser.activeTeams.teamOfThree === null) {
+                if (!teamHasCharacters(activeTeamOfThree)) {
                     duelRequestEmbed.setTitle(`⚠️ Duel Request Failed`);
-                    duelRequestEmbed.setDescription(`**${opponentUser.username} (Opponent)** doesn't have an active team set yet. Unfortunately, this **Team of 3** duel can't start until the opponent sets up an active team.`);
+                    duelRequestEmbed.setDescription(`**<@!${interaction.user.id}>**, you haven't set up an active team yet or your team doesn't have any characters. Unfortunately, this **Team of 3** duel can't start until you set up an active team with characters.`);
                     duelRequestEmbed.setFooter({
-                        text: `⏳ This command will be automatically deleted in ${timeLeft} seconds.`,
+                        text: `⏳ This command will be automatically deleted in ${timeLeft} second${timeLeft > 1 ? 's' : ''}.`,
+                    });
+                } else if (!teamHasCharacters(opponentActiveTeamOfThree)) {
+                    duelRequestEmbed.setTitle(`⚠️ Duel Request Failed`);
+                    duelRequestEmbed.setDescription(`**${opponentUser.username} (Opponent)** hasn't set up an active team yet or their team doesn't have any characters. Unfortunately, this **Team of 3** duel can't start until the opponent sets up an active team with characters.`);
+                    duelRequestEmbed.setFooter({
+                        text: `⏳ This command will be automatically deleted in ${timeLeft} second${timeLeft > 1 ? 's' : ''}.`,
                     });
                 } else {
                     const calculatePower = (team: ITeams) => {
@@ -161,13 +158,13 @@ export default {
                     .setCustomId('accept')
                     .setLabel('Accept')
                     .setStyle(ButtonStyle.Success)
-                    .setDisabled(getOpponentUser.activeTeams.teamOfThree === null ? true : false);
+                    .setDisabled(!teamHasCharacters(activeTeamOfThree) || !teamHasCharacters(opponentActiveTeamOfThree) ? true : false);
             
                 const declineButton = new ButtonBuilder()
                     .setCustomId('decline')
                     .setLabel('Decline')
                     .setStyle(ButtonStyle.Danger)
-                    .setDisabled(getOpponentUser.activeTeams.teamOfThree === null ? true : false);
+                    .setDisabled(!teamHasCharacters(activeTeamOfThree) || !teamHasCharacters(opponentActiveTeamOfThree) ? true : false);
 
                 const duelRequestComponentRow = new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(acceptButton, declineButton);
@@ -185,16 +182,15 @@ export default {
                         iconURL: interaction.user.displayAvatarURL(),
                     })
                     .setTitle(`⛔ Duel Request Cancelled`)
-                    .setDescription(`Hey **${interaction.user.username}**, quick update! Your duel request didn't go through because **${opponentUser.username} (Opponent)** needs to set up an active team first. Could you kindly remind your opponent to set an active team use ${config.commands.teamCommandTag} command? Once that's done, you're all set for an exciting duel!`)
                     .setFooter({
                         text: config.messages.footerText,
                     });
 
-                if (getOpponentUser.activeTeams.teamOfThree === null) {
+                if (!teamHasCharacters(activeTeamOfThree) || !teamHasCharacters(opponentActiveTeamOfThree)) {
                     const intervalId = setInterval(async () => {
                         timeLeft--;
                         duelRequestEmbed.setFooter({
-                            text: `⏳ This command will be automatically deleted in ${timeLeft} seconds.`,
+                            text: `⏳ This command will be automatically deleted in ${timeLeft} second${timeLeft > 1 ? 's' : ''}.`,
                         });
 
                         await interaction.editReply({
@@ -203,6 +199,13 @@ export default {
 
                         if (timeLeft === 0) {
                             clearInterval(intervalId);
+
+                            if (!teamHasCharacters(activeTeamOfThree)) {
+                                cancelEmbed.setDescription(`Hey **<@!${interaction.user.id}>**, quick update! Your duel request didn't go through because you need to set up an active team first or your team doesn't have any characters.\n\nCould you kindly set up an active team with characters using the ${config.commands.teamCommandTag} command? Once that's done, you're all set for an exciting duel!`);
+                            } else if (!teamHasCharacters(opponentActiveTeamOfThree)) {
+                                cancelEmbed.setDescription(`Hey **${interaction.user.username}**, quick update! Your duel request didn't go through because **${opponentUser.username} (Opponent)** either hasn't set up an active team yet or their team doesn't have any characters.\n\nCould you kindly remind your opponent to set up an active team with characters using the ${config.commands.teamCommandTag} command? Once that's done, you're all set for an exciting duel!`);
+                            }                            
+
                             await interaction.deleteReply();
                             await interaction.followUp({
                                 embeds: [cancelEmbed],
@@ -262,7 +265,7 @@ export default {
                             if (characterObject && characterObject.character) {
                                 return new Character(
                                     characterObject.character.character.name,
-                                    characterObject.character.attributes.health * 10,
+                                    (characterObject.character.attributes.health) * 10,
                                     characterObject.character.attributes.attack,
                                     characterObject.character.attributes.defense,    
                                     characterObject.character.attributes.speed,

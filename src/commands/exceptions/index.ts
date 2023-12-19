@@ -9,4 +9,3 @@ export * from './playerIssue';
 
 // Collector Exception (Action Interaction)
 export * from './actionNA';
-export * from './teamNF';
