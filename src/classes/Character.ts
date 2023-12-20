@@ -66,9 +66,19 @@ export class Character {
         this.status = [];
     }
 
-    attackCalculation(target: Character) {
+    attackCalculation(target: Character, allTarget: Character[]) {
         if (this.activeSkillCooldown === 0) {
-            this.useActiveSkill(target);
+            switch (this.activeSkill.target) {
+                case 'Single':
+                    this.useActiveSkill([target]);
+                    break;
+                case 'Area':
+                    this.useActiveSkill(allTarget);
+                    break;
+                default:
+                    console.error(`Unsupported skill target: ${this.activeSkill.target}`);
+                    break;
+            }
         } else {
             const damage = this.calculatePhysicalDamage();
             this.inflictDamage(target, damage);
@@ -131,18 +141,24 @@ export class Character {
         }
     }
 
-    private useActiveSkill(target: Character) {
+    private useActiveSkill(target: Character[]) {
         this.skillEffect.effects.forEach((effect: IEffect) => {
             if (Math.random() <= effect.chance && effect.target === 'Enemy') {
                 switch (effect.type) {
                     case 'Damage':
-                        this.handleDamageEffect(effect, target);
+                        target.forEach((eachTarget) => {
+                            this.handleDamageEffect(effect, eachTarget);
+                        });
                         break;
                     case 'True Damage':
-                        this.handleTrueDamageEffect(effect, target);
+                        target.forEach((eachTarget) => {
+                            this.handleTrueDamageEffect(effect, eachTarget);
+                        });
                         break;
                     case 'Debuff':
-                        this.handleDebuffEffect(effect, target);
+                        target.forEach((eachTarget) => {
+                            this.handleDebuffEffect(effect, eachTarget);
+                        });
                         break;
                     default:
                         console.log(`Unhandled effect type: ${effect.type}`);

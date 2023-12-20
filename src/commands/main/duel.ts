@@ -388,7 +388,7 @@ export default {
                                         if (enemy.health > 0) {
                                             await delay(1000);
                                             console.log(`Character ${character.name} Attacking!`);
-                                            character.attackCalculation(enemy);
+                                            character.attackCalculation(enemy, enemyTeamPlayers);
         
                                                 await confirmation.editReply({
                                                     content: null,
