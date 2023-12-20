@@ -226,6 +226,7 @@ export default {
                                         1: 0 // Legendary
                                     },
                                     player.scrolls.novice.guaranteed,
+                                    1,
                                     Rarity.Epic
                                 );                                
 

@@ -13,7 +13,11 @@ export async function getPlayer(interaction: CommandInteraction | CollectedInter
         }).populate({
             path: 'teams.lineup.character',
             populate: {
-                path: 'character'
+                path: 'character',
+                populate: [
+                    { path: 'activeSkill.skill' },
+                    { path: 'passiveSkill.skill' }
+                ]
             },
         });
 

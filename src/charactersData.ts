@@ -20,7 +20,7 @@ export const charactersData = [
                 "Epic": "When Kirito's health drops below 50%, he activates his Dual Wielding skill. This increases his attack by 45% and his speed by 65% for 3 turns.",
                 "Legendary": "When Kirito's health drops below 50%, he activates his Dual Wielding skill. This increases his attack by 50% and his speed by 70% for 3 turns."
             },
-            "baseName": "Resilience Boost" 
+            "skill": "65815b2a08b1050becae1dee" // Resilience Boost 
         },
         "activeSkill": {
             "name": 'Starbust Stream',
@@ -31,7 +31,7 @@ export const charactersData = [
                 "Epic": "Kirito unleashes a rapid 16-hit combo that targets a single enemy. The skill dealing 165% true damage of Kirito's attack.",
                 "Legendary": "Kirito unleashes a rapid 16-hit combo that targets a single enemy. The skill dealing 170% true damage of Kirito's attack."
             },
-            "baseName": "True Damage Strike"
+            "skill": "65815b2a08b1050becae1df7" // True Damage Strike
         },
         "quotes": "I may be a solo player, but in this virtual world I feel more alive than ever."
     },
@@ -56,7 +56,7 @@ export const charactersData = [
                 "Epic": "When Yuno's health drops below 50%, he enters Spirit Dive mode, increasing his attack by 45% and his speed by 65% for 3 turns.",
                 "Legendary": "When Yuno's health drops below 50%, he enters Spirit Dive mode, increasing his attack by 50% and his speed by 70% for 3 turns."
             },
-            "baseName": "Resilience Boost" 
+            "skill": "65815b2a08b1050becae1dee" // Resilience Boost 
         },
         "activeSkill": {
             "name": 'Spirit Storm',
@@ -67,7 +67,7 @@ export const charactersData = [
                 "Epic": "Yuno uses his aero powers to create a strong wind that hits all enemies. This skill deals 120% aero damage to all enemies.",
                 "Legendary": "Yuno uses his aero powers to create a strong wind that hits all enemies. This skill deals 125% aero damage to all enemies."
             },
-            "baseName": "Elemental Burst"
+            "skill": "65815b2a08b1050becae1df6" // Elemental Burst
         },
         "quotes": "Once you elites trip up, you're so weak."
     }

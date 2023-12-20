@@ -6,6 +6,9 @@ const effectSchema = new Schema({
         type: String,
         required: true
     },
+    attribute: {
+        type: String,
+    },
     value: {
         type: Number,
         required: true

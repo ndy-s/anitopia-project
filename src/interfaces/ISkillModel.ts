@@ -1,12 +1,13 @@
-interface IEffect {
+export interface IEffect {
     type: string;
+    attribute: string;
     value: number;
     chance: number;
     duration: number;
     target: string;
 }
 
-interface IRarityEffect {
+export interface IRarityEffect {
     effects: IEffect[];
     description: string;
 }

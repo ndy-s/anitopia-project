@@ -2,9 +2,9 @@ import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentB
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { Character } from "../../classes/Character";
 import { Team } from "../../classes/Team";
-import { getPlayer } from "../../utils";
-import { IPlayerModel, ITeams } from "../../interfaces";
-import { PlayerModel } from "../../models";
+import { getPlayer, mapRarity } from "../../utils";
+import { IPlayerModel, ISkillModel, ITeams } from "../../interfaces";
+import { PlayerModel, SkillModel } from "../../models";
 import { config } from "../../config";
 import { actionNA, playerIssue } from "../exceptions";
 
@@ -32,12 +32,17 @@ export default {
         const userOptionValue: string = String(interaction.options.get('user')?.value);
 
         const opponentUser = await client.users.fetch(userOptionValue);
+        
         const getOpponentUser = await PlayerModel.findOne({ 
             userId: userOptionValue 
         }).populate({
             path: 'teams.lineup.character',
             populate: {
-                path: 'character'
+                path: 'character',
+                populate: [
+                    { path: 'activeSkill.skill' },
+                    { path: 'passiveSkill.skill' }
+                ]
             },
         });
 
@@ -260,6 +265,8 @@ export default {
                         // const buffer = canvas.toBuffer('image/png');
                         
                         // const attachment = new AttachmentBuilder(buffer, {name: 'image.png'})
+
+                        // console.log(PlayerSkill?.rarityEffects.get(mapRarity(activeTeamOfThree.lineup[0].character.rarity)));
         
                         const characterDataPlayerA = activeTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
@@ -272,11 +279,13 @@ export default {
                                     characterObject.character.level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
-                                    3
+                                    characterObject.character.character.activeSkill.skill,
+                                    characterObject.character.character.activeSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)]
                                 );
                             }
                             return null;
                         }).filter((character: Character | null) => character !== null) as Character[];
+
 
                         const characterDataPlayerB = opponentActiveTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
@@ -289,28 +298,19 @@ export default {
                                     characterObject.character.level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
-                                    3
+                                    characterObject.character.character.activeSkill.skill,
+                                    characterObject.character.character.activeSkill.skill.rarityEffects.get(mapRarity(characterObject.character.rarity))
                                 );
                             }
                             return null;
                         }).filter((character: Character | null) => character !== null) as Character[];
+                        console.log(characterDataPlayerB);
 
-                        let PlayerB1 = new Character(
-                            'Goblin', // name
-                            1000, // health
-                            50, // attack
-                            60, // defense
-                            30, // speed
-                            100, // level
-                            'Common', // rarity
-                            'Shade', // element
-                            3, // cooldown
-                        );
-        
                         let teamA = new Team(characterDataPlayerA);
                         let teamB = new Team(characterDataPlayerB);
         
-                        let allCharacters = [...characterDataPlayerA, ...characterDataPlayerB];
+                        // TODO: Solve this "any" problem.
+                        let allCharacters: any[] = [...characterDataPlayerA, ...characterDataPlayerB];
         
                         await confirmation.deferUpdate();
                         await confirmation.editReply({
@@ -359,9 +359,29 @@ export default {
                                 }
                                 return b.speed - a.speed;
                             });
-        
+
                             for (let character of allCharacters) {
                                 if (character.health > 0) {
+                                    character.status = character.status.filter((stat: {
+                                        type: string,
+                                        attribute: string,
+                                        value: number,
+                                        duration: number,
+                                    }) => {
+                                        if (stat.duration === 0) {
+                                            const attribute = stat.attribute.toLowerCase();
+
+                                            character[attribute] += (stat.type === 'Debuff') ? stat.value : -stat.value;
+                                            character[attribute] = +character[attribute].toFixed(3);
+                                            
+                                            console.log(`Debuff over: ${attribute} restore back by ${stat.value}`);
+                                            return false;
+                                        } else if (stat.duration > 0) {
+                                            stat.duration--;
+                                        }
+                                        return true;
+                                    });
+                                    
                                     let enemyTeamPlayers = teamA.hasMember(character) ? [...characterDataPlayerB] : [...characterDataPlayerA];
         
                                     for (let enemy of enemyTeamPlayers) {

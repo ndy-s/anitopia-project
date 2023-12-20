@@ -1,4 +1,5 @@
-import { Document } from 'mongoose';
+import { Document, ObjectId } from 'mongoose';
+import { ISkillModel } from './ISkillModel';
 
 export interface IAttributes {
     health: number;
@@ -10,7 +11,7 @@ export interface IAttributes {
 interface ISkillReference {
     name: string;
     descriptions: Map<string, string>;
-    baseName: string;
+    skill: ObjectId | ISkillModel;
 }
 
 export interface ICharacterModel extends Document {

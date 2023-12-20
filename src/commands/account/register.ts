@@ -31,7 +31,7 @@ export default {
         }
 
         const latestAccount = await PlayerModel.findOne({}, {}, { sort: { createdAt: -1 } });
-        const generatedUniqueToken = generateUniqueID(latestAccount?.playerId ?? null);
+        const [generatedUniqueToken] = generateUniqueID(latestAccount?.playerId ?? null);
 
         player = new PlayerModel({
             ...{

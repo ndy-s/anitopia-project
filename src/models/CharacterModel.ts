@@ -10,9 +10,11 @@ const skillReferenceSchema = new Schema({
         type: Map,
         of: String
     },
-    baseName: {
-        type: String,
-        ref: 'Skill'
+    skill: {
+        type: Schema.Types.ObjectId,
+        ref: 'Skill',
+        required: true
+
     }
 }, { _id: false });
 

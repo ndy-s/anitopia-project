@@ -10,6 +10,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.3,
                         "chance": 1,
                         "duration": 0,
@@ -22,6 +23,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.35,
                         "chance": 1,
                         "duration": 0,
@@ -34,6 +36,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.4,
                         "chance": 1,
                         "duration": 0,
@@ -46,6 +49,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.45,
                         "chance": 1,
                         "duration": 0,
@@ -58,6 +62,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.5,
                         "chance": 1,
                         "duration": 0,
@@ -79,6 +84,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.05,
                         "chance": 1,
                         "duration": 0,
@@ -91,6 +97,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.1,
                         "chance": 1,
                         "duration": 0,
@@ -103,6 +110,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.15,
                         "chance": 1,
                         "duration": 0,
@@ -115,6 +123,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.2,
                         "chance": 1,
                         "duration": 0,
@@ -127,6 +136,7 @@ export const activeSkillsData = [
                 "effects": [
                     {
                         "type": "Damage",
+                        "attribute": "Damage",
                         "value": 1.25,
                         "chance": 1,
                         "duration": 0,
@@ -147,7 +157,8 @@ export const activeSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.5,
                         "chance": 1,
                         "duration": 0,
@@ -159,7 +170,8 @@ export const activeSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.55,
                         "chance": 1,
                         "duration": 0,
@@ -171,7 +183,8 @@ export const activeSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.6,
                         "chance": 1,
                         "duration": 0,
@@ -183,7 +196,8 @@ export const activeSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.65,
                         "chance": 1,
                         "duration": 0,
@@ -195,7 +209,8 @@ export const activeSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.7,
                         "chance": 1,
                         "duration": 0,
@@ -216,7 +231,8 @@ export const activeSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.25,
                         "chance": 1,
                         "duration": 0,
@@ -228,7 +244,8 @@ export const activeSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.3,
                         "chance": 1,
                         "duration": 0,
@@ -240,7 +257,8 @@ export const activeSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.35,
                         "chance": 1,
                         "duration": 0,
@@ -252,7 +270,8 @@ export const activeSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.4,
                         "chance": 1,
                         "duration": 0,
@@ -264,7 +283,8 @@ export const activeSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "True Damage of Attack",
+                        "type": "True Damage",
+                        "attribute": "Attack",
                         "value": 1.45,
                         "chance": 1,
                         "duration": 0,
@@ -285,7 +305,8 @@ export const activeSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Debuff Accuracy",
+                        "type": "Debuff",
+                        "attribute": "Accuracy",
                         "value": 0.2,
                         "chance": 1,
                         "duration": 2,
@@ -297,7 +318,8 @@ export const activeSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Debuff Accuracy",
+                        "type": "Debuff",
+                        "attribute": "Accuracy",
                         "value": 0.25,
                         "chance": 1,
                         "duration": 2,
@@ -309,7 +331,8 @@ export const activeSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Debuff Accuracy",
+                        "type": "Debuff",
+                        "attribute": "Accuracy",
                         "value": 0.3,
                         "chance": 1,
                         "duration": 2,
@@ -321,7 +344,8 @@ export const activeSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Debuff Accuracy",
+                        "type": "Debuff",
+                        "attribute": "Accuracy",
                         "value": 0.35,
                         "chance": 1,
                         "duration": 2,
@@ -333,7 +357,8 @@ export const activeSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Debuff Accuracy",
+                        "type": "Debuff",
+                        "attribute": "Accuracy",
                         "value": 0.4,
                         "chance": 1,
                         "duration": 2,
