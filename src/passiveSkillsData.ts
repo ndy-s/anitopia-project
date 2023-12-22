@@ -14,7 +14,7 @@ export const passiveSkillsData = [
                         "value": 0.2,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "At the start of each battle, your team's attack increases by 20%."
@@ -27,7 +27,7 @@ export const passiveSkillsData = [
                         "value": 0.25,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "At the start of each battle, your team's attack increases by 25%."
@@ -40,7 +40,7 @@ export const passiveSkillsData = [
                         "value": 0.3,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "At the start of each battle, your team's attack increases by 30%."
@@ -53,7 +53,7 @@ export const passiveSkillsData = [
                         "value": 0.35,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "At the start of each battle, your team's attack increases by 35%."
@@ -66,7 +66,7 @@ export const passiveSkillsData = [
                         "value": 0.4,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "At the start of each battle, your team's attack increases by 40%."
@@ -78,7 +78,7 @@ export const passiveSkillsData = [
         "type": "Passive",
         "cooldown": null,
         "trigger": "Each Turn",
-        "target": "Single",
+        "target": "Lowest Health",
         "rarityEffects": {
             "Common": {
                 "effects": [
@@ -88,7 +88,7 @@ export const passiveSkillsData = [
                         "value": 0.15,
                         "chance": 0.22,
                         "duration": 1,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 22% chance to provides a protective shield to the ally with the lowest health, reducing the damage they take by 15% for 1 turn."
@@ -101,7 +101,7 @@ export const passiveSkillsData = [
                         "value": 0.2,
                         "chance": 0.24,
                         "duration": 1,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 24% chance to provides a protective shield to the ally with the lowest health, reducing the damage they take by 20% for 1 turn."
@@ -114,7 +114,7 @@ export const passiveSkillsData = [
                         "value": 0.25,
                         "chance": 0.26,
                         "duration": 1,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 26% chance to provides a protective shield to the ally with the lowest health, reducing the damage they take by 25% for 1 turn."
@@ -127,7 +127,7 @@ export const passiveSkillsData = [
                         "value": 0.3,
                         "chance": 0.28,
                         "duration": 1,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 28% chance to provides a protective shield to the ally with the lowest health, reducing the damage they take by 30% for 1 turn."
@@ -140,7 +140,7 @@ export const passiveSkillsData = [
                         "value": 0.35,
                         "chance": 0.3,
                         "duration": 1,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 30% chance to provides a protective shield to the ally with the lowest health, reducing the damage they take by 35% for 1 turn."
@@ -152,7 +152,7 @@ export const passiveSkillsData = [
         "type": "Passive",
         "cooldown": null,
         "trigger": "Each Turn",
-        "target": "Single",
+        "target": "Lowest Health",
         "rarityEffects": {
             "Common": {
                 "effects": [
@@ -162,7 +162,7 @@ export const passiveSkillsData = [
                         "value": 0.05,
                         "chance": 0.22,
                         "duration": 0,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 22% chance to heal one ally with the lowest health. The healing effect restores 5% of the ally's maximum health."
@@ -175,7 +175,7 @@ export const passiveSkillsData = [
                         "value": 0.08,
                         "chance": 0.24,
                         "duration": 0,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 24% chance to heal one ally with the lowest health. The healing effect restores 8% of the ally's maximum health."
@@ -188,7 +188,7 @@ export const passiveSkillsData = [
                         "value": 0.11,
                         "chance": 0.26,
                         "duration": 0,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 26% chance to heal one ally with the lowest health. The healing effect restores 11% of the ally's maximum health."
@@ -201,7 +201,7 @@ export const passiveSkillsData = [
                         "value": 0.14,
                         "chance": 0.28,
                         "duration": 0,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 28% chance to heal one ally with the lowest health. The healing effect restores 14% of the ally's maximum health."
@@ -214,7 +214,7 @@ export const passiveSkillsData = [
                         "value": 0.18,
                         "chance": 0.3,
                         "duration": 0,
-                        "target": "Lowest Health"
+                        "target": "Ally"
                     }
                 ],
                 "description": "Each turn, your character's has a 30% chance to heal one ally with the lowest health. The healing effect restores 18% of the ally's maximum health."
@@ -236,7 +236,7 @@ export const passiveSkillsData = [
                         "value": 0.3,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     },
                     {
                         "type": "Buff",
@@ -244,7 +244,7 @@ export const passiveSkillsData = [
                         "value": 0.5,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "When your character's health drops below 50%, your character's attack increases by 30% and speed increases by 50% for 3 turns."
@@ -257,7 +257,7 @@ export const passiveSkillsData = [
                         "value": 0.35,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     },
                     {
                         "type": "Buff",
@@ -265,7 +265,7 @@ export const passiveSkillsData = [
                         "value": 0.55,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "When your character's health drops below 50%, your character's attack increases by 35% and speed increases by 55% for 3 turns."
@@ -278,7 +278,7 @@ export const passiveSkillsData = [
                         "value": 0.4,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     },
                     {
                         "type": "Buff",
@@ -286,7 +286,7 @@ export const passiveSkillsData = [
                         "value": 0.6,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "When your character's health drops below 50%, your character's attack increases by 40% and speed increases by 60% for 3 turns."
@@ -299,7 +299,7 @@ export const passiveSkillsData = [
                         "value": 0.45,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     },
                     {
                         "type": "Buff",
@@ -307,7 +307,7 @@ export const passiveSkillsData = [
                         "value": 0.65,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "When your character's health drops below 50%, your character's attack increases by 45% and speed increases by 65% for 3 turns."
@@ -320,7 +320,7 @@ export const passiveSkillsData = [
                         "value": 0.5,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     },
                     {
                         "type": "Buff",
@@ -328,7 +328,7 @@ export const passiveSkillsData = [
                         "value": 0.7,
                         "chance": 1,
                         "duration": 3,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "When your character's health drops below 50%, your character's attack increases by 50% and speed increases by 70% for 3 turns."
@@ -345,11 +345,12 @@ export const passiveSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Damage Reduction",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.05,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "This skill reduces the damage taken by 5% whenever you are hit."
@@ -357,11 +358,12 @@ export const passiveSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Damage Reduction",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.1,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "This skill reduces the damage taken by 10% whenever you are hit."
@@ -369,11 +371,12 @@ export const passiveSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Damage Reduction",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.15,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "This skill reduces the damage taken by 15% whenever you are hit."
@@ -381,11 +384,12 @@ export const passiveSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Damage Reduction",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.2,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "This skill reduces the damage taken by 20% whenever you are hit."
@@ -393,11 +397,12 @@ export const passiveSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Damage Reduction",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.25,
                         "chance": 1,
                         "duration": 0,
-                        "target": "Self"
+                        "target": "Ally"
                     }
                 ],
                 "description": "This skill reduces the damage taken by 25% whenever you are hit."
@@ -414,7 +419,8 @@ export const passiveSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Debuff Bleed",
+                        "type": "Bleed",
+                        "attribute": "Maximum Health",
                         "value": 0.05,
                         "chance": 0.1,
                         "duration": 3,
@@ -426,7 +432,8 @@ export const passiveSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Debuff Bleed",
+                        "type": "Bleed",
+                        "attribute": "Maximum Health",
                         "value": 0.05,
                         "chance": 0.15,
                         "duration": 3,
@@ -438,7 +445,8 @@ export const passiveSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Debuff Bleed",
+                        "type": "Bleed",
+                        "attribute": "Maximum Health",
                         "value": 0.05,
                         "chance": 0.2,
                         "duration": 3,
@@ -450,7 +458,8 @@ export const passiveSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Debuff Bleed",
+                        "type": "Bleed",
+                        "attribute": "Maximum Health",
                         "value": 0.05,
                         "chance": 0.25,
                         "duration": 3,
@@ -462,7 +471,8 @@ export const passiveSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Debuff Bleed",
+                        "type": "Bleed",
+                        "attribute": "Maximum Health",
                         "value": 0.05,
                         "chance": 0.3,
                         "duration": 3,

@@ -57,8 +57,8 @@ export class Character {
         public level: number,
         public rarity: number,
         public element: Element,
-        // public passiveSkill: ISkillModel,
-        // public passiveSkillEffect: IRarityEffect,
+        public passiveSkill: ISkillModel,
+        public passiveSkillEffect: IRarityEffect,
         public activeSkill: ISkillModel,
         public activeSkillEffect: IRarityEffect
     ) {

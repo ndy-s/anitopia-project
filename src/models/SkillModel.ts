@@ -24,6 +24,7 @@ const effectSchema = new Schema({
     target: {
         type: String,
         required: true,
+        enum: ['Enemy', 'Ally']
     }
 }, { _id: false });
 
@@ -56,7 +57,7 @@ const skillSchema = new Schema({
     target: {
         type: String,
         required: true,
-        enum: ['Single', 'Area']
+        enum: ['Single', 'Area', 'Lowest Health']
     },
     rarityEffects: {
         type: Map,

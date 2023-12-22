@@ -267,6 +267,7 @@ export default {
                         // const attachment = new AttachmentBuilder(buffer, {name: 'image.png'})
 
                         // console.log(PlayerSkill?.rarityEffects.get(mapRarity(activeTeamOfThree.lineup[0].character.rarity)));
+                        
         
                         const characterDataPlayerA = activeTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
@@ -279,8 +280,8 @@ export default {
                                     characterObject.character.level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
-                                    // characterObject.character.character.passiveSkill.skill,
-                                    // characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
+                                    characterObject.character.character.passiveSkill.skill,
+                                    characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
                                     characterObject.character.character.activeSkill.skill,
                                     characterObject.character.character.activeSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)]
                                 );
@@ -300,8 +301,8 @@ export default {
                                     characterObject.character.level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
-                                    // characterObject.character.character.passiveSkill.skill,
-                                    // characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
+                                    characterObject.character.character.passiveSkill.skill,
+                                    characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
                                     characterObject.character.character.activeSkill.skill,
                                     characterObject.character.character.activeSkill.skill.rarityEffects.get(mapRarity(characterObject.character.rarity))
                                 );
