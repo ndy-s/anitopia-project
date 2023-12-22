@@ -9,7 +9,8 @@ export const passiveSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.2,
                         "chance": 1,
                         "duration": 0,
@@ -21,7 +22,8 @@ export const passiveSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.25,
                         "chance": 1,
                         "duration": 0,
@@ -33,7 +35,8 @@ export const passiveSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.3,
                         "chance": 1,
                         "duration": 0,
@@ -45,7 +48,8 @@ export const passiveSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.35,
                         "chance": 1,
                         "duration": 0,
@@ -57,7 +61,8 @@ export const passiveSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.4,
                         "chance": 1,
                         "duration": 0,
@@ -78,7 +83,8 @@ export const passiveSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Buff Shield",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.15,
                         "chance": 0.22,
                         "duration": 1,
@@ -90,7 +96,8 @@ export const passiveSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Buff Shield",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.2,
                         "chance": 0.24,
                         "duration": 1,
@@ -102,7 +109,8 @@ export const passiveSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Buff Shield",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.25,
                         "chance": 0.26,
                         "duration": 1,
@@ -114,7 +122,8 @@ export const passiveSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Buff Shield",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.3,
                         "chance": 0.28,
                         "duration": 1,
@@ -126,7 +135,8 @@ export const passiveSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Buff Shield",
+                        "type": "Shield",
+                        "attribute": "Damage",
                         "value": 0.35,
                         "chance": 0.3,
                         "duration": 1,
@@ -147,7 +157,8 @@ export const passiveSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Buff Heal",
+                        "type": "Heal",
+                        "attribute": "Health",
                         "value": 0.05,
                         "chance": 0.22,
                         "duration": 0,
@@ -159,7 +170,8 @@ export const passiveSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Buff Heal",
+                        "type": "Heal",
+                        "attribute": "Health",
                         "value": 0.08,
                         "chance": 0.24,
                         "duration": 0,
@@ -171,7 +183,8 @@ export const passiveSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Buff Heal",
+                        "type": "Heal",
+                        "attribute": "Health",
                         "value": 0.11,
                         "chance": 0.26,
                         "duration": 0,
@@ -183,7 +196,8 @@ export const passiveSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Buff Heal",
+                        "type": "Heal",
+                        "attribute": "Health",
                         "value": 0.14,
                         "chance": 0.28,
                         "duration": 0,
@@ -195,7 +209,8 @@ export const passiveSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Buff Heal",
+                        "type": "Heal",
+                        "attribute": "Health",
                         "value": 0.18,
                         "chance": 0.3,
                         "duration": 0,
@@ -216,14 +231,16 @@ export const passiveSkillsData = [
             "Common": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.3,
                         "chance": 1,
                         "duration": 3,
                         "target": "Self"
                     },
                     {
-                        "type": "Buff Speed",
+                        "type": "Buff",
+                        "attribute": "Speed",
                         "value": 0.5,
                         "chance": 1,
                         "duration": 3,
@@ -235,14 +252,16 @@ export const passiveSkillsData = [
             "Uncommon": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.35,
                         "chance": 1,
                         "duration": 3,
                         "target": "Self"
                     },
                     {
-                        "type": "Buff Speed",
+                        "type": "Buff",
+                        "attribute": "Speed",
                         "value": 0.55,
                         "chance": 1,
                         "duration": 3,
@@ -254,14 +273,16 @@ export const passiveSkillsData = [
             "Rare": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.4,
                         "chance": 1,
                         "duration": 3,
                         "target": "Self"
                     },
                     {
-                        "type": "Buff Speed",
+                        "type": "Buff",
+                        "attribute": "Speed",
                         "value": 0.6,
                         "chance": 1,
                         "duration": 3,
@@ -273,14 +294,16 @@ export const passiveSkillsData = [
             "Epic": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.45,
                         "chance": 1,
                         "duration": 3,
                         "target": "Self"
                     },
                     {
-                        "type": "Buff Speed",
+                        "type": "Buff",
+                        "attribute": "Speed",
                         "value": 0.65,
                         "chance": 1,
                         "duration": 3,
@@ -292,14 +315,16 @@ export const passiveSkillsData = [
             "Legendary": {
                 "effects": [
                     {
-                        "type": "Buff Attack",
+                        "type": "Buff",
+                        "attribute": "Attack",
                         "value": 0.5,
                         "chance": 1,
                         "duration": 3,
                         "target": "Self"
                     },
                     {
-                        "type": "Buff Speed",
+                        "type": "Buff",
+                        "attribute": "Speed",
                         "value": 0.7,
                         "chance": 1,
                         "duration": 3,

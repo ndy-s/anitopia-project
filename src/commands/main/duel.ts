@@ -279,6 +279,8 @@ export default {
                                     characterObject.character.level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
+                                    // characterObject.character.character.passiveSkill.skill,
+                                    // characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
                                     characterObject.character.character.activeSkill.skill,
                                     characterObject.character.character.activeSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)]
                                 );
@@ -298,13 +300,14 @@ export default {
                                     characterObject.character.level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
+                                    // characterObject.character.character.passiveSkill.skill,
+                                    // characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
                                     characterObject.character.character.activeSkill.skill,
                                     characterObject.character.character.activeSkill.skill.rarityEffects.get(mapRarity(characterObject.character.rarity))
                                 );
                             }
                             return null;
                         }).filter((character: Character | null) => character !== null) as Character[];
-                        console.log(characterDataPlayerB);
 
                         let teamA = new Team(characterDataPlayerA);
                         let teamB = new Team(characterDataPlayerB);
@@ -382,13 +385,14 @@ export default {
                                         return true;
                                     });
                                     
-                                    let enemyTeamPlayers = teamA.hasMember(character) ? [...characterDataPlayerB] : [...characterDataPlayerA];
+                                    let allies = teamA.hasMember(character) ? [...characterDataPlayerA] : [...characterDataPlayerB];
+                                    let enemies = teamA.hasMember(character) ? [...characterDataPlayerB] : [...characterDataPlayerA];
         
-                                    for (let enemy of enemyTeamPlayers) {
+                                    for (let enemy of enemies) {
                                         if (enemy.health > 0) {
                                             await delay(1000);
-                                            console.log(`Character ${character.name} Attacking!`);
-                                            character.attackCalculation(enemy, enemyTeamPlayers);
+                                            console.log(`${teamA.hasMember(character) ? 'Player A' : 'Player B'} Character ${character.name} Attacking!`);
+                                            character.attackCalculation(enemy, enemies, character, allies);
         
                                                 await confirmation.editReply({
                                                     content: null,
