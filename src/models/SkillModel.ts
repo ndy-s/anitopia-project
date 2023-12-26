@@ -52,12 +52,12 @@ const skillSchema = new Schema({
     },
     trigger: {
         type: String,
-        enum: ['Battle Start', 'Each Turn', 'Health -50%', 'Damage Taken', 'Attack', null]
+        enum: ['Battle Start', 'Each Turn', 'Health -50%', 'Health -25%', 'Damage Taken', 'Attack', 'Defeated', null]
     },
     target: {
         type: String,
         required: true,
-        enum: ['Single', 'Area', 'Lowest Health']
+        enum: ['Single', 'Area', 'Highest Health', 'Lowest Health', 'Random']
     },
     rarityEffects: {
         type: Map,

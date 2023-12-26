@@ -32,7 +32,6 @@ export default {
         const userOptionValue: string = String(interaction.options.get('user')?.value);
 
         const opponentUser = await client.users.fetch(userOptionValue);
-        
         const getOpponentUser = await PlayerModel.findOne({ 
             userId: userOptionValue 
         }).populate({
@@ -90,7 +89,6 @@ export default {
                 actionNA(i, interaction.user.username);
                 return false;
             }
-
             return true;
         };
 
@@ -228,7 +226,6 @@ export default {
                         actionNA(interaction, opponentUser.username);
                         return false;
                     }
-                
                     return true;
                 };
 
@@ -268,7 +265,14 @@ export default {
 
                         // console.log(PlayerSkill?.rarityEffects.get(mapRarity(activeTeamOfThree.lineup[0].character.rarity)));
                         
-        
+                        const convertMapToObject = (mapOrObject: Map<string, any> | { [key: string]: any }): { [key: string]: any } => {
+                            if (mapOrObject instanceof Map) {
+                              return Object.fromEntries(mapOrObject);
+                            }
+                          
+                            return { ...mapOrObject };
+                        };
+
                         const characterDataPlayerA = activeTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
                                 return new Character(
@@ -281,14 +285,13 @@ export default {
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
                                     characterObject.character.character.passiveSkill.skill,
-                                    characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
+                                    convertMapToObject(characterObject.character.character.passiveSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)],
                                     characterObject.character.character.activeSkill.skill,
-                                    characterObject.character.character.activeSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)]
+                                    convertMapToObject(characterObject.character.character.activeSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)]
                                 );
                             }
                             return null;
                         }).filter((character: Character | null) => character !== null) as Character[];
-
 
                         const characterDataPlayerB = opponentActiveTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
@@ -302,9 +305,9 @@ export default {
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
                                     characterObject.character.character.passiveSkill.skill,
-                                    characterObject.character.character.passiveSkill.skill.rarityEffects[mapRarity(characterObject.character.rarity)],
+                                    convertMapToObject(characterObject.character.character.passiveSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)],
                                     characterObject.character.character.activeSkill.skill,
-                                    characterObject.character.character.activeSkill.skill.rarityEffects.get(mapRarity(characterObject.character.rarity))
+                                    convertMapToObject(characterObject.character.character.activeSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)]
                                 );
                             }
                             return null;
@@ -318,7 +321,6 @@ export default {
         
                         await confirmation.deferUpdate();
                         await confirmation.editReply({
-                            content: null,
                             embeds: [
                                 new EmbedBuilder()
                                     .setColor('Blurple')
@@ -372,17 +374,46 @@ export default {
                                         value: number,
                                         duration: number,
                                     }) => {
-                                        if (stat.duration === 0) {
-                                            const attribute = stat.attribute.toLowerCase();
+                                        if (stat.type === 'Bleed') {
+                                            if (stat.duration === 0) {
+                                                console.log(`${stat.type} Status Over!`);
+                                                
+                                                return false;
+                                            } else if (stat.duration > 0) {
+                                                const reductionValue = Math.ceil(character.maxHealth * stat.value);
+                                                character.maxHealth -= reductionValue;
 
-                                            character[attribute] += (stat.type === 'Debuff') ? stat.value : -stat.value;
-                                            character[attribute] = +character[attribute].toFixed(3);
+                                                if (character.health > character.maxHealth) {
+                                                    character.health = character.maxHealth;
+                                                    character.displayHealth = character.maxHealth;
+                                                }
+
+                                                console.log(`${stat.type} Status on Effect! Reduced ${stat.attribute} by ${reductionValue}. Your HP: ${character.health}/${character.maxHealth}`);
+                                                stat.duration--;
+                                            }
+                                        } else if (stat.type === 'Buff' || stat.type === 'Debuff') {
+                                            if (stat.duration === 0) {
+                                                const attribute = stat.attribute.toLowerCase();
+                                                const change = (stat.type === 'Buff') ? -stat.value : stat.value;
                                             
-                                            console.log(`Debuff over: ${attribute} restore back by ${stat.value}`);
-                                            return false;
-                                        } else if (stat.duration > 0) {
-                                            stat.duration--;
+                                                character[attribute] += change;
+                                                character[attribute] = +character[attribute].toFixed(3);
+                                            
+                                                switch (stat.type) {
+                                                    case 'Buff':
+                                                        console.log(`${stat.type} Status Over! ${attribute} ${change > 0 ? 'reduced' : 'restored'} by ${Math.abs(change)}. Current ${attribute} is ${character[attribute]}`);
+                                                        break;
+                                                    case 'Debuff':
+                                                        console.log(`${stat.type} Status Over! ${attribute} ${change > 0 ? 'restored' : 'reduced'} by ${Math.abs(change)}. Current ${attribute} is ${character[attribute]}`);
+                                                        break;
+                                                }
+    
+                                                return false;
+                                            } else if (stat.duration > 0) {
+                                                stat.duration--;
+                                            }
                                         }
+
                                         return true;
                                     });
                                     
@@ -390,13 +421,43 @@ export default {
                                     let enemies = teamA.hasMember(character) ? [...characterDataPlayerB] : [...characterDataPlayerA];
         
                                     for (let enemy of enemies) {
+                                        switch (character.passiveSkill.trigger) {
+                                            case 'Battle Start':
+                                                if (turn === 1) {
+                                                    character.activateSkill(enemy, enemies, character, allies, 'passive');
+                                                }
+                                            case 'Each Turn':
+                                                character.activateSkill(enemy, enemies, character, allies, 'passive');
+                                                break;
+                                            case 'Health -50%':
+                                                if (character.health <= 0.5 * character.maxHealth && !character.isPassiveSkillActive) {
+                                                    character.activateSkill(enemy, enemies, character, allies, 'passive');
+                                                    character.isPassiveSkillActive = true;
+                                                }
+                                                break;
+                                            case 'Health -25%':
+                                                if (character.health <= 0.25 * character.maxHealth && !character.isPassiveSkillActive) {
+                                                    character.activateSkill(enemy, enemies, character, allies, 'passive');
+                                                    character.isPassiveSkillActive = true;
+                                                }
+                                                break;
+                                            case 'Damage Taken':
+
+                                                break;
+                                            case 'Attack':
+
+                                                break;
+                                            case 'Defeated':
+
+                                                break;
+                                        }
+
                                         if (enemy.health > 0) {
                                             await delay(1000);
                                             console.log(`${teamA.hasMember(character) ? 'Player A' : 'Player B'} Character ${character.name} Attacking!`);
                                             character.attackCalculation(enemy, enemies, character, allies);
         
                                                 await confirmation.editReply({
-                                                    content: null,
                                                     embeds: [
                                                         new EmbedBuilder()
                                                             .setColor('Blurple')

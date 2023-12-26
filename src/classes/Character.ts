@@ -1,4 +1,5 @@
 import { IEffect, IRarityEffect, ISkillModel } from "../interfaces";
+import { mapRarity } from "../utils";
 
 enum Element {
     PYRO = 'Pyro',
@@ -28,6 +29,7 @@ export class Character {
     displayDamage: number = 0;
     displayHealth: number;
     activeSkillCooldown: number;
+    isPassiveSkillActive: boolean = false;
     accuracy: number = ACCURACY_THRESHOLD;
     dodge: number = DODGE_THRESHOLD;
     critRate: number = CRIT_RATE_THRESHOLD;
@@ -66,29 +68,6 @@ export class Character {
         this.displayHealth = health;
         this.activeSkillCooldown = activeSkill.cooldown ?? 0;
         this.status = [];
-    }
-
-    attackCalculation(enemy: Character, enemies: Character[], ally: Character, allies: Character[]) {
-        if (this.activeSkillCooldown === 0) {
-            switch (this.activeSkill.target) {
-                case 'Single':
-                    this.useActiveSkill([enemy], [ally]);
-                    break;
-                case 'Area':
-                    this.useActiveSkill(enemies, allies);
-                    break;
-                default:
-                    console.error(`Unsupported skill target: ${this.activeSkill.target}`);
-                    break;
-            }
-        } else {
-            const damage = this.calculatePhysicalDamage();
-            this.inflictDamage(enemy, damage);
-    
-            if (this.activeSkillCooldown > 0) {
-                this.activeSkillCooldown--;
-            }
-        }
     }
 
     private calculatePhysicalDamage(): number {
@@ -143,77 +122,156 @@ export class Character {
         }
     }
 
-    private useActiveSkill(enemies: Character[], allies: Character[]) {
-        this.activeSkillEffect.effects.forEach((effect: IEffect) => {
-            if (Math.random() <= effect.chance && effect.target === 'Enemy') {
+    attackCalculation(enemy: Character, enemies: Character[], ally: Character, allies: Character[]) {
+        if (this.activeSkillCooldown === 0) {
+            this.activateSkill(enemy, enemies, ally, allies, 'active');
+
+            if ((this.passiveSkill.trigger ?? '').toString() === 'Attack') {
+                this.activeSkillEffect.effects.forEach((effect) => {
+                    if (effect.type === 'Damage' || effect.type === 'True Damage') {
+                        this.activateSkill(enemy, enemies, ally, allies, 'passive');
+                    }
+                });
+            }
+        } else {
+            const damage = this.calculatePhysicalDamage();
+            this.inflictDamage(enemy, damage);
+
+            if ((this.passiveSkill.trigger ?? '').toString() === 'Attack') {
+                this.activateSkill(enemy, enemies, ally, allies, 'passive');
+            }
+    
+            if (this.activeSkillCooldown > 0) {
+                this.activeSkillCooldown--;
+            }
+        }
+    }
+
+    activateSkill(enemy: Character, enemies: Character[], ally: Character, allies: Character[], skillType: 'active' | 'passive') {
+        console.log(`${this.name} ${skillType === 'active' ? 'Active Skill ' + this.activeSkill.name : 'Passive Skill ' + this.passiveSkill.name } Activated!`);
+
+        const { target } = this.passiveSkill;
+        
+        switch (target) {
+            case 'Single':
+                this.useSkill([enemy], [ally], skillType);
+                break;
+            case 'Area':
+                this.useSkill(enemies, allies, skillType);
+                break;
+            case 'Highest Health':
+                const getHighestHealth = (entities: Character[]) => entities.reduce((maxEntity, currentEntity) =>
+                    (currentEntity.health > maxEntity.health) ? currentEntity : maxEntity
+                );
+        
+                const highestHealthEnemy = getHighestHealth(enemies);
+                const highestHealthAlly = getHighestHealth(allies);
+        
+                this.useSkill([highestHealthEnemy], [highestHealthAlly], skillType);
+                break;
+            case 'Lowest Health':
+                const getLowestHealth = (entities: Character[]) => entities.reduce((minEntity, currentEntity) =>
+                    (currentEntity.health < minEntity.health) ? currentEntity : minEntity
+                );
+
+                const lowestHealthEnemy = getLowestHealth(enemies);
+                const lowestHealthAlly = getLowestHealth(allies);
+
+                this.useSkill([lowestHealthEnemy], [lowestHealthAlly], skillType);
+                break;
+            case 'Random':
+                const getRandomEntity = (entities: Character[]) => entities[Math.floor(Math.random() * entities.length)];
+        
+                const randomEnemy = getRandomEntity(enemies);
+                const randomAlly = getRandomEntity(allies);
+        
+                this.useSkill([randomEnemy], [randomAlly], skillType);
+                break;
+            default:
+                console.error(`Unsupported passive skill target: ${target}`);
+                break;
+        }
+    }
+
+    useSkill(enemies: Character[], allies: Character[], skillType: 'active' | 'passive') {
+        const effects = skillType === 'active' ? this.activeSkillEffect.effects : this.passiveSkillEffect.effects;
+
+        effects.forEach((effect: IEffect) => {
+            if (Math.random() <= effect.chance) {
+                const isTargetEnemy = effect.target === 'Enemy';
+                const applicableTargets = isTargetEnemy ? enemies : allies;
+    
                 switch (effect.type) {
+                    // Enemy
+                    case 'Bleed':
+                        applicableTargets.forEach((target) => this.handleBleedEffect(effect, target, skillType));
+                        break;
                     case 'Damage':
-                        enemies.forEach((enemy) => this.handleDamageEffect(effect, enemy));
-                        console.log(``);
+                        applicableTargets.forEach((target) => this.handleDamageEffect(effect, target, skillType));
                         break;
                     case 'True Damage':
-                        enemies.forEach((enemy) => this.handleTrueDamageEffect(effect, enemy));
-                        console.log(``);
+                        applicableTargets.forEach((target) => this.handleTrueDamageEffect(effect, target, skillType));
                         break;
                     case 'Debuff':
-                        enemies.forEach((enemy) => this.handleDebuffEffect(effect, enemy));
-                        console.log(``);
+                        applicableTargets.forEach((target) => this.handleDebuffEffect(effect, target, skillType));
                         break;
-                    default:
-                        console.log(`Unhandled effect type: ${effect.type}`);
-                }
-            } else if (Math.random() <= effect.chance && effect.target === 'Ally') {
-                switch (effect.type) {
+
+                    // Ally
                     case 'Heal':
-                        allies.forEach((ally) => this.handleHealEffect(effect, ally));
+                        applicableTargets.forEach((target) => this.handleHealEffect(effect, target, skillType));
                         break;
                     case 'Buff':
-                        allies.forEach((ally) => this.handleBuffEffect(effect, ally));
-                        console.log(``);
+                        applicableTargets.forEach((target) => this.handleBuffEffect(effect, target, skillType));
+                        break;
+                    case 'Shield':
                         break;
                     default:
                         console.log(`Unhandled effect type: ${effect.type}`);
                 }
             } else {
-                console.log('CHANCE FOR ACTIVE SKILL FAILED!');
-                console.log(``);
+                console.log(`Chance for ${skillType} Skill Failed!`);
             }
         });
-        this.activeSkillCooldown = this.activeSkill.cooldown ?? 0;
+    
+        if (skillType === 'active') {
+            this.activeSkillCooldown = this.activeSkill.cooldown ?? 0;
+        }
+
+        console.log('');
     }
 
-    // Handle Active Skill Ally Effect Methods
-    private handleHealEffect(effect: IEffect, ally: Character) {
+    // Handle Skill Ally Effect Methods
+    private handleHealEffect(effect: IEffect, ally: Character, skillType: 'active' | 'passive') {
         const heal = Math.ceil(effect.value * ally.health);
 
         ally.health += heal;
         this.displayHealth = ally.health;
 
-        console.log(`Character ${this.name} using active skill (${this.activeSkill.name}), Ally ${ally.name} got heal by ${heal}!, HP: ${Math.max(ally.health, 0)}/${ally.maxHealth}`);
+        console.log(`Character ${this.name} using ${skillType} skill (${skillType === 'active' ? this.activeSkill.name : this.passiveSkill.name}), Ally ${ally.name} got heal by ${heal}!, HP: ${Math.max(ally.health, 0)}/${ally.maxHealth}`);
     };
 
-
     // TODO: Solve this "any" problem.
-    private handleBuffEffect(effect: IEffect, ally: any) {
+    private handleBuffEffect(effect: IEffect, ally: any, skillType: 'active' | 'passive') {
         const attribute = effect.attribute.toLowerCase();
 
         const additionValue = ally[attribute] * effect.value;
         ally[attribute] += additionValue;
         ally[attribute] = +ally[attribute].toFixed(3);
 
-        ally.status.push({
-            type: effect.type,
-            attribute: attribute,
-            value: additionValue,
-            duration: effect.duration
-        });
+        if (effect.duration > 0) {
+            ally.status.push({
+                type: effect.type,
+                attribute: attribute,
+                value: additionValue,
+                duration: effect.duration
+            });
+        }
         
-        console.log(`Character ${this.name} using active skill (${this.activeSkill.name}), Ally ${ally.name} got buff ${attribute} reduced by ${additionValue}!`);
+        console.log(`Character ${this.name} using ${skillType} skill (${skillType === 'active' ? this.activeSkill.name : this.passiveSkill.name}), Ally ${ally.name} got buff ${attribute} increased by ${additionValue}!`);
     }
 
-
-    // Handle Active Skill Enemy Effect Methods
-    private handleDamageEffect(effect: IEffect, enemy: Character) {
+    // Handle Skill Enemy Effect Methods
+    private handleDamageEffect(effect: IEffect, enemy: Character, skillType: 'active' | 'passive') {
         let damage = Math.ceil(effect.value * this.calculatePhysicalDamage());
     
         if (this.calculateDodge(enemy)) {
@@ -225,36 +283,52 @@ export class Character {
             damage = this.applyElementalEffect(damage, enemy.element);
             this.displayDamage = damage;
             enemy.health -= damage;
-    
-            console.log(`Character ${this.name} using active skill (${this.activeSkill.name}), Target ${enemy.name} got damage ${damage}!, HP: ${Math.max(enemy.health, 0)}/${enemy.maxHealth}`);
+            
+            console.log(`Character ${this.name} using ${skillType} skill (${skillType === 'active' ? this.activeSkill.name : this.passiveSkill.name}), Enemy ${enemy.name} got damage ${damage}!, HP: ${Math.max(enemy.health, 0)}/${enemy.maxHealth}`);
         } else {
             console.log("Attack missed, enemy dodged it!");
         }
     }
     
-    private handleTrueDamageEffect(effect: IEffect, enemy: Character) {
+    private handleTrueDamageEffect(effect: IEffect, enemy: Character, skillType: 'active' | 'passive') {
         const damage = Math.ceil(effect.value * this.attack);
         this.displayDamage = damage;
         enemy.health -= damage;
-    
-        console.log(`Character ${this.name} using active skill (${this.activeSkill.name}), Target ${enemy.name} got damage ${damage}!, HP: ${Math.max(enemy.health, 0)}/${enemy.maxHealth}`);
+
+        console.log(`Character ${this.name} using ${skillType} skill (${skillType === 'active' ? this.activeSkill.name : this.passiveSkill.name}), Enemy ${enemy.name} got true damage ${damage}!, HP: ${Math.max(enemy.health, 0)}/${enemy.maxHealth}`);
     }
 
     // TODO: Solve this "any" problem.
-    private handleDebuffEffect(effect: IEffect, enemy: any) {
+    private handleDebuffEffect(effect: IEffect, enemy: any, skillType: 'active' | 'passive') {
         const attribute = effect.attribute.toLowerCase();
 
         const reductionValue = enemy[attribute] * effect.value;
         enemy[attribute] -= reductionValue;
         enemy[attribute] = +enemy[attribute].toFixed(3);
     
-        enemy.status.push({
-            type: effect.type,
-            attribute: attribute,
-            value: reductionValue,
-            duration: effect.duration
-        });
-    
-        console.log(`Character ${this.name} using active skill (${this.activeSkill.name}), Target ${enemy.name} got debuff ${attribute} reduced by ${reductionValue}!`);
+        if (effect.duration > 0) {
+            enemy.status.push({
+                type: effect.type,
+                attribute: attribute,
+                value: reductionValue,
+                duration: effect.duration
+            });
+        }
+
+        console.log(`Character ${this.name} using ${skillType} skill (${skillType === 'active' ? this.activeSkill.name : this.passiveSkill.name}), Enemy ${enemy.name} got debuff ${attribute} reduced by ${reductionValue}!`);
+    }
+
+    // TODO: Solve this "any" problem.
+    private handleBleedEffect(effect: IEffect, enemy: any, skillType: 'active' | 'passive') {
+        if (effect.duration > 0) {
+            enemy.status.push({
+                type: effect.type,
+                attribute: effect.attribute,
+                value: effect.value,
+                duration: effect.duration
+            });
+
+            console.log(`Character ${this.name} using ${skillType} skill (${skillType === 'active' ? this.activeSkill.name : this.passiveSkill.name}), Enemy ${enemy.name} got debuff bleed status reduced by ${effect.value * 100}% of ${effect.attribute} for ${effect.duration} turns!`);
+        }
     }
 }

@@ -4,7 +4,7 @@ export interface IEffect {
     value: number;
     chance: number;
     duration: number;
-    target: string;
+    target: 'Enemy' | 'Ally';
 }
 
 export interface IRarityEffect {
@@ -16,8 +16,8 @@ export interface ISkillModel {
     name: string;
     type: 'Active' | 'Passive';
     cooldown?: number;
-    trigger?: 'Battle Start' | 'Each Turn' | 'Health -50%' | 'Damage Taken' | 'Attack' | null;
-    target: 'Single' | 'Area';
+    trigger?: 'Battle Start' | 'Each Turn' | 'Health -50%' | 'Health -25%' | 'Damage Taken' | 'Attack' | 'Defeated' | null;
+    target: 'Single' | 'Area' | 'Highest Health' | 'Lowest Health' | 'Random';
     rarityEffects: Map<string, IRarityEffect>;
     createdAt: Date;
     updatedAt: Date;
