@@ -1,7 +1,6 @@
 import * as cron from 'node-cron';
 import redis from '../../lib/redis';
-import { WeeklySeriesModel } from '../../models/WeeklySeriesModel';
-import { CharacterModel } from '../../models';
+import { CharacterModel, WeeklySeriesModel } from "../../models";
 import { IWeeklySeriesModel } from '../../interfaces';
 
 const ONE_WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;

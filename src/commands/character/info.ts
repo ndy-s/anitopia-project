@@ -4,7 +4,7 @@ import { ICharacterModel } from "../../interfaces";
 import { mapRarity } from "../../utils";
 import collection from "./collection";
 import { actionNA, characterNF } from "../exceptions";
-import { IPlayerModel } from '../../interfaces/IPlayerModel';
+import { IPlayerModel } from '../../interfaces';
 
 export default {
     name: 'info',

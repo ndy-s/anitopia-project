@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 
 import eventHandler from './handlers/eventHandler';
 
-import { SkillModel, CharacterModel } from "./models";
+import { SkillModel, CharacterModel } from "../../common/models";
 import { passiveSkillsData } from "./passiveSkillsData";
 import { activeSkillsData } from "./activeSkillsData";
 import { charactersData } from "./charactersData";
@@ -22,11 +22,12 @@ const client = new Client({
 (async () => {
     try {
         if (!process.env.MONGODB_URI) {
-            throw new Error("MONGODB_URI environment variable is not defined.");
+            console.error('MONGODB_URI is not defined in the environment variables.');
+            process.exit(1);
         }
 
         await mongoose.connect(process.env.MONGODB_URI);
-        console.log("Connected to Anitopia Database.")
+        console.log("Bot connected to Anitopia database.")
 
         // try {
         //     await SkillModel.insertMany(passiveSkillsData);
@@ -38,8 +39,8 @@ const client = new Client({
         // }
         
         eventHandler(client);
-        client.login(process.env.TOKEN);
+        await client.login(process.env.TOKEN);
     } catch (error) {
-        console.log(`Connection Error: ${error}`);
+        console.error(`Database connection error: ${error}`);
     }
 })();

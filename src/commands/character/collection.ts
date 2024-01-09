@@ -50,7 +50,7 @@ export default {
             .populate('character')
             .sort({ rarity: 1, level: -1, createdAt: -1 });
 
-        const attachment = new AttachmentBuilder('C:/Storage/Programming/Project Dev/Anitopia/src/public/wisp.jpg', { name: 'wisp.jpg' });
+        const attachment = new AttachmentBuilder('C:/Storage/Project Dev/Anitopia Bot/src/public/wisp.jpg', { name: 'wisp.jpg' });
 
         const charaCollectionEmbed = new EmbedBuilder()
             .setColor('Blurple')

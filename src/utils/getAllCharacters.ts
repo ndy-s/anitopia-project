@@ -1,5 +1,5 @@
 import redis from '../lib/redis';
-import { CharacterModel } from '../models';
+import { CharacterModel } from "../models";
 
 export async function getAllCharacters(seriesName = null) {
     if (seriesName !== null) {

@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ISkillModel } from "../interfaces";
+import { ISkillModel } from "../../discord-bot/src/interfaces";
 
 const effectSchema = new Schema({
     type: {

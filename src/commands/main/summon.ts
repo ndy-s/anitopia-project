@@ -3,8 +3,7 @@ import redis from "../../lib/redis";
 
 import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID, mapRarity } from "../../utils";
 import { config, configCharacterSummonedEmbed } from "../../config";
-import { PlayerModel, CharaCollectionModel } from "../../models";
-import { WeeklySeriesModel } from "../../models/WeeklySeriesModel";
+import { PlayerModel, CharaCollectionModel, WeeklySeriesModel } from "../../models";
 import { actionNA } from "../exceptions";
 
 enum Rarity {

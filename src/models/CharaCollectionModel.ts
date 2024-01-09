@@ -1,5 +1,5 @@
 import { Model, Schema, model } from "mongoose";
-import { ICharaCollectionModel } from "../interfaces";
+import { ICharaCollectionModel } from "../../discord-bot/src/interfaces";
 
 const charaCollectionSchema = new Schema({
     playerId: {
