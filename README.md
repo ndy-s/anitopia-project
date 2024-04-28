@@ -1,14 +1,10 @@
 # Anitopia Project
-<span style="display: flex; align-items: flex-start;">
-    <span style="flex: 1.7;">
-        Anitopia is a text-based anime RPG Discord bot, as the name suggests. It operates on a turn-based RPG system with a variety of character classes. You collect your own characters, create teams of characters, and go on adventures or challenge other players to battles. Each character has their own unique abilities and personality, just like in the anime they're based on. It's all about strategy and having fun in this turn-based RPG game!
-    </span>
-    <span style="flex: 0.5; text-align: center;">
-        <img src="src/public/anitopia_demo.png" alt="Anitopia Demo" width="auto"/>
-    </span>
-</span>
+<img src="src/public/anitopia_demo.png" alt="Anitopia Demo" width="400" align="right"/>
 
-## About
+Anitopia is a text-based anime RPG Discord bot, as the name suggests. It operates on a turn-based RPG system with a variety of character classes. You collect your own characters, create teams of characters, and go on adventures or challenge other players to battles. Each character has their own unique abilities and personality, just like in the anime they're based on. It's all about strategy and having fun in this turn-based RPG game!
+
+~ Story behind it.
+
 This is one of the BEST projects I've ever made. After much consideration, I've decided to open up the Anitopia Project. Though it remains unfinished, I'm releasing it publicly since I haven't been actively developing it for some time now. As a solo developer, the complexities of the project grew, demanding more resources and time than I could feasibly manage alone. Also, I haven't found others who share the same passion to collaborate with on this project. If you're reading this and interested in collaborating on the project, feel free to reach out. I'm happy to discuss more about it, since I have tons of ideas that haven't been executed yet for this project.
 
 ## Features
