@@ -26,8 +26,8 @@ This bot uses slash commands as its instruction. The available commands include:
 <b>TODO</b>: more commands and features will be added in the future.
 
 ## Demo
-Watch the bot demo below:
-~ video to be added
+Watch the bot demo below:<br>
+![anitopia-demo-vid](https://github.com/ndy-s/anitopia-discord-bot/assets/94002483/acab4638-0d51-4c7a-9684-174fcf5b53f0)
 
 ## Installation
 I won't give a detailed instruction on how to replicate or use the project running your machine locally since it's a bit complex to set up. But, I will say to make sure you have redis-server installed and running on your system, a MongoDB server URI, your own discord server, and a discord bot application that you can create in Discord Developer Portal. To proceed, copy the `config-example.json` and `.env-example` files and adjust them with your own credentials.
