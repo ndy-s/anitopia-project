@@ -15,10 +15,10 @@ export default () => {
                 const randomSeries = getRandomSeries(currentSeries?.seriesName as string, uniqueSeriesList);
 
                 if (currentSeries) {
-                    updateWeeklySeries(currentSeries, randomSeries);
+                    await updateWeeklySeries(currentSeries, randomSeries);
                     console.log(`Updated Weekly Series ${randomSeries}.`);
                 } else {
-                    createNewWeeklySeries(randomSeries);
+                    await createNewWeeklySeries(randomSeries);
                     console.log(`New Weekly Series Created.`);
                 }
             } catch (error) {
