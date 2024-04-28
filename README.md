@@ -7,6 +7,7 @@ Anitopia is a text-based anime RPG Discord bot, as the name suggests. It operate
 
 This is one of the BEST projects I've ever made. After much consideration, I've decided to open up the Anitopia Project. Though it remains unfinished, I'm releasing it publicly since I haven't been actively developing it for some time now. As a solo developer, the complexities of the project grew, demanding more resources and time than I could feasibly manage alone. Also, I haven't found others who share the same passion to collaborate with on this project. If you're reading this and interested in collaborating on the project, feel free to reach out. I'm happy to discuss more about it, since I have tons of ideas that haven't been executed yet for this project.
 
+
 ## Features
 This bot uses slash commands as its instruction. The available commands include:
 
@@ -16,8 +17,13 @@ This bot uses slash commands as its instruction. The available commands include:
 - `/profile`: To customize your in-game account profile.
 - `/duel {user}`: To do a duel battle with other people.
 - `/ping`: To check your connection latency.
+- And much more..
 
-And much more... _(todo: much more commands and features will be added in the future)_
+**Game Mechanics**
+<br>
+<img src="https://github.com/ndy-s/anitopia-discord-bot/assets/94002483/3c81f877-8098-4421-8514-99b19107e95d" alt="Game Mechanics" height="250"/>
+<br>
+<b>TODO</b>: more commands and features will be added in the future.
 
 ## Demo
 Watch the bot demo below:
