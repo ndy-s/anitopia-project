@@ -5,8 +5,7 @@ Anitopia is a text-based anime RPG Discord bot, as the name suggests. It operate
 
 ~ Story behind it.
 
-This is one of the BEST projects I've ever made. After much consideration, I've decided to open up the Anitopia Project. Though it remains unfinished, I'm releasing it publicly since I haven't been actively developing it for some time now. As a solo developer, the complexities of the project grew, demanding more resources and time than I could feasibly manage alone. Also, I haven't found others who share the same passion to collaborate with on this project. If you're reading this and interested in collaborating on the project, feel free to reach out. I'm happy to discuss more about it, since I have tons of ideas that haven't been executed yet for this project.
-
+After much consideration, I've decided to open up the Anitopia Project. Though it remains unfinished, I'm releasing it publicly since I haven't been actively developing it for some time now. As a solo developer, the complexities of the project grew, demanding more resources and time than I could feasibly manage alone. Also, I haven't found others who share the same passion to collaborate with on this project. If you're reading this and interested in collaborating on the project, feel free to reach out. I'm happy to discuss more about it, since I have tons of ideas that haven't been executed yet for this project.
 
 ## Features
 This bot uses slash commands as its instruction. The available commands include:
