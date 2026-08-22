@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { ICooldownModel } from '../../discord-bot/src/interfaces';
+import { ICooldownModel } from '../interfaces';
 
 const cooldownSchema = new Schema({
     commandName: {

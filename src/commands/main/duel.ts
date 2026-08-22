@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CommandInteraction, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { Character } from "../../classes/Character";
 import { Team } from "../../classes/Team";
@@ -28,7 +28,7 @@ export default {
     botPermissions: [],
     permissionsRequired: [],
 
-    callback: async (client: Client, interaction: CommandInteraction) => {
+    callback: async (client: Client, interaction: ChatInputCommandInteraction) => {
         const userOptionValue: string = String(interaction.options.get('user')?.value);
 
         const opponentUser = await client.users.fetch(userOptionValue);

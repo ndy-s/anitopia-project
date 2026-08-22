@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { IPlayerModel } from '../../discord-bot/src/interfaces';
+import { IPlayerModel } from '../interfaces';
 
 const lineupSchema = new Schema({
     position: {

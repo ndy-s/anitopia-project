@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { CharaCollectionModel } from "../../models";
 import { ICharacterModel } from "../../interfaces";
 import { mapRarity } from "../../utils";
@@ -27,10 +27,10 @@ export default {
     botPermissions: [],
     permissionRequired: [],
 
-    callback: async (client: Client, interaction: CommandInteraction | CollectedInteraction, charaIdInput: string | null = null) => {
+    callback: async (client: Client, interaction: ChatInputCommandInteraction | CollectedInteraction, charaIdInput: string | null = null) => {
         let characterIdOptionValue: string | null = charaIdInput;
 
-        if (interaction instanceof CommandInteraction) {
+        if (interaction instanceof ChatInputCommandInteraction) {
             const optionValue = interaction.options.get('character-id')?.value;
             characterIdOptionValue = optionValue ? optionValue.toString().toUpperCase() : charaIdInput;
         }

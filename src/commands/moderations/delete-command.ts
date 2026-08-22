@@ -1,4 +1,4 @@
-import { ApplicationCommand, ApplicationCommandOptionType, Client, CommandInteraction } from "discord.js";
+import { ApplicationCommand, ApplicationCommandOptionType, Client, ChatInputCommandInteraction } from "discord.js";
 import { getApplicationCommands } from "../../utils";
 
 export default {
@@ -21,7 +21,7 @@ export default {
     botPermissions: [],
     permissionsRequired: [],
 
-    callback: async (client: Client, interaction: CommandInteraction) => {
+    callback: async (client: Client, interaction: ChatInputCommandInteraction) => {
         const commandName = interaction.options.get('command-name')?.value;
 
         const applicationCommands = await getApplicationCommands(client);

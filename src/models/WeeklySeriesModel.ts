@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IWeeklySeriesModel } from "../../discord-bot/src/interfaces";
+import { IWeeklySeriesModel } from "../interfaces";
 
 const weeklySeriesSchema = new Schema({
     seriesName: {

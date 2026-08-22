@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ICharacterModel } from "../../discord-bot/src/interfaces";
+import { ICharacterModel } from "../interfaces";
 
 const skillReferenceSchema = new Schema({
     name: {

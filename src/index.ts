@@ -4,11 +4,6 @@ import mongoose from 'mongoose';
 
 import eventHandler from './handlers/eventHandler';
 
-import { SkillModel, CharacterModel } from "../../common/models";
-import { passiveSkillsData } from "./passiveSkillsData";
-import { activeSkillsData } from "./activeSkillsData";
-import { charactersData } from "./charactersData";
-
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -29,15 +24,6 @@ const client = new Client({
         await mongoose.connect(process.env.MONGODB_URI);
         console.log("Bot connected to Anitopia database.")
 
-        // try {
-        //     await SkillModel.insertMany(passiveSkillsData);
-        //     await SkillModel.insertMany(activeSkillsData);
-        //     await CharacterModel.insertMany(charactersData);
-        //     console.log('Skills data has been inserted successfully.');
-        // } catch (error) {
-        //     console.error('An error occurred, skipping insert the data', error);
-        // }
-        
         eventHandler(client);
         await client.login(process.env.TOKEN);
     } catch (error) {

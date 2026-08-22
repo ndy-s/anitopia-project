@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, Interaction, InteractionCollector, InteractionResponse, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, ChatInputCommandInteraction, EmbedBuilder, Interaction, InteractionCollector, InteractionResponse, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
 
 import { getPlayer, mapRarity } from "../../utils";
 import { actionNA, pageNF } from "../exceptions";
@@ -29,8 +29,8 @@ export default {
     botPermissions: [],
     permissionRequired: [],
 
-    callback: async function callback(client: Client, interaction: CommandInteraction | CollectedInteraction, editReply = false, pageInput: number = 0) {
-        const pageOptionValue: number = pageInput || (interaction instanceof CommandInteraction ? Number(interaction.options?.get('page')?.value) : 1) || 1;
+    callback: async function callback(client: Client, interaction: ChatInputCommandInteraction | CollectedInteraction, editReply = false, pageInput: number = 0) {
+        const pageOptionValue: number = pageInput || (interaction instanceof ChatInputCommandInteraction ? Number(interaction.options?.get('page')?.value) : 1) || 1;
         const player = await getPlayer(interaction);
 
         const PAGE_SIZE: number = 12;

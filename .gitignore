@@ -4,3 +4,5 @@ config.json
 dump.rdb
 node_modules
 dist
+design-docs
+.DS_Store
