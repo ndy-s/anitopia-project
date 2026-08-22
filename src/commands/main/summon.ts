@@ -2,7 +2,8 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteract
 import redis from "../../lib/redis";
 
 import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID, mapRarity } from "../../utils";
-import { config, configCharacterSummonedEmbed } from "../../config";
+import { config } from "../../config";
+import { configCharacterSummonedEmbed } from "../../embeds/summonEmbed";
 import { PlayerModel, CharaCollectionModel, WeeklySeriesModel } from "../../models";
 import { actionNA } from "../exceptions";
 

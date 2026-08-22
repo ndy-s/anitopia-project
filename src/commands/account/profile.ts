@@ -1,7 +1,7 @@
 import { ActionRowBuilder, Client, CommandInteraction, EmbedBuilder, ModalBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import redis from "../../lib/redis";
 
-import { configProfileEmbed } from "../../config";
+import { configProfileEmbed } from "../../embeds/profileEmbed";
 import { getPlayer } from "../../utils";
 import { PlayerModel } from "../../models";
 import { actionNA } from "../exceptions";
