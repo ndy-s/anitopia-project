@@ -1,4 +1,4 @@
-# Anitopia
+<img src="src/public/anitopia_logo.png" alt="Anitopia" width="480"/>
 <img src="src/public/anitopia_demo.png" alt="Anitopia Demo" width="250" align="right"/>
 
 Anitopia is a text-based anime RPG Discord bot, as the name suggests. It operates on a turn-based RPG system with a variety of character classes. You collect your own characters, create teams of characters, and go on adventures or challenge other players to battles. Each character has their own unique abilities and personality, just like in the anime they're based on. It's all about strategy and having fun in this turn-based RPG game!
