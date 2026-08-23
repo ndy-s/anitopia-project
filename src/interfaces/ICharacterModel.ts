@@ -10,7 +10,7 @@ export interface IAttributes {
 
 interface ISkillReference {
     name: string;
-    descriptions: Map<string, string>;
+    flavorTemplate: string;
     skill: ObjectId | ISkillModel;
 }
 
@@ -20,6 +20,7 @@ export interface ICharacterModel extends Document {
     series: string;
     element: 'Pyro' | 'Aqua' | 'Volt' | 'Terra' | 'Aero' | 'Lumen' | 'Shade' | 'Neutralis';
     class: 'Mage' | 'Warrior' | 'Tank' | 'Hunter' | 'Support';
+    role: 'Hero' | 'Enemy';
     attributes: IAttributes;
     passiveSkill: ISkillReference;
     activeSkill: ISkillReference;

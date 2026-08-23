@@ -1,11 +1,13 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, MessageComponentInteraction } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, MessageComponentInteraction } from "discord.js";
+import * as path from "path";
 import redis from "../../lib/redis";
 
 import { getAllCharacters, summonCharacters, getPlayer, generateUniqueID, mapRarity } from "../../utils";
 import { config } from "../../config";
 import { configCharacterSummonedEmbed } from "../../embeds/summonEmbed";
 import { PlayerModel, CharaCollectionModel, WeeklySeriesModel } from "../../models";
-import { actionNA } from "../exceptions";
+import { actionNA, handleCollectorTimeout } from "../exceptions";
+import { getButtonEmoji } from "../../lib/appEmojis";
 
 enum Rarity {
     Common = 5,
@@ -44,6 +46,10 @@ export default {
         }
 
         const callbackFunction = this;
+        const altarIconAttachment = new AttachmentBuilder(
+            path.join(__dirname, '..', '..', 'public', 'anitopia_icon.png'),
+            { name: 'anitopia_icon.png' }
+        );
         const summonEmbed = new EmbedBuilder()
             .setColor('Blurple')
             .setAuthor({
@@ -51,7 +57,7 @@ export default {
                 iconURL: interaction.user.displayAvatarURL(),
             })
             .setTitle('Summoning Altar')
-            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+            .setThumbnail('attachment://anitopia_icon.png')
             .setDescription(`Welcome to the Anitopia Summoning Altar! This is your go-to place to expand your collection of characters. We offer three types of scrolls, each summoning characters of different rarities.\n\n${(currentDate - lastClaimTimestamp >= cooldownDuration) ? 'Good news! You have a **free daily Novice Scroll** just waiting to be claimed!\n\n': ''}Enjoy your time at the Summoning Altar and may luck be with you!`)
             .addFields(
                 {
@@ -79,19 +85,19 @@ export default {
             .setCustomId('novice')
             .setLabel((currentDate - lastClaimTimestamp >= cooldownDuration) ? 'Free' : 'Novice')
             .setStyle(ButtonStyle.Success)
-            .setEmoji('🟢');
+            .setEmoji(getButtonEmoji('scroll_novice', '🟢'));
 
         const eliteScrollButton = new ButtonBuilder()
             .setCustomId('elite')
             .setLabel('Elite')
             .setStyle(ButtonStyle.Primary)
-            .setEmoji('🔵');
+            .setEmoji(getButtonEmoji('scroll_elite', '🔵'));
 
         const seriesScrollButton = new ButtonBuilder()
             .setCustomId('series')
             .setLabel('Series')
             .setStyle(ButtonStyle.Danger)
-            .setEmoji('🟣');
+            .setEmoji(getButtonEmoji('scroll_series', '🟣'));
         
         const summonComponentRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
@@ -103,6 +109,7 @@ export default {
         const responseOptions = {
             embeds: [summonEmbed],
             components: [summonComponentRow],
+            files: [altarIconAttachment],
         };
 
         let response;
@@ -143,7 +150,7 @@ export default {
                             iconURL: interaction.user.displayAvatarURL(),
                         })
                         .setTitle('Summoning Altar • Novice Scroll')
-                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                        .setThumbnail('attachment://anitopia_icon.png')
                         .setDescription(`The **Novice Scroll** is quite affordable at just **2,000 AniCoins**, and you even get one free every day! This scroll gives you a chance to summon characters of various rarities.\n\nYou could find a **Common** character (**60% chance**), an **Uncommon** character (**24% chance**), a **Rare** character (**13% chance**), or if you're really lucky, an **Epic** character (**3% chance**).\n\nEvery summon is a step towards expanding your collection, bringing your favorite characters into battle.`)
                         .addFields(
                             {
@@ -175,14 +182,14 @@ export default {
                         .setCustomId('summonOne')
                         .setLabel((currentDate - lastClaimTimestamp >= cooldownDuration) ? 'Free' : 'Summon 1')
                         .setStyle(ButtonStyle.Success)
-                        .setEmoji('🟣')
+                        .setEmoji(getButtonEmoji('anicoin', '🟣'))
                         .setDisabled(player.scrolls.novice.count < 1 && !(currentDate - lastClaimTimestamp >= cooldownDuration) ? true : false);
 
                     const summonTenButton = new ButtonBuilder()
                         .setCustomId('summonTen')
                         .setLabel('Summon 10')
                         .setStyle(ButtonStyle.Success)
-                        .setEmoji('🟣')
+                        .setEmoji(getButtonEmoji('anicoin', '🟣'))
                         .setDisabled(player.scrolls.novice.count < 10 ? true : false);
 
                     const noviceSummonComponentRow = new ActionRowBuilder<ButtonBuilder>()
@@ -196,7 +203,8 @@ export default {
                     await confirmation.deferUpdate();
                     const response = await confirmation.editReply({
                         embeds: [noviceScrollEmbed],
-                        components: [noviceSummonComponentRow]
+                        components: [noviceSummonComponentRow],
+                        files: [altarIconAttachment]
                     });
             
                     try {
@@ -264,7 +272,7 @@ export default {
                                     }
                                 });
 
-                                const characterSummonedEmbed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId);
+                                const { embed: characterSummonedEmbed, files: characterSummonedFiles } = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId);
                                 characterSummonedEmbed.setFooter({
                                     text: `New character added, see it with /collection. You've got ${player.scrolls.novice.count} Novice Scroll${player.scrolls.novice.count > 1 ? 's' : ''} left.`
                                 });
@@ -281,7 +289,8 @@ export default {
                                 await confirmation.deferUpdate();
                                 const response = await confirmation.editReply({
                                     embeds: [characterSummonedEmbed],
-                                    components: [characterSummonedComponentRow]
+                                    components: [characterSummonedComponentRow],
+                                    files: characterSummonedFiles
                                 });
 
                                 try {
@@ -296,17 +305,7 @@ export default {
                                         await handleSummonedCharacterPage(confirmation);
                                     }
                                 } catch (error) {
-                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                        characterSummonedEmbed.setFooter({
-                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                        });
-                                        await confirmation.editReply({
-                                            embeds: [characterSummonedEmbed],
-                                            components: []
-                                        });
-                                    } else {
-                                        console.log(`Novice Scroll Summon Error: ${error}`);
-                                    }
+                                    await handleCollectorTimeout(error, confirmation, characterSummonedEmbed, '/summon', 'Novice Scroll Summon', characterSummonedFiles);
                                 }
                             }
 
@@ -337,9 +336,9 @@ export default {
                                             iconURL: interaction.user.displayAvatarURL(),
                                         })
                                         .setTitle('Novice Scroll Summon')
-                                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
                                         .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
+                                const characterSummonedTenFilesArray: AttachmentBuilder[][] = [[]];
 
                                 const session = await CharaCollectionModel.startSession();
                                 let retries = 5;
@@ -392,13 +391,14 @@ export default {
                                             ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
                                                 const characterId = characterIdArray[index];
                                             
-                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Novice');
+                                                const { embed, files } = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Novice');
+                                                characterSummonedTenFilesArray.push(files);
                                                 characterSummonedTenEmbedArray[0].addFields({
                                                     name: `🔹 ${summonedCharacterData.character.name}`,
                                                     value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
                                                     inline: true,
                                                 });
-                                            
+
                                                 return embed;
                                             })
                                         );
@@ -459,6 +459,7 @@ export default {
                                     const response = await confirmation.editReply({
                                         embeds: [characterSummonedTenEmbed],
                                         components: [characterSummonedTenComponentRow],
+                                        files: characterSummonedTenFilesArray[currentPage],
                                     });
 
                                     try {
@@ -466,7 +467,7 @@ export default {
                                             filter: collectorFilter,
                                             time: 300_000
                                         });
-                            
+
                                         if (confirmation.customId === 'back') {
                                             await handleNovicePage(confirmation);
                                         } else if (confirmation.customId === 'summonTen') {
@@ -477,17 +478,7 @@ export default {
                                             await handlePages(confirmation, currentPage + 1);
                                         }
                                     } catch (error) {
-                                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                            characterSummonedTenEmbed.setFooter({
-                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                            });
-                                            await confirmation.editReply({
-                                                embeds: [characterSummonedTenEmbed],
-                                                components: []
-                                            });
-                                        } else {
-                                            console.log(`Multiple Novice Scroll Summon Error: ${error}`);
-                                        }
+                                        await handleCollectorTimeout(error, confirmation, characterSummonedTenEmbed, '/summon', 'Multiple Novice Scroll Summon', characterSummonedTenFilesArray[currentPage]);
                                     }
                                 }
                                 await handlePages(confirmation);
@@ -496,17 +487,7 @@ export default {
                             await handleSummonedTenCharacterPage(confirmation);
                         }
                     } catch (error) {
-                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                            noviceScrollEmbed.setFooter({
-                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                            });
-                            await confirmation.editReply({
-                                embeds: [noviceScrollEmbed],
-                                components: []
-                            });
-                        } else {
-                            console.log(`Summon Command - Novice Scroll Error: ${error}`);
-                        }
+                        await handleCollectorTimeout(error, confirmation, noviceScrollEmbed, '/summon', 'Summon Command - Novice Scroll', [altarIconAttachment]);
                     }
                 }
                 await handleNovicePage(confirmation);
@@ -519,7 +500,7 @@ export default {
                             iconURL: interaction.user.displayAvatarURL(),
                         })
                         .setTitle('Summoning Altar • Elite Scroll')
-                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                        .setThumbnail('attachment://anitopia_icon.png')
                         .setDescription(`Step right up and try your luck with the **Elite Scroll**! For just **5,000 AniCoins**, you can summon a character to join your team. Who knows who you might meet?\n\nYou have a **50% chance** to summon an **Uncommon** character, a **42% chance** for a **Rare** one, a **7.5% chance** to get an **Epic** character, and if luck is really on your side, a **0.5% chance** to summon a **Legendary** character!`)
                         .addFields(
                             {
@@ -546,14 +527,14 @@ export default {
                         .setCustomId('summonOne')
                         .setLabel('Summon 1')
                         .setStyle(ButtonStyle.Primary)
-                        .setEmoji('🟣')
+                        .setEmoji(getButtonEmoji('anicoin', '🟣'))
                         .setDisabled(player.scrolls.elite.count < 1 ? true : false);
 
                     const summonTenButton = new ButtonBuilder()
                         .setCustomId('summonTen')
                         .setLabel('Summon 10')
                         .setStyle(ButtonStyle.Primary)
-                        .setEmoji('🟣')
+                        .setEmoji(getButtonEmoji('anicoin', '🟣'))
                         .setDisabled(player.scrolls.elite.count < 10 ? true : false);
 
                     const eliteSummonComponentRow = new ActionRowBuilder<ButtonBuilder>()
@@ -566,7 +547,8 @@ export default {
                     await confirmation.deferUpdate();
                     const response = await confirmation.editReply({
                         embeds: [eliteScrollEmbed],
-                        components: [eliteSummonComponentRow]
+                        components: [eliteSummonComponentRow],
+                        files: [altarIconAttachment]
                     });
 
                     try {
@@ -629,7 +611,7 @@ export default {
                                     }
                                 });
 
-                                const characterSummonedEmbed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
+                                const { embed: characterSummonedEmbed, files: characterSummonedFiles } = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
                                 characterSummonedEmbed.setFooter({
                                     text: `New character added, see it with /collection. You've got ${player.scrolls.elite.count} Elite Scroll${player.scrolls.elite.count > 1 ? 's' : ''} left.`
                                 });
@@ -646,7 +628,8 @@ export default {
                                 await confirmation.deferUpdate();
                                 const response = await confirmation.editReply({
                                     embeds: [characterSummonedEmbed],
-                                    components: [characterSummonedComponentRow]
+                                    components: [characterSummonedComponentRow],
+                                    files: characterSummonedFiles
                                 });
 
                                 try {
@@ -661,17 +644,7 @@ export default {
                                         await handleSummonedCharacterPage(confirmation);
                                     }
                                 } catch (error) {
-                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                        characterSummonedEmbed.setFooter({
-                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                        });
-                                        await confirmation.editReply({
-                                            embeds: [characterSummonedEmbed],
-                                            components: []
-                                        });
-                                    } else {
-                                        console.log(`Elite Scroll Summon Error: ${error}`);
-                                    }
+                                    await handleCollectorTimeout(error, confirmation, characterSummonedEmbed, '/summon', 'Elite Scroll Summon', characterSummonedFiles);
                                 }
                             }
 
@@ -701,9 +674,9 @@ export default {
                                             iconURL: interaction.user.displayAvatarURL(),
                                         })
                                         .setTitle('Elite Scroll Summon')
-                                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
                                         .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
+                                const characterSummonedTenFilesArray: AttachmentBuilder[][] = [[]];
 
                                 const session = await CharaCollectionModel.startSession();
                                 let retries = 5;
@@ -756,13 +729,14 @@ export default {
                                             ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
                                                 const characterId = characterIdArray[index];
                                             
-                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
+                                                const { embed, files } = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Elite');
+                                                characterSummonedTenFilesArray.push(files);
                                                 characterSummonedTenEmbedArray[0].addFields({
                                                     name: `🔹 ${summonedCharacterData.character.name}`,
                                                     value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
                                                     inline: true,
                                                 });
-                                            
+
                                                 return embed;
                                             })
                                         );
@@ -823,6 +797,7 @@ export default {
                                     const response = await confirmation.editReply({
                                         embeds: [characterSummonedTenEmbed],
                                         components: [characterSummonedTenComponentRow],
+                                        files: characterSummonedTenFilesArray[currentPage],
                                     });
 
                                     try {
@@ -830,7 +805,7 @@ export default {
                                             filter: collectorFilter,
                                             time: 300_000
                                         });
-                            
+
                                         if (confirmation.customId === 'back') {
                                             await handleElitePage(confirmation);
                                         } else if (confirmation.customId === 'summonTen') {
@@ -841,17 +816,7 @@ export default {
                                             await handlePages(confirmation, currentPage + 1);
                                         }
                                     } catch (error) {
-                                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                            characterSummonedTenEmbed.setFooter({
-                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                            });
-                                            await confirmation.editReply({
-                                                embeds: [characterSummonedTenEmbed],
-                                                components: []
-                                            });
-                                        } else {
-                                            console.log(`Multiple Elite Scroll Summon Error: ${error}`);
-                                        }
+                                        await handleCollectorTimeout(error, confirmation, characterSummonedTenEmbed, '/summon', 'Multiple Elite Scroll Summon', characterSummonedTenFilesArray[currentPage]);
                                     }
                                 }
                                 await handlePages(confirmation);
@@ -861,17 +826,7 @@ export default {
                             await handleSummonedTenCharacterPage(confirmation);
                         }
                     } catch (error) {
-                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                            eliteScrollEmbed.setFooter({
-                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                            });
-                            await confirmation.editReply({
-                                embeds: [eliteScrollEmbed],
-                                components: []
-                            });
-                        } else {
-                            console.log(`Summon Command - Elite Scroll Error: ${error}`);
-                        }
+                        await handleCollectorTimeout(error, confirmation, eliteScrollEmbed, '/summon', 'Summon Command - Elite Scroll', [altarIconAttachment]);
                     }
                 }
 
@@ -897,7 +852,7 @@ export default {
                             iconURL: interaction.user.displayAvatarURL(),
                         })
                         .setTitle('Summoning Altar • Series Scroll')
-                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+                        .setThumbnail('attachment://anitopia_icon.png')
                         .setDescription(`Welcome to the Summoning Altar! This week, we're offering **Series Scroll**. For just **50,000 AniCoins**, you can summon character from a specific anime series to join your team. But hurry, this offer is only available for a week!\n\nHere's the rarity breakdown for the character in the scroll:\n- **Rare**: 53%\n- **Epic**: 43%\n- **Legendary**: 4%\n\nGood luck, and may the odds be ever in your favor!`)
                         .addFields(
                             {
@@ -930,14 +885,14 @@ export default {
                         .setCustomId('summonOne')
                         .setLabel('Summon 1')
                         .setStyle(ButtonStyle.Primary)
-                        .setEmoji('🟣')
+                        .setEmoji(getButtonEmoji('anicoin', '🟣'))
                         .setDisabled(player.scrolls.series.count < 1 ? true : false);
 
                     const summonTenButton = new ButtonBuilder()
                         .setCustomId('summonTen')
                         .setLabel('Summon 10')
                         .setStyle(ButtonStyle.Primary)
-                        .setEmoji('🟣')
+                        .setEmoji(getButtonEmoji('anicoin', '🟣'))
                         .setDisabled(player.scrolls.series.count < 10 ? true : false);
 
                     const seriesSummonComponentRow = new ActionRowBuilder<ButtonBuilder>()
@@ -950,7 +905,8 @@ export default {
                     await confirmation.deferUpdate();
                     const response = await confirmation.editReply({
                         embeds: [seriesScrollEmbed],
-                        components: [seriesSummonComponentRow]
+                        components: [seriesSummonComponentRow],
+                        files: [altarIconAttachment]
                     });
 
                     try {
@@ -976,7 +932,11 @@ export default {
                                         2: 43, // Epic
                                         1: 4 // Legendary
                                     },
-                                    player.scrolls.elite.guaranteed,
+                                    // Series Scroll has no pity system (see IPlayerModel/PlayerModel — scrolls.series
+                                    // has no `guaranteed` field), so pass a value that never triggers the guaranteed-rarity
+                                    // branch in summonCharacters(). Previously this borrowed player.scrolls.elite.guaranteed,
+                                    // which was a copy-paste bug from the Elite Scroll summon path above.
+                                    Infinity,
                                     1
                                 );
 
@@ -1010,7 +970,7 @@ export default {
                                     }
                                 });
 
-                                const characterSummonedEmbed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series');
+                                const { embed: characterSummonedEmbed, files: characterSummonedFiles } = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series');
                                 characterSummonedEmbed.setFooter({
                                     text: `New character added, see it with /collection. You've got ${player.scrolls.series.count} Series Scroll${player.scrolls.series.count > 1 ? 's' : ''} left.`
                                 });
@@ -1027,7 +987,8 @@ export default {
                                 await confirmation.deferUpdate();
                                 const response = await confirmation.editReply({
                                     embeds: [characterSummonedEmbed],
-                                    components: [characterSummonedComponentRow]
+                                    components: [characterSummonedComponentRow],
+                                    files: characterSummonedFiles
                                 });
 
                                 try {
@@ -1042,17 +1003,7 @@ export default {
                                         await handleSummonedCharacterPage(confirmation);
                                     }
                                 } catch (error) {
-                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                        characterSummonedEmbed.setFooter({
-                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                        });
-                                        await confirmation.editReply({
-                                            embeds: [characterSummonedEmbed],
-                                            components: []
-                                        });
-                                    } else {
-                                        console.log(`Elite Scroll Summon Error: ${error}`);
-                                    }
+                                    await handleCollectorTimeout(error, confirmation, characterSummonedEmbed, '/summon', 'Series Scroll Summon', characterSummonedFiles);
                                 }
                             }
 
@@ -1069,7 +1020,8 @@ export default {
                                         2: 43, // Epic
                                         1: 4 // Legendary
                                     },
-                                    player.scrolls.elite.guaranteed,
+                                    // See the comment on the Summon 1 path above — Series Scroll has no pity system.
+                                    Infinity,
                                     10
                                 );
 
@@ -1081,9 +1033,9 @@ export default {
                                             iconURL: interaction.user.displayAvatarURL(),
                                         })
                                         .setTitle('Series Scroll Summon')
-                                        .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
                                         .setDescription(`Congratulations! You've successfully summoned 10 new characters. Each page reveals their unique details. Enjoy the discovery!`)
                                 ];
+                                const characterSummonedTenFilesArray: AttachmentBuilder[][] = [[]];
 
                                 const session = await CharaCollectionModel.startSession();
                                 let retries = 5;
@@ -1133,13 +1085,14 @@ export default {
                                             ...summonedCharacterDataArray.map((summonedCharacterData, index) => {
                                                 const characterId = characterIdArray[index];
                                             
-                                                const embed = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series');
+                                                const { embed, files } = configCharacterSummonedEmbed(interaction, summonedCharacterData, characterId, 'Series');
+                                                characterSummonedTenFilesArray.push(files);
                                                 characterSummonedTenEmbedArray[0].addFields({
                                                     name: `🔹 ${summonedCharacterData.character.name}`,
                                                     value: `${summonedCharacterData.character.fullname}\n\`${characterId}\` • __**${mapRarity(summonedCharacterData.rarity)}**__`,
                                                     inline: true,
                                                 });
-                                            
+
                                                 return embed;
                                             })
                                         );
@@ -1200,6 +1153,7 @@ export default {
                                     const response = await confirmation.editReply({
                                         embeds: [characterSummonedTenEmbed],
                                         components: [characterSummonedTenComponentRow],
+                                        files: characterSummonedTenFilesArray[currentPage],
                                     });
 
                                     try {
@@ -1207,7 +1161,7 @@ export default {
                                             filter: collectorFilter,
                                             time: 300_000
                                         });
-                            
+
                                         if (confirmation.customId === 'back') {
                                             await handleSeriesPage(confirmation);
                                         } else if (confirmation.customId === 'summonTen') {
@@ -1218,17 +1172,7 @@ export default {
                                             await handlePages(confirmation, currentPage + 1);
                                         }
                                     } catch (error) {
-                                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                            characterSummonedTenEmbed.setFooter({
-                                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                                            });
-                                            await confirmation.editReply({
-                                                embeds: [characterSummonedTenEmbed],
-                                                components: []
-                                            });
-                                        } else {
-                                            console.log(`Multiple Series Scroll Summon Error: ${error}`);
-                                        }
+                                        await handleCollectorTimeout(error, confirmation, characterSummonedTenEmbed, '/summon', 'Multiple Series Scroll Summon', characterSummonedTenFilesArray[currentPage]);
                                     }
                                 }
                                 await handlePages(confirmation);
@@ -1237,17 +1181,7 @@ export default {
                             await handleSummonedTenCharacterPage(confirmation);
                         }
                     } catch (error) {
-                        if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                            seriesScrollEmbed.setFooter({
-                                text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                            });
-                            await confirmation.editReply({
-                                embeds: [seriesScrollEmbed],
-                                components: []
-                            });
-                        } else {
-                            console.log(`Summon Command - Series Scroll Error: ${error}`);
-                        }
+                        await handleCollectorTimeout(error, confirmation, seriesScrollEmbed, '/summon', 'Summon Command - Series Scroll', [altarIconAttachment]);
                     }
                 }
 
@@ -1255,17 +1189,7 @@ export default {
             }
             
         } catch (error) {
-            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                summonEmbed.setFooter({
-                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /summon.`
-                });
-                await interaction.editReply({
-                    embeds: [summonEmbed],
-                    components: []
-                });
-            } else {
-                console.log(`Summon Command Error: ${error}`);
-            }
+            await handleCollectorTimeout(error, interaction, summonEmbed, '/summon', 'Summon Command', [altarIconAttachment]);
         }
     }
 }

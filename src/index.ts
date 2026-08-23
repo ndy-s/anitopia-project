@@ -4,6 +4,14 @@ import mongoose from 'mongoose';
 
 import eventHandler from './handlers/eventHandler';
 
+process.on('unhandledRejection', (error) => {
+    console.error('Unhandled promise rejection (kept the bot alive):', error);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught exception (kept the bot alive):', error);
+});
+
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,

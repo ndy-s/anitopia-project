@@ -1,12 +1,15 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
-import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, Client, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { Character } from "../../classes/Character";
 import { Team } from "../../classes/Team";
-import { getPlayer, mapRarity } from "../../utils";
-import { IPlayerModel, ISkillModel, ITeams } from "../../interfaces";
-import { PlayerModel, SkillModel } from "../../models";
+import { getPlayer, mapRarity, applyLevelGrowth } from "../../utils";
+import { IPlayerModel, ITeams } from "../../interfaces";
+import { PlayerModel } from "../../models";
 import { config } from "../../config";
-import { actionNA, playerIssue } from "../exceptions";
+import { actionNA, playerIssue, handleCollectorTimeout } from "../exceptions";
+import { runBattle, snapshotTeam } from "../../battle/runBattle";
+import { presentBattleReplay } from "../../battle/battleReplay";
+import { awardBattleExperience } from "../../battle/awardExperience";
+import { buildBattleIntroEmbed, buildBattleTurnEmbed } from "../../embeds/battleEmbed";
 
 export default {
     name: 'duel',
@@ -235,36 +238,25 @@ export default {
                         time: 300_000
                     });
 
-                    if (confirmation.customId === 'accept') {
-                        // const megumin = await loadImage('C:/Storage/Programming/Project Dev/Anitopia/src/public/megumin.png');
-                        // const chainsawman = await loadImage('C:/Storage/Programming/Project Dev/Anitopia/src/public/chainsawman.png');
-                        // const background = await loadImage('C:/Storage/Programming/Project Dev/Anitopia/src/public/background.png');
-                        
-                        // // Adjust the canvas dimensions to make it landscape
-                        // const canvas = createCanvas(1920, 1080);
-                        // const ctx = canvas.getContext('2d');
-                        
-                        // ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
-                        
-                        // // Calculate the desired height for the characters (e.g., half of the canvas height)
-                        // const characterHeight = canvas.height / 2;
-                        // const meguminScale = characterHeight / megumin.height;
-                        // const chainsawmanScale = characterHeight / chainsawman.height;
-                        
-                        // ctx.save();
-                        // ctx.scale(-meguminScale, meguminScale); // Scale the context before drawing Megumin
-                        // ctx.drawImage(megumin, -megumin.width * meguminScale * 2, canvas.height - megumin.height * meguminScale / 1.5); // Draw Megumin at the bottom
-                        // ctx.restore();
-                        
-                        // // Draw Chainsaw Man at the scaled size on the right side of the canvas
-                        // ctx.drawImage(chainsawman, canvas.width - chainsawman.width * chainsawmanScale, canvas.height - chainsawman.height * chainsawmanScale * 1.3, chainsawman.width * chainsawmanScale, canvas.height - chainsawman.height * chainsawmanScale);
-                        
-                        // const buffer = canvas.toBuffer('image/png');
-                        
-                        // const attachment = new AttachmentBuilder(buffer, {name: 'image.png'})
-
-                        // console.log(PlayerSkill?.rarityEffects.get(mapRarity(activeTeamOfThree.lineup[0].character.rarity)));
-                        
+                    if (confirmation.customId === 'decline') {
+                        await confirmation.deferUpdate();
+                        await confirmation.editReply({
+                            embeds: [
+                                new EmbedBuilder()
+                                    .setColor('Red')
+                                    .setAuthor({
+                                        name: interaction.user.username,
+                                        iconURL: interaction.user.displayAvatarURL(),
+                                    })
+                                    .setTitle('⛔ Duel Request Declined')
+                                    .setDescription(`**${opponentUser.username}** declined the duel request.`)
+                                    .setFooter({
+                                        text: config.messages.footerText,
+                                    })
+                            ],
+                            components: []
+                        });
+                    } else if (confirmation.customId === 'accept') {
                         const convertMapToObject = (mapOrObject: Map<string, any> | { [key: string]: any }): { [key: string]: any } => {
                             if (mapOrObject instanceof Map) {
                               return Object.fromEntries(mapOrObject);
@@ -275,17 +267,21 @@ export default {
 
                         const characterDataPlayerA = activeTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
+                                const level = characterObject.character.level;
                                 return new Character(
                                     characterObject.character.character.name,
-                                    (characterObject.character.attributes.health) * 10,
-                                    characterObject.character.attributes.attack,
-                                    characterObject.character.attributes.defense,    
-                                    characterObject.character.attributes.speed,
-                                    characterObject.character.level,
+                                    applyLevelGrowth(characterObject.character.attributes.health, level) * 10,
+                                    applyLevelGrowth(characterObject.character.attributes.attack, level),
+                                    applyLevelGrowth(characterObject.character.attributes.defense, level),
+                                    applyLevelGrowth(characterObject.character.attributes.speed, level),
+                                    level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
+                                    characterObject.character.character.class,
+                                    characterObject.character.character.passiveSkill.name,
                                     characterObject.character.character.passiveSkill.skill,
                                     convertMapToObject(characterObject.character.character.passiveSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)],
+                                    characterObject.character.character.activeSkill.name,
                                     characterObject.character.character.activeSkill.skill,
                                     convertMapToObject(characterObject.character.character.activeSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)]
                                 );
@@ -295,17 +291,21 @@ export default {
 
                         const characterDataPlayerB = opponentActiveTeamOfThree.lineup.map((characterObject: any) => {
                             if (characterObject && characterObject.character) {
+                                const level = characterObject.character.level;
                                 return new Character(
                                     characterObject.character.character.name,
-                                    (characterObject.character.attributes.health) * 10,
-                                    characterObject.character.attributes.attack,
-                                    characterObject.character.attributes.defense,
-                                    characterObject.character.attributes.speed,
-                                    characterObject.character.level,
+                                    applyLevelGrowth(characterObject.character.attributes.health, level) * 10,
+                                    applyLevelGrowth(characterObject.character.attributes.attack, level),
+                                    applyLevelGrowth(characterObject.character.attributes.defense, level),
+                                    applyLevelGrowth(characterObject.character.attributes.speed, level),
+                                    level,
                                     characterObject.character.rarity,
                                     characterObject.character.character.element,
+                                    characterObject.character.character.class,
+                                    characterObject.character.character.passiveSkill.name,
                                     characterObject.character.character.passiveSkill.skill,
                                     convertMapToObject(characterObject.character.character.passiveSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)],
+                                    characterObject.character.character.activeSkill.name,
                                     characterObject.character.character.activeSkill.skill,
                                     convertMapToObject(characterObject.character.character.activeSkill.skill.rarityEffects)[mapRarity(characterObject.character.rarity)]
                                 );
@@ -313,204 +313,47 @@ export default {
                             return null;
                         }).filter((character: Character | null) => character !== null) as Character[];
 
-                        let teamA = new Team(characterDataPlayerA);
-                        let teamB = new Team(characterDataPlayerB);
-        
-                        // TODO: Solve this "any" problem.
-                        let allCharacters: any[] = [...characterDataPlayerA, ...characterDataPlayerB];
-        
+                        const teamA = new Team(characterDataPlayerA);
+                        const teamB = new Team(characterDataPlayerB);
+
+                        const sideALabel = activeTeamOfThree.name;
+                        const sideBLabel = opponentActiveTeamOfThree.name;
+
+                        const introTeamA = snapshotTeam(characterDataPlayerA);
+                        const introTeamB = snapshotTeam(characterDataPlayerB);
+
                         await confirmation.deferUpdate();
+                        const intro = await buildBattleIntroEmbed(introTeamA, introTeamB, sideALabel, sideBLabel);
                         await confirmation.editReply({
-                            embeds: [
-                                new EmbedBuilder()
-                                    .setColor('Blurple')
-                                    .setTitle("Fight")
-                                    .addFields(
-                                        {
-                                            name: `Intializing Battle`,
-                                            value: `Player A vs Player B`
-                                        },
-                                        {
-                                            name: `Player A Team`,
-                                            value: characterDataPlayerA
-                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
-                                                .join('\n'),
-                                            inline: true
-                                        },
-                                        {
-                                            name: `Player B Team`,
-                                            value: characterDataPlayerB
-                                                .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
-                                                .join('\n'),
-                                            inline: true
-                                        },
-                                    )
-                            ],
+                            embeds: [intro.embed],
+                            files: intro.files,
                             components: []
                         });
-        
-                        const delay = (ms: number) => {
-                            return new Promise(resolve => setTimeout(resolve, ms));
-                        };
-                        
-                        let turn = 0;
-        
-                        while (!teamA.isDefeated() && !teamB.isDefeated()) {
-                            turn++;
-                            console.log(`This is Turn: ${turn}`);
-        
-                            allCharacters.sort((a, b) => {
-                                if (a.speed === b.speed) {
-                                    return 0.5 - Math.random();
-                                }
-                                return b.speed - a.speed;
+
+                        const outcome = await runBattle(teamA, teamB, async (event) => {
+                            const turnScene = await buildBattleTurnEmbed(event, sideALabel, sideBLabel);
+                            await confirmation.editReply({
+                                embeds: [turnScene.embed],
+                                files: turnScene.files,
+                                components: []
                             });
+                        });
 
-                            for (let character of allCharacters) {
-                                if (character.health > 0) {
-                                    character.status = character.status.filter((stat: {
-                                        type: string,
-                                        attribute: string,
-                                        value: number,
-                                        duration: number,
-                                    }) => {
-                                        if (stat.type === 'Bleed') {
-                                            if (stat.duration === 0) {
-                                                console.log(`${stat.type} Status Over!`);
-                                                
-                                                return false;
-                                            } else if (stat.duration > 0) {
-                                                const reductionValue = Math.ceil(character.maxHealth * stat.value);
-                                                character.maxHealth -= reductionValue;
+                        await Promise.all([
+                            awardBattleExperience(activeTeamOfThree.lineup, outcome.result === 'A'),
+                            awardBattleExperience(opponentActiveTeamOfThree.lineup, outcome.result === 'B'),
+                        ]);
 
-                                                if (character.health > character.maxHealth) {
-                                                    character.health = character.maxHealth;
-                                                    character.displayHealth = character.maxHealth;
-                                                }
-
-                                                console.log(`${stat.type} Status on Effect! Reduced ${stat.attribute} by ${reductionValue}. Your HP: ${character.health}/${character.maxHealth}`);
-                                                stat.duration--;
-                                            }
-                                        } else if (stat.type === 'Buff' || stat.type === 'Debuff') {
-                                            if (stat.duration === 0) {
-                                                const attribute = stat.attribute.toLowerCase();
-                                                const change = (stat.type === 'Buff') ? -stat.value : stat.value;
-                                            
-                                                character[attribute] += change;
-                                                character[attribute] = +character[attribute].toFixed(3);
-                                            
-                                                switch (stat.type) {
-                                                    case 'Buff':
-                                                        console.log(`${stat.type} Status Over! ${attribute} ${change > 0 ? 'reduced' : 'restored'} by ${Math.abs(change)}. Current ${attribute} is ${character[attribute]}`);
-                                                        break;
-                                                    case 'Debuff':
-                                                        console.log(`${stat.type} Status Over! ${attribute} ${change > 0 ? 'restored' : 'reduced'} by ${Math.abs(change)}. Current ${attribute} is ${character[attribute]}`);
-                                                        break;
-                                                }
-    
-                                                return false;
-                                            } else if (stat.duration > 0) {
-                                                stat.duration--;
-                                            }
-                                        }
-
-                                        return true;
-                                    });
-                                    
-                                    let allies = teamA.hasMember(character) ? [...characterDataPlayerA] : [...characterDataPlayerB];
-                                    let enemies = teamA.hasMember(character) ? [...characterDataPlayerB] : [...characterDataPlayerA];
-        
-                                    for (let enemy of enemies) {
-                                        switch (character.passiveSkill.trigger) {
-                                            case 'Battle Start':
-                                                if (turn === 1) {
-                                                    character.activateSkill(enemy, enemies, character, allies, 'passive');
-                                                }
-                                            case 'Each Turn':
-                                                character.activateSkill(enemy, enemies, character, allies, 'passive');
-                                                break;
-                                            case 'Health -50%':
-                                                if (character.health <= 0.5 * character.maxHealth && !character.isPassiveSkillActive) {
-                                                    character.activateSkill(enemy, enemies, character, allies, 'passive');
-                                                    character.isPassiveSkillActive = true;
-                                                }
-                                                break;
-                                            case 'Health -25%':
-                                                if (character.health <= 0.25 * character.maxHealth && !character.isPassiveSkillActive) {
-                                                    character.activateSkill(enemy, enemies, character, allies, 'passive');
-                                                    character.isPassiveSkillActive = true;
-                                                }
-                                                break;
-                                            case 'Damage Taken':
-
-                                                break;
-                                            case 'Attack':
-
-                                                break;
-                                            case 'Defeated':
-
-                                                break;
-                                        }
-
-                                        if (enemy.health > 0) {
-                                            await delay(1000);
-                                            console.log(`${teamA.hasMember(character) ? 'Player A' : 'Player B'} Character ${character.name} Attacking!`);
-                                            character.attackCalculation(enemy, enemies, character, allies);
-        
-                                                await confirmation.editReply({
-                                                    embeds: [
-                                                        new EmbedBuilder()
-                                                            .setColor('Blurple')
-                                                            .setTitle("Fight")
-                                                            .setDescription(`**[Turn ${turn}]**\n${character.name} attack ${enemy.name} with ${character.displayDamage}`)
-                                                            .addFields(
-                                                                {
-                                                                    name: `In-Game Battle`,
-                                                                    value: `Turn ${turn}`
-                                                                },
-                                                                {
-                                                                    name: `Player A Team`,
-                                                                    value: characterDataPlayerA
-                                                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
-                                                                        .join('\n'),
-                                                                    inline: true
-                                                                },
-                                                                {
-                                                                    name: `Player B Team`,
-                                                                    value: characterDataPlayerB
-                                                                        .map((character: { name: string; health: number; maxHealth: number; }) => `${character.name}: ${Math.max(character.health, 0)}/${character.maxHealth}`)
-                                                                        .join('\n'),
-                                                                    inline: true
-                                                                },
-                                                            )
-                                                    ],
-                                                    components: []
-                                                });
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-        
-                        if (teamA.isDefeated()) {
-                            console.log("Team B has won the battle!");
-                        } else if (teamB.isDefeated()) {
-                            console.log("Team A has won the battle!");
-                        } else {
-                            console.log("The battle ended in a draw.");
-                        }
-        
+                        await presentBattleReplay(confirmation, interaction.user.id, outcome, introTeamA, introTeamB, sideALabel, sideBLabel);
                     }
 
                 } catch (error) {
-                    console.log(error);
+                    await handleCollectorTimeout(error, interaction, duelRequestEmbed, '/duel', 'Duel Request');
                 }
 
             }
         } catch (error) {
-            console.log(error);
-            
+            await handleCollectorTimeout(error, interaction, duelEmbed, '/duel', 'Duel Command');
         }
     }
 };

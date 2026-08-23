@@ -9,11 +9,11 @@ export interface IEffect {
 
 export interface IRarityEffect {
     effects: IEffect[];
-    description: string;
 }
 
 export interface ISkillModel {
     name: string;
+    descriptionTemplate: string;
     type: 'Active' | 'Passive';
     cooldown?: number;
     trigger?: 'Battle Start' | 'Each Turn' | 'Health -50%' | 'Health -25%' | 'Damage Taken' | 'Attack' | 'Defeated' | null;

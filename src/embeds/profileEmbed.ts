@@ -1,4 +1,5 @@
 import { CommandInteraction, EmbedBuilder, ModalSubmitInteraction } from "discord.js";
+import { getAppEmojiMention } from "../lib/appEmojis";
 
 export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmitInteraction, player: any) => {
     return new EmbedBuilder()
@@ -27,12 +28,12 @@ export const configProfileEmbed = (interaction: CommandInteraction | ModalSubmit
                 inline: true
             },
             {
-                name: '💰 AniCoins',
+                name: `${getAppEmojiMention('anicoin') || '💰'} AniCoins`,
                 value: `${player.balance.aniCoin}`,
                 inline: true
             },
             {
-                name: '💎 AniCrystals',
+                name: `${getAppEmojiMention('anicrystal') || '💎'} AniCrystals`,
                 value: `${player.balance.aniCrystal}`,
                 inline: true
             },

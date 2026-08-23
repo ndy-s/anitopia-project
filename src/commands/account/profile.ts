@@ -4,7 +4,7 @@ import redis from "../../lib/redis";
 import { configProfileEmbed } from "../../embeds/profileEmbed";
 import { getPlayer } from "../../utils";
 import { PlayerModel } from "../../models";
-import { actionNA } from "../exceptions";
+import { actionNA, handleCollectorTimeout } from "../exceptions";
 
 export default {
     name: 'profile',
@@ -104,17 +104,7 @@ export default {
                 }
             }
         } catch (error) {
-            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                profileEmbed.setFooter({
-                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /profile.`
-                });
-                await interaction.editReply({
-                    embeds: [profileEmbed],
-                    components: []
-                });
-            } else {
-                console.log(`Profile Command Error: ${error}`);
-            }
+            await handleCollectorTimeout(error, interaction, profileEmbed, '/profile', 'Profile Command');
         }
 
     }

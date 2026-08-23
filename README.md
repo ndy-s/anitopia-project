@@ -1,33 +1,102 @@
 <img src="src/public/anitopia_logo.png" alt="Anitopia" width="480"/>
-<img src="src/public/anitopia_demo.png" alt="Anitopia Demo" width="250" align="right"/>
 
-Anitopia is a text-based anime RPG Discord bot, as the name suggests. It operates on a turn-based RPG system with a variety of character classes. You collect your own characters, create teams of characters, and go on adventures or challenge other players to battles. Each character has their own unique abilities and personality, just like in the anime they're based on. It's all about strategy and having fun in this turn-based RPG game!
+**Anitopia** is a turn-based anime gacha-RPG Discord bot. Summon characters from your favorite anime,
+build a team, and battle, either against another player or a random AI-controlled squad. Every
+character has a class, an element, and a passive + active skill, all rendered in a hand-built
+pixel-art battle scene.
 
-I've decided to open up the Anitopia Project, even though it remains unfinished. As a solo developer, the project's complexities grew beyond what I could manage alone, and I haven't found collaborators who share my passion to collaborate with on this project. If you're interested in contributing to the project, please reach out! I have plenty of ideas that are yet to be executed, and I'd love to discuss them.
-
-## Features
-This bot uses slash commands as its instruction. The available commands include:
-
-- `/main`: This is where all main commands of the bot are listed.
-- `/summon`: This is where you summon your character. You get 1 free novice scroll summon every day.
-- `/character`: To check your character collection. I've maximized the user experience features, so you will find some features that have not been implemented by other bots.
-- `/profile`: To customize your in-game account profile.
-- `/duel {user}`: To do a duel battle with other people.
-- `/ping`: To check your connection latency.
-- And much more..
-
-**Game Mechanics**
-<br>
-<img src="https://github.com/ndy-s/anitopia-discord-bot/assets/94002483/3c81f877-8098-4421-8514-99b19107e95d" alt="Game Mechanics" height="250"/>
-<br>
-<b>TODO</b>: more commands and features will be added in the future.
+This is an old personal project I picked back up, using AI assistance (Claude Code) to brainstorm the
+game design and help build it out. It's **unfinished, not a polished v1, but stable enough to demo**:
+the core loop (register, summon, build a team, duel/battle) runs end-to-end without crashing. See
+[Project status](#project-status) below for what's solid and what's still rough.
 
 ## Demo
-Watch the bot demo below:<br>
-![anitopia-demo-vid](https://github.com/ndy-s/anitopia-discord-bot/assets/94002483/acab4638-0d51-4c7a-9684-174fcf5b53f0)
 
-## Installation
-I won't give a detailed instruction on how to replicate or use the project running your machine locally since it's a bit complex to set up. But, I will say to make sure you have redis-server installed and running on your system, a MongoDB server URI, your own discord server, and a discord bot application that you can create in Discord Developer Portal. To proceed, copy the `config-example.json` and `.env-example` files and adjust them with your own credentials.
+<!-- Drop your demo video/GIF here -->
+
+## Features
+
+- **5 character classes** (Warrior, Mage, Tank, Hunter, Support), each with a distinct combat hook
+- **8-element type wheel** (Pyro, Aqua, Volt, Terra, Aero, Lumen, Shade, Neutralis) with real
+  advantage/disadvantage multipliers
+- **Gacha summoning** with per-scroll rarity tables and a pity system
+- **Leveling**, passive/active skills, and a full status-effect system (Bleed, Poison, Burn,
+  Paralysis, Freeze, Sleep, Silence, buffs/debuffs, and more)
+- **PvP duels** against other players and **PvE battles** against AI squads
+- A weekly-rotating Featured Series summon scroll
+
+See [`design-docs/GAME-MECHANICS-GUIDE.md`](design-docs/GAME-MECHANICS-GUIDE.md) for the full
+breakdown of how the numbers work, and [`design-docs/GAME-DESIGN-PLAN.md`](design-docs/GAME-DESIGN-PLAN.md)
+for the roadmap.
+
+## Commands
+
+| Command | Description |
+|---|---|
+| `/main` | Central menu for the bot's main features |
+| `/register` | Create your Anitopia player profile |
+| `/summon` | Summon a character (1 free Novice scroll every day) |
+| `/character` | Manage your collection, build teams, and enhance characters |
+| `/info {character-id}` | Look up a character's stats, rarity, and skills |
+| `/team` | Set up your active battle team |
+| `/duel {user}` | Challenge another player to a PvP duel |
+| `/battle` | Battle a random AI-controlled team |
+| `/profile` | Customize your in-game profile |
+| `/ping` | Check bot latency |
+
+## Project status
+
+This is a personal/portfolio project, not a production release. It's good enough to demo the core
+gameplay loop end-to-end, but it's not feature-complete and hasn't seen real user load.
+
+**Solid enough to demo:**
+- Register → summon → collection → team setup → `/duel` and `/battle` all work start to finish
+- Turn-based battle engine with class hooks, elemental type wheel, and a full status-effect system
+- Hand-built pixel-art battle UI with a paginated replay viewer
+- 18-character roster with real skill data (not placeholder text)
+
+**Known rough edges:**
+- Roster is small (18 characters) and class/rarity distribution isn't fully balanced; see
+  `design-docs/GAME-DESIGN-PLAN.md` for the plan to grow it
+- Story mode is a stub (`/main` -> Story just says "not built yet")
+- `pnpm run seed` always inserts, so re-running it against an already-seeded database will duplicate
+  data rather than upsert; only run it once per fresh database
+- No automated test suite yet; correctness has been verified through manual and scripted playtesting
+- This was originally solo-built and is now being extended with AI assistance, so code style/patterns
+  aren't fully consistent across older and newer files
+
+## Setup
+
+**Requirements:**
+- [Node.js](https://nodejs.org/) + [pnpm](https://pnpm.io/)
+- A running [MongoDB](https://www.mongodb.com/) instance (local or Atlas)
+- A running local [Redis](https://redis.io/) server
+- A Discord bot application (create one at the [Discord Developer Portal](https://discord.com/developers/applications))
+
+**Steps:**
+
+1. Clone the repo and install dependencies:
+   ```
+   pnpm install
+   ```
+2. Copy the example config files and fill in your own credentials:
+   ```
+   cp .env-example .env
+   cp config-example.json config.json
+   ```
+   `.env` needs your bot's token and MongoDB connection URI. `config.json` needs your bot's client ID,
+   a Discord server ID to use for testing (`testOnly` commands register there instantly instead of
+   waiting on Discord's global command propagation), and your own Discord user ID (`devs`) to unlock
+   dev-only commands.
+3. Seed the database with the initial character/skill data:
+   ```
+   pnpm run seed
+   ```
+4. Start the bot:
+   ```
+   pnpm run dev
+   ```
 
 ## License
+
 MIT

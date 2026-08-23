@@ -29,11 +29,7 @@ const effectSchema = new Schema({
 }, { _id: false });
 
 const rarityEffectSchema = new Schema({
-    effects: [effectSchema],
-    description: {
-        type: String,
-        required: true
-    }
+    effects: [effectSchema]
 }, { _id: false });
 
 const skillSchema = new Schema({
@@ -41,6 +37,10 @@ const skillSchema = new Schema({
         type: String,
         required: true,
         unique: true
+    },
+    descriptionTemplate: {
+        type: String,
+        required: true
     },
     type: {
         type: String,

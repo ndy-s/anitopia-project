@@ -1,0 +1,14 @@
+- Skill Name & Desciption: Can you give a general name for this skill in RPG, also fix my skill description words.
+
+- Character Element: For ####, What is the element? (Pyro, Aqua, Volt, Terra, Aero, Lumen, Shade, Neutralis). Please choose 1 element that represent the character in the Anime for my RPG game.
+
+- Character Attributes:
+Attributes Range per Class					
+Rarity	Class	Health	ATK	DEF	SPD
+Common	Mage	50-70	80-100	50-70	70-90
+	Tank	80-100	50-70	80-100	50-70
+	Warrior	65-85	65-85	65-85	65-85
+	Ranger	55-75	70-90	60-80	80-100
+	Support	60-80	60-80	60-80	70-90
+
+Based on data above can you help me define the attributes for ### (common rarity)?

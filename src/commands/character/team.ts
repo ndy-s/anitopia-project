@@ -2,7 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteract
 import character from "./character";
 import { getPlayer } from "../../utils";
 import { config } from "../../config";
-import { actionNA } from "../exceptions";
+import { actionNA, handleCollectorTimeout } from "../exceptions";
 
 export default {
     name: 'team',
@@ -208,18 +208,7 @@ export default {
                 }
             }
         } catch (error) {
-            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                teamEmbed.setFooter({
-                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
-                });
-
-                await interaction.editReply({
-                    embeds: [teamEmbed],
-                    components: []
-                });
-            } else {
-                console.log(`Team Command Error: ${error}`)
-            }
+            await handleCollectorTimeout(error, interaction, teamEmbed, '/team', 'Team Command');
         }
     }
 }

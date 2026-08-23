@@ -1,0 +1,3 @@
+todo: improve summon command code (efficiency)
+todo: fix modal code structure
+check code structure

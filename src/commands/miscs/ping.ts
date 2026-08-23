@@ -19,9 +19,9 @@ export default {
         .setColor('Blurple')
         .setTitle(`🏓 Pinging server...`)
 
-        const sent = await interaction.reply({ 
-            embeds: [pingEmbed], 
-            fetchReply: true 
+        const sent = await interaction.reply({
+            embeds: [pingEmbed],
+            withResponse: true
         });
 
         
@@ -39,7 +39,7 @@ export default {
                 },
                 {
                     name: '⏱️ Roundtrip Latency',
-                    value: `${sent.createdTimestamp - interaction.createdTimestamp} ms`,
+                    value: `${(sent.resource?.message?.createdTimestamp ?? Date.now()) - interaction.createdTimestamp} ms`,
                     inline: true,
                 }
             )

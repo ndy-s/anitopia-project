@@ -6,9 +6,9 @@ const skillReferenceSchema = new Schema({
         type: String,
         required: true
     },
-    descriptions: {
-        type: Map,
-        of: String
+    flavorTemplate: {
+        type: String,
+        required: true
     },
     skill: {
         type: Schema.Types.ObjectId,
@@ -40,6 +40,12 @@ const characterSchema = new Schema({
         type: String,
         required: true,
         enum: ['Mage', 'Warrior', 'Tank', 'Hunter', 'Support']
+    },
+    role: {
+        type: String,
+        required: true,
+        enum: ['Hero', 'Enemy'],
+        default: 'Hero'
     },
     attributes: {
         health: {

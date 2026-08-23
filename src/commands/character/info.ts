@@ -1,10 +1,12 @@
-import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import * as path from "path";
 import { CharaCollectionModel } from "../../models";
 import { ICharacterModel } from "../../interfaces";
-import { mapRarity } from "../../utils";
+import { mapRarity, resolveSkillFlavorText, xpToNextLevel } from "../../utils";
 import collection from "./collection";
-import { actionNA, characterNF } from "../exceptions";
+import { actionNA, characterNF, handleCollectorTimeout } from "../exceptions";
 import { IPlayerModel } from '../../interfaces';
+import { resolveElementIconPath } from "../../battle/renderBattleScene";
 
 export default {
     name: 'info',
@@ -41,7 +43,15 @@ export default {
             return characterNF(interaction, 'symbols');
         }
 
-        const characterInfo = await CharaCollectionModel.findOne({ characterId: characterIdOptionValue }).populate('character').populate('playerId');
+        const characterInfo = await CharaCollectionModel.findOne({ characterId: characterIdOptionValue })
+            .populate({
+                path: 'character',
+                populate: [
+                    { path: 'passiveSkill.skill' },
+                    { path: 'activeSkill.skill' }
+                ]
+            })
+            .populate('playerId');
 
         if (!characterInfo || !characterInfo.character) {
             return characterNF(interaction);
@@ -61,6 +71,13 @@ export default {
             rarity: characterInfo.rarity
         });
 
+        const portraitPath = resolveElementIconPath(character.element);
+        const portraitFilename = path.basename(portraitPath);
+        const portraitAttachment = new AttachmentBuilder(portraitPath, { name: portraitFilename });
+
+        const passiveEffects = (character.passiveSkill.skill as any)?.rarityEffects?.get?.(rarity)?.effects ?? [];
+        const activeEffects = (character.activeSkill.skill as any)?.rarityEffects?.get?.(rarity)?.effects ?? [];
+
         const characterInfoEmbed = new EmbedBuilder()
             .setColor('Blurple')
             .setAuthor({
@@ -68,7 +85,7 @@ export default {
                 iconURL: interaction.user.displayAvatarURL(),
             })
             .setTitle(`${character.name} (${character.fullname}) Lv. ${characterInfo.level}`)
-            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+            .setThumbnail(`attachment://${portraitFilename}`)
             .addFields(
                 {
                     name: 'Character ID',
@@ -77,7 +94,7 @@ export default {
                 },
                 {
                     name: 'EXP',
-                    value: `200/200`,
+                    value: `${characterInfo.experience}/${xpToNextLevel(characterInfo.level)}`,
                     inline: true,
                 },
                 {
@@ -111,11 +128,11 @@ export default {
                 },
                 {
                     name: `Passive Skill`,
-                    value: `**${character.passiveSkill.name}**: ${character.passiveSkill.descriptions.get(rarity)}`
+                    value: `**${character.passiveSkill.name}**: ${resolveSkillFlavorText(character.passiveSkill.flavorTemplate, passiveEffects)}`
                 },
                 {
                     name: "Active Skill",
-                    value: `**${character.activeSkill.name}**: ${character.activeSkill.descriptions.get(rarity)}`
+                    value: `**${character.activeSkill.name}**: ${resolveSkillFlavorText(character.activeSkill.flavorTemplate, activeEffects)}`
                 },
                 {
                     name: "Catchphrase",
@@ -139,7 +156,7 @@ export default {
         const responseOptions = {
             embeds: [characterInfoEmbed],
             components: [charaInfoComponentRow],
-            files: []
+            files: [portraitAttachment]
         };
 
         if ('deferUpdate' in interaction && charaIdInput) await interaction.deferUpdate();
@@ -168,18 +185,7 @@ export default {
             } 
 
         } catch (error) {
-            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                characterInfoEmbed.setFooter({
-                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /info.`
-                });
-
-                await interaction.editReply({
-                    embeds: [characterInfoEmbed],
-                    components: []
-                });
-            } else {
-                console.log(`Collection Command Error: ${error}`)
-            }
+            await handleCollectorTimeout(error, interaction, characterInfoEmbed, '/info', 'Info Command');
         }
 
     }

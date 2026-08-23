@@ -6,7 +6,7 @@ import team from "../character/team";
 import { CharacterModel, PlayerModel } from "../../models";
 import redis from "../../lib/redis";
 import { config } from "../../config";
-import { actionNA } from "../exceptions";
+import { actionNA, handleCollectorTimeout } from "../exceptions";
 
 export default {
     name: 'detailTeamModal',
@@ -273,36 +273,14 @@ export default {
                                         }
                                     }
                                 } catch (error) {
-                                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                                        teamDetailEmbed.setFooter({
-                                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
-                                        });
-                        
-                                        await interaction.editReply({
-                                            embeds: [teamDetailEmbed],
-                                            components: []
-                                        });
-                                    } else {
-                                        console.log(`Detail Team Command Error: ${error}`)
-                                    }
+                                    await handleCollectorTimeout(error, interaction, teamDetailEmbed, '/team', 'Detail Team Command');
                                 }
                             }
                             await editTeamFormation(confirmation);
                         }
                     }
                 } catch (error) {
-                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                        teamDetailEmbed.setFooter({
-                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /team.`
-                        });
-        
-                        await interaction.editReply({
-                            embeds: [teamDetailEmbed],
-                            components: []
-                        });
-                    } else {
-                        console.log(`Detail Team Command Error: ${error}`)
-                    }
+                    await handleCollectorTimeout(error, interaction, teamDetailEmbed, '/team', 'Detail Team Command');
                 }
             }
         } catch (error) {

@@ -1,7 +1,8 @@
 import { ActionRowBuilder, ApplicationCommandOptionType, Attachment, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, ChatInputCommandInteraction, EmbedBuilder, Interaction, InteractionCollector, InteractionResponse, ModalBuilder, ModalSubmitInteraction, TextInputBuilder, TextInputStyle } from "discord.js";
+import * as path from "path";
 
 import { getPlayer, mapRarity } from "../../utils";
-import { actionNA, pageNF } from "../exceptions";
+import { actionNA, pageNF, handleCollectorTimeout } from "../exceptions";
 import { ICharaCollectionModel, ICharacterModel } from "../../interfaces";
 import { CharaCollectionModel } from "../../models";
 
@@ -50,7 +51,7 @@ export default {
             .populate('character')
             .sort({ rarity: 1, level: -1, createdAt: -1 });
 
-        const attachment = new AttachmentBuilder('C:/Storage/Project Dev/Anitopia Bot/src/public/wisp.jpg', { name: 'wisp.jpg' });
+        const attachment = new AttachmentBuilder(path.join(__dirname, '..', '..', 'public', 'anitopia_icon.png'), { name: 'anitopia_icon.png' });
 
         const charaCollectionEmbed = new EmbedBuilder()
             .setColor('Blurple')
@@ -60,7 +61,7 @@ export default {
             })
             .setTitle(`Character Collection`)
             .setDescription("Welcome to your character collection! Each character has a unique ID that you can use to view more details about them. \n\nSimply click the **Info** button and input the **Character ID** to get more details.")
-            .setThumbnail('attachment://wisp.jpg');
+            .setThumbnail('attachment://anitopia_icon.png');
         
         for (const chara of charaCollection) {
             charaCollectionEmbed.addFields({
@@ -214,18 +215,7 @@ export default {
                     }
                             
                 } catch (error) {
-                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                        charaCollectionEmbed.setFooter({
-                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /collection.`
-                        });
-        
-                        await interaction.editReply({
-                            embeds: [charaCollectionEmbed],
-                            components: []
-                        });
-                    } else {
-                        console.log(`Collection Command Error: ${error}`)
-                    }
+                    await handleCollectorTimeout(error, interaction, charaCollectionEmbed, '/collection', 'Collection Command');
                 }
             }
 
@@ -288,33 +278,11 @@ export default {
                     }
                             
                 } catch (error) {
-                    if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                        charaCollectionEmbed.setFooter({
-                            text: `⏱️ This command is only active for 5 minutes. To use it again, please type /collection.`
-                        });
-        
-                        await interaction.editReply({
-                            embeds: [charaCollectionEmbed],
-                            components: []
-                        });
-                    } else {
-                        console.log(`Collection Command Error: ${error}`)
-                    }
+                    await handleCollectorTimeout(error, interaction, charaCollectionEmbed, '/collection', 'Collection Command');
                 }
             }
         } catch (error) {
-            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                charaCollectionEmbed.setFooter({
-                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /collection.`
-                });
-
-                await interaction.editReply({
-                    embeds: [charaCollectionEmbed],
-                    components: []
-                });
-            } else {
-                console.log(`Collection Command Error: ${error}`)
-            }
+            await handleCollectorTimeout(error, interaction, charaCollectionEmbed, '/collection', 'Collection Command');
         }
     }
 }

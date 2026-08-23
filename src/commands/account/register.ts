@@ -1,9 +1,10 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, CommandInteraction, EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CommandInteraction, EmbedBuilder } from "discord.js";
+import * as path from "path";
 import redis from "../../lib/redis";
 
 import { config } from "../../config";
 import { getPlayer, generateUniqueID } from "../../utils";
-import { actionNA, registrationNA } from "../exceptions";
+import { actionNA, registrationNA, handleCollectorTimeout } from "../exceptions";
 import { PlayerModel } from "../../models";
 
 import profile from "./profile";
@@ -41,6 +42,11 @@ export default {
             }
         });
 
+        const iconAttachment = new AttachmentBuilder(
+            path.join(__dirname, '..', '..', 'public', 'anitopia_icon.png'),
+            { name: 'anitopia_icon.png' }
+        );
+
         const registerEmbed = new EmbedBuilder()
             .setColor('Blurple')
             .setAuthor({
@@ -48,8 +54,8 @@ export default {
                 iconURL: interaction.user.displayAvatarURL(),
             })
             .setTitle('Welcome to Anitopia!')
-            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
-            .setDescription(`Explosion! Ahem... Greetings, <@!${interaction.user.id}>!\n\nI am Megumin, the great Arch-Wizard of Anitopia. I invite you to a realm of extraordinary experiences. By clicking '**Create Account**', you're not just signing up, but setting sail on an exciting journey.\n\nMay your adventure be filled with joy and discovery!`);
+            .setThumbnail('attachment://anitopia_icon.png')
+            .setDescription(`Greetings, <@!${interaction.user.id}>!\n\nAnitopia invites you to a realm of extraordinary experiences, where anime heroes await your call. By clicking '**Create Account**', you're not just signing up, but setting sail on an exciting journey.\n\nMay your adventure be filled with joy and discovery!`);
 
         const registerComponentRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
@@ -62,6 +68,7 @@ export default {
         const response = await interaction.reply({
             embeds: [registerEmbed],
             components: [registerComponentRow],
+            files: [iconAttachment],
         });
 
 
@@ -149,18 +156,8 @@ export default {
                 }
 
             }
-        } catch (error) {            
-            if (error instanceof Error && error.message === "Collector received no interactions before ending with reason: time") {
-                registerEmbed.setFooter({
-                    text: `⏱️ This command is only active for 5 minutes. To use it again, please type /register.`
-                });
-                await interaction.editReply({
-                    embeds: [registerEmbed],
-                    components: []
-                });
-            } else {
-                console.log(`Register Command Error: ${error}`);
-            }
+        } catch (error) {
+            await handleCollectorTimeout(error, interaction, registerEmbed, '/register', 'Register Command');
         }
 
     },

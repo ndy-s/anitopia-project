@@ -99,13 +99,10 @@ export default async (client: Client, interaction: CommandInteraction) => {
 
         const player = await getPlayer(interaction);
 
-        // Temporary
-        // commandObject.callback(client, interaction);
-
         if (!player) {
             await register.callback(client, interaction);
-        } else if (player) {
-            commandObject.callback(client, interaction);
+        } else {
+            await commandObject.callback(client, interaction);
         }
 
     } catch (error) {

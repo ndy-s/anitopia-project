@@ -1,12 +1,13 @@
-import { ActionRowBuilder, ActionRowData, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, MessageComponentInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, ActionRowData, AttachmentBuilder, ButtonBuilder, ButtonStyle, Client, CollectedInteraction, CommandInteraction, EmbedBuilder, MessageComponentInteraction, ModalBuilder, ModalSubmitInteraction, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import * as path from "path";
 
-import { getPlayer } from "../../utils";
+import { getPlayer, ENHANCE_COST_ANICOIN, ENHANCE_XP_GAIN } from "../../utils";
 import { CharaCollectionModel } from "../../models";
 
 import collection from "./collection";
 import team from "./team";
 import { config } from "../../config";
-import { actionNA } from "../exceptions";
+import { actionNA, handleCollectorTimeout } from "../exceptions";
 
 export default {
     name: 'character',
@@ -45,6 +46,11 @@ export default {
                     .setEmoji('🛡️'),
             );
 
+        const iconAttachment = new AttachmentBuilder(
+            path.join(__dirname, '..', '..', 'public', 'anitopia_icon.png'),
+            { name: 'anitopia_icon.png' }
+        );
+
         const characterEmbed = new EmbedBuilder()
             .setColor('Blurple')
             .setAuthor({
@@ -52,7 +58,7 @@ export default {
                 iconURL: interaction.user.displayAvatarURL(),
             })
             .setTitle('Character Command Center')
-            .setThumbnail('https://images-ext-1.discordapp.net/external/huMhSM-tW8IbG2kU1hR1Q-pI-A44b74PL_teDZ7nhVc/https/www.vhv.rs/dpng/d/28-280300_konosuba-megumin-explosion-megumin-chibi-png-transparent-png.png?width=566&height=671')
+            .setThumbnail('attachment://anitopia_icon.png')
             .setDescription(`Welcome to the Character Command Center! Here, you can manage all aspects of your characters.\n\n- **Collection**: Browse and learn more about your characters.\n- **Enhance**: Power up your characters to increase their abilities.\n- **Team**: Strategically form teams with your characters for battles.`)
             .setFooter({
                 text: 'Select an option from the menu bellow for your character.',
@@ -63,7 +69,7 @@ export default {
         const responseOptions = {
             embeds: [characterEmbed],
             components: [characterComponentRow],
-            files: []
+            files: [iconAttachment]
         };
         
         let response;
@@ -97,11 +103,28 @@ export default {
                     await collection.callback(client, confirmation, true);
                 } else if (confirmation.values.includes('team')) {
                     await team.callback(client, confirmation, true);
+                } else if (confirmation.values.includes('enhance')) {
+                    const enhanceModal = new ModalBuilder()
+                        .setCustomId('enhanceCharacterModal')
+                        .setTitle('Enhance a Character');
+
+                    const enhanceCharaIdInput = new TextInputBuilder()
+                        .setCustomId('enhanceCharaIdInput')
+                        .setLabel('Character ID')
+                        .setPlaceholder(`Spend ${ENHANCE_COST_ANICOIN} AniCoin for ${ENHANCE_XP_GAIN} XP`)
+                        .setStyle(TextInputStyle.Short)
+                        .setRequired(true);
+
+                    enhanceModal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(enhanceCharaIdInput));
+
+                    if (!(confirmation instanceof ModalSubmitInteraction)) {
+                        await confirmation.showModal(enhanceModal);
+                    }
                 }
             }
 
         } catch (error) {
-            console.log(error);
+            await handleCollectorTimeout(error, interaction, characterEmbed, '/character', 'Character Command');
         }
     },
 };
