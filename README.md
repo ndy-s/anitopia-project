@@ -14,11 +14,8 @@ the core loop (register, summon, build a team, duel/battle) runs end-to-end with
 
 [Watch the demo](media/demo.mp4)
 
-<!--
-For an inline player instead of a download link: open this README in the GitHub web editor after
-pushing, drag media/demo.mp4 into this section, and GitHub will replace it with its own hosted
-player link (that link can only be generated through the web UI, not from the command line).
--->
+https://github.com/user-attachments/assets/a61e724f-7ebd-4184-bcb6-540858551a73
+
 
 ## Features
 
