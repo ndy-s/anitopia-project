@@ -5,8 +5,8 @@ build a team, and battle, either against another player or a random AI-controlle
 character has a class, an element, and a passive + active skill, all rendered in a hand-built
 pixel-art battle scene.
 
-This is an old personal project I picked back up, using AI assistance (Claude Code) to brainstorm the
-game design and help build it out. It's **unfinished, not a polished v1, but stable enough to demo**:
+This is an old personal project I picked back up, using AI assistance to brainstorm the game design
+and help build it out. It's **unfinished, not a polished v1, but stable enough to demo**:
 the core loop (register, summon, build a team, duel/battle) runs end-to-end without crashing. See
 [Project status](#project-status) below for what's solid and what's still rough.
 
